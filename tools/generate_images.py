@@ -38,13 +38,30 @@ P = {
 FONT_DIR = os.path.join(ROOT, "tools", "fonts")
 FONTS = {"oswald": "Oswald-Variable.ttf", "playfair": "PlayfairDisplay-Variable.ttf",
          "cinzel": "Cinzel-Variable.ttf", "script": "DancingScript-Variable.ttf",
-         "kaushan": "KaushanScript-Regular.ttf"}
+         "kaushan": "KaushanScript-Regular.ttf", "alegreya": "AlegreyaSans-Medium.ttf"}
+
+# Fonts whose license does not allow them in this repository. Put the file in
+# tools/fonts/local (git ignores that folder). If the file is missing, the
+# generator uses the fallback font from FONTS and prints a warning.
+LOCAL_FONT_DIR = os.path.join(FONT_DIR, "local")
+LOCAL_FONTS = {"calluna": (["CallunaSans-Regular.otf", "CallunaSans-Regular.ttf"], "alegreya")}
 _glyphs = {}
+
+def font_path(font):
+    if font in FONTS:
+        return os.path.join(FONT_DIR, FONTS[font])
+    files, fallback = LOCAL_FONTS[font]
+    for name in files:
+        path = os.path.join(LOCAL_FONT_DIR, name)
+        if os.path.exists(path):
+            return path
+    print(f"Warning: {' or '.join(files)} is not in tools/fonts/local. Using {FONTS[fallback]} instead.")
+    return os.path.join(FONT_DIR, FONTS[fallback])
 
 def glyphs(font, weight):
     key = (font, weight)
     if key not in _glyphs:
-        f = TTFont(os.path.join(FONT_DIR, FONTS[font]))
+        f = TTFont(font_path(font))
         gs = f.getGlyphSet(location={"wght": weight}) if "fvar" in f else f.getGlyphSet()
         _glyphs[key] = (f.getBestCmap(), gs, f["head"].unitsPerEm)
     return _glyphs[key]
@@ -173,10 +190,11 @@ def town_b(p):
          f'<g stroke="{A}" stroke-width="3"><line x1="104" y1="738" x2="136" y2="738"/><line x1="104" y1="750" x2="136" y2="750"/></g>'
          f'<circle cx="120" cy="790" r="13" fill="{GOLD}"/><circle cx="120" cy="790" r="6" fill="{RED}"/>'
          + arch(98, 826, 44, 74, R))
+    s += sign(196, 768, 204, 30, R, "New City", "calluna", 400, 22, 790, 2)
     for wx in (196, 280, 364):
-        s += (arch(wx, 786, 36, 80, BLUE) + f'<rect x="{wx+12}" y="806" width="12" height="60" fill="{RED}"/>'
-              f'<circle cx="{wx+18}" cy="802" r="7" fill="{GOLD}"/>'
-              f'<g stroke="{R}" stroke-width="2"><line x1="{wx}" y1="830" x2="{wx+36}" y2="830"/><line x1="{wx}" y1="850" x2="{wx+36}" y2="850"/></g>')
+        s += (arch(wx, 806, 36, 66, BLUE) + f'<rect x="{wx+12}" y="826" width="12" height="46" fill="{RED}"/>'
+              f'<circle cx="{wx+18}" cy="822" r="7" fill="{GOLD}"/>'
+              f'<g stroke="{R}" stroke-width="2"><line x1="{wx}" y1="846" x2="{wx+36}" y2="846"/><line x1="{wx}" y1="860" x2="{wx+36}" y2="860"/></g>')
     s += f'<rect x="60" y="892" width="120" height="8" fill="{p["curb"]}"/>'
     # Gas station: price sign, canopy over one pump, and a small market.
     # The parked car is added by MainScene.brs so it can change each time.

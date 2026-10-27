@@ -5,7 +5,7 @@ A Roku screensaver inspired by Roku City. It shows a small town beside a river w
 ## Features
 
 - Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street.
-- The town has two sections. The first has houses, a bakery, a book store, Williams Hardware, and a diner called Luke's. The last two are references to Gilmore Girls. The second has a church, a gas station with a small market, and a public library.
+- The town has two sections. The first has houses, a bakery, a book store, Williams Hardware, and a diner called Luke's. The last two are references to Gilmore Girls. The second has a church named New City, a gas station with a small market, and a public library.
 - A car is parked at the gas station. The car and the direction it faces are chosen at random each time the screensaver starts.
 - Each store sign uses its own font.
 - Four cars: a sedan, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it.
@@ -83,8 +83,17 @@ Store sign fonts:
 | Playfair Display | Books |
 | Oswald | Williams Hardware, gas station, Market |
 | Cinzel | Public Library |
+| Calluna Sans (see below) | New City church |
 
 These fonts are from [Google Fonts](https://fonts.google.com/). All of them except Kaushan Script are variable fonts: one file covers a range of weights, and the generator picks the weight for each sign. Kaushan Script has only one weight. They are licensed under the SIL Open Font License; the license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
+
+Calluna Sans is not stored in this repository, because its license does not allow that. To use it:
+
+1. Download Calluna Sans Regular from [exljbris](https://exljbris.com/callunasans.html). The Regular weight is free.
+2. Put the font file in `tools/fonts/local/` and name it `CallunaSans-Regular.otf` (or `.ttf`). Git ignores this folder.
+3. Run the generator again and commit the new images.
+
+If the file is missing, the generator prints a warning and draws the church sign with Alegreya Sans, a free font in a similar style.
 
 This writes every PNG into `images/`, including the mirrored car images used by the far lane. It also writes full-scene previews for day and night into `build/`, which git ignores. There is one preview for each town section (`_a` and `_b`). The `_b` previews include a parked car so its position can be checked.
 

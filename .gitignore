@@ -7,6 +7,9 @@ out/
 # Preview images written by tools/generate_images.py
 build/
 
+# Fonts that cannot be shared in this repository (see README.md)
+tools/fonts/local/
+
 # Python
 __pycache__/
 *.pyc
