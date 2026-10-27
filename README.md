@@ -5,6 +5,9 @@ A Roku screensaver inspired by Roku City. It shows a small town beside a river w
 ## Features
 
 - Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street.
+- The town has two sections. The first has houses, a bakery, a book store, a hardware store, and a cafe. The second has a church, a gas station with a small market, and a public library.
+- A car is parked at the gas station. The car and the direction it faces are chosen at random each time the screensaver starts.
+- Each store sign uses its own font.
 - Four cars: a sedan, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it.
 - Two lanes. The near lane drives left to right at full size. The far lane drives right to left and draws the cars slightly smaller.
 - Weather from [Open-Meteo](https://open-meteo.com/), refreshed every 15 minutes. No API key is needed.
@@ -23,6 +26,7 @@ components/WeatherTask.xml  Task node definition for the weather request
 components/WeatherTask.brs  Calls the Open-Meteo API
 images/                     All artwork as PNG files
 tools/generate_images.py    Draws every image in images/
+tools/fonts/                Store sign fonts and their licenses (used only by the generator)
 ```
 
 ## Installing on a Roku
@@ -48,6 +52,7 @@ All settings are at the top of `init()` in `components/MainScene.brs`.
 |---|---|
 | `m.LAT`, `m.LON` | Location for the weather. The default is ZIP code 46220 (Indianapolis). Roku does not give apps the device's ZIP code, so the location must be set here. |
 | `m.layerSpeeds` | Scroll speed of each scenery layer, in pixels per second. |
+| `m.layerWidths` | Width of each scenery layer before it repeats. The town is 3840 because it is two different 1920 pixel sections. |
 | `m.cameraSpeed` | Must match the `town` layer speed. Cars use it so their speed looks correct relative to the street. |
 | `m.carDefs` | Each car's image size, wheel positions, wheel radius, and `ground` speed in pixels per second. |
 | `m.infoSpots` | The positions the clock panel moves between. |
@@ -59,7 +64,7 @@ The panel's transparency is set by the `color` value on the `Rectangle` inside t
 The images are drawn by `tools/generate_images.py`. Edit the shapes or colors in that file, then regenerate:
 
 ```
-pip install cairosvg pillow
+pip install cairosvg pillow fonttools
 python3 tools/generate_images.py
 ```
 
@@ -67,13 +72,24 @@ Requirements:
 
 - Python 3.
 - The Cairo graphics library, which `cairosvg` needs. On macOS, install it with `brew install cairo`. On Debian or Ubuntu, install it with `sudo apt install libcairo2`.
-- The DejaVu Sans font for the store sign text. If it is not installed, the signs are drawn with a different font.
+- No fonts need to be installed. The store sign fonts are in `tools/fonts`, and the generator converts the sign text to shapes, so the images are the same on every computer.
 
-This writes every PNG into `images/`, including the mirrored car images used by the far lane. It also writes full-scene previews for day and night into `build/`, which git ignores.
+Store sign fonts:
+
+| Font | Used for |
+|---|---|
+| Dancing Script | Bakery, Cafe |
+| Playfair Display | Books |
+| Oswald | Hardware, gas station, Market |
+| Cinzel | Public Library |
+
+These are variable fonts from [Google Fonts](https://fonts.google.com/): one file covers a range of weights, and the generator picks the weight for each sign. They are licensed under the SIL Open Font License; the license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
+
+This writes every PNG into `images/`, including the mirrored car images used by the far lane. It also writes full-scene previews for day and night into `build/`, which git ignores. There is one preview for each town section (`_a` and `_b`). The `_b` previews include a parked car so its position can be checked.
 
 Notes on the image sizes:
 
-- Each scenery layer is exactly 1920 pixels wide and its left and right edges line up, so two copies placed side by side repeat without a visible seam.
+- Each scenery layer is exactly 1920 pixels wide and its left and right edges line up, so two copies placed side by side repeat without a visible seam. The town layer is two different images (`town_a` and `town_b`) placed in the order A, B, A, so the street is 3840 pixels long before it repeats.
 - The sky is an 8 pixel wide gradient that the scene stretches to full width. This uses much less memory than a full-size image.
 - If you change a car's size or wheel positions in the generator, update the matching entry in `m.carDefs`.
 
@@ -90,7 +106,7 @@ Screensavers use port 8087, not port 8085 like normal channels. Errors from the 
 ## Known limits
 
 - A screensaver cannot define `Main()`. If it does, Roku does not list it under Settings > Theme > Screensavers. For this reason it cannot be opened from the home screen.
-- Only one car uses each lane at a time, so at most two cars are on screen.
+- Only one car uses each lane at a time, so at most two moving cars are on screen.
 - Dusk covers 40 minutes on each side of sunrise and sunset. Before the first weather request finishes, the scene assumes sunrise at 7:00 AM and sunset at 7:00 PM.
 
 ## Credits
