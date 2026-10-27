@@ -10,8 +10,8 @@ sub init()
 
     ' Scroll speed of each scenery layer in pixels per second. Farther = slower.
     m.layerSpeeds = { clouds: 8, far: 5, near: 12, hills: 24, town: 55 }
-    ' Width of each layer before it repeats. The town is two different 1920 px tiles.
-    m.layerWidths = { clouds: 1920, far: 1920, near: 1920, hills: 1920, town: 3840 }
+    ' Width of each layer before it repeats. The town is three different 1920 px tiles.
+    m.layerWidths = { clouds: 1920, far: 1920, near: 1920, hills: 1920, town: 5760 }
     ' The street moves with the town layer, so cars use this as the ground speed offset.
     m.cameraSpeed = 55
 
@@ -46,7 +46,7 @@ sub init()
     ' Layers that have a different image for some seasons. This must match
     ' SEASONAL in tools/generate_images.py.
     allSeasons = ["spring", "summer", "fall", "winter"]
-    m.seasonalLayers = { far: ["winter"], near: ["winter"], hills: allSeasons, town_a: allSeasons, town_b: allSeasons }
+    m.seasonalLayers = { far: ["winter"], near: ["winter"], hills: allSeasons, town_a: allSeasons, town_b: allSeasons, town_c: allSeasons }
 
     ' Airplane (a Cessna). It flies at the distance of the far mountains, so the
     ' camera adds or takes away m.layerSpeeds.far from its speed on screen, the
@@ -209,6 +209,7 @@ sub applyScene()
     m.top.findNode("townA1").uri = layerUri("town_a", ground, period)
     m.top.findNode("townA2").uri = layerUri("town_a", ground, period)
     m.top.findNode("townB").uri = layerUri("town_b", ground, period)
+    m.top.findNode("townC").uri = layerUri("town_c", ground, period)
     updateSeasonFx(season, period)
     updatePlaneImage()
     if period = "night"

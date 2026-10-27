@@ -60,7 +60,7 @@ def season_palette(pal, season):
 # listed, or a season that is not in its list, uses the summer drawing saved
 # without a season in the file name. components/MainScene.brs has the same
 # list in m.seasonalLayers.
-SEASONAL = {"far": ["winter"], "near": ["winter"], "hills": SEASONS, "town_a": SEASONS, "town_b": SEASONS}
+SEASONAL = {"far": ["winter"], "near": ["winter"], "hills": SEASONS, "town_a": SEASONS, "town_b": SEASONS, "town_c": SEASONS}
 
 # Store sign fonts. Most are variable fonts (one file covers a range of weights).
 # Kaushan Script and Alegreya Sans Medium have one weight, so the weight value is
@@ -71,7 +71,11 @@ FONT_DIR = os.path.join(ROOT, "tools", "fonts")
 FONTS = {"oswald": "Oswald-Variable.ttf", "playfair": "PlayfairDisplay-Variable.ttf",
          "cinzel": "Cinzel-Variable.ttf", "script": "DancingScript-Variable.ttf",
          "kaushan": "KaushanScript-Regular.ttf", "alegreya": "AlegreyaSans-Medium.ttf",
-         "signika": "Signika-Variable.ttf", "cabin": "Cabin-Variable.ttf", "hanken": "HankenGrotesk-Variable.ttf"}
+         "signika": "Signika-Variable.ttf", "cabin": "Cabin-Variable.ttf", "hanken": "HankenGrotesk-Variable.ttf",
+         "pacifico": "Pacifico-Regular.ttf", "amatic": "AmaticSC-Bold.ttf", "fredoka": "Fredoka-Variable.ttf",
+         "lora": "Lora-Italic-Variable.ttf", "montserrat": "Montserrat-Variable.ttf", "raleway": "Raleway-Variable.ttf",
+         "comfortaa": "Comfortaa-Variable.ttf", "josefin": "JosefinSans-Variable.ttf", "quicksand": "Quicksand-Variable.ttf",
+         "bitter": "Bitter-Variable.ttf"}
 _glyphs = {}
 
 def glyphs(font, weight):
@@ -400,13 +404,120 @@ def town_b(p, season):
     s += round_tree(1820, 900, 64, 36, p, season) + round_tree(1207, 900, 54, 26, p, season)
     return s + street(p, season)
 
+# Town section C: five houses and five shops. The houses are narrower than the
+# ones in section A so all ten buildings fit in 1920 pixels.
+def town_c(p, season):
+    A, B, W2, R, Wn = p["houseA"], p["houseB"], p["wall2"], p["roof"], p["window"]
+    def small_house(x, w, y, peak, number, font, weight):
+        winY = y + 18
+        doorX = x + w // 2 - 20
+        return (f'<rect x="{x}" y="{y}" width="{w}" height="{900 - y}" fill="{A}"/>'
+                f'<polygon points="{x - 8},{y} {x + w // 2},{peak} {x + w + 8},{y}" fill="{R}"/>'
+                + snow_ridge(season, p, (x - 6, y - 3), (x + w // 2, peak - 3), (x + w + 6, y - 3)) +
+                f'<rect x="{x + 10}" y="{winY}" width="40" height="38" fill="{Wn}"/><rect x="{x + w - 50}" y="{winY}" width="40" height="38" fill="{Wn}"/>'
+                + flower_box(season, p, x + 10, winY + 38, 40) + flower_box(season, p, x + w - 50, winY + 38, 40) +
+                f'<rect x="{doorX}" y="830" width="40" height="70" fill="{R}"/>'
+                f'<rect x="{doorX - 2}" y="808" width="44" height="18" rx="3" fill="{R}"/>'
+                + text(number, font, weight, 14, doorX + 20, 822, "#F8FAFC", 1)
+                + pumpkins(season, doorX + 50))
+
+    def awning(x, w, colors):
+        """A striped awning over a shop window, from y=800 to y=828."""
+        n = len(colors) * 3
+        out = ""
+        for i in range(n):
+            t0, t1 = x + 10 + (w - 20) * i / n, x + 10 + (w - 20) * (i + 1) / n
+            b0, b1 = x + w * i / n, x + w * (i + 1) / n
+            out += f'<polygon points="{t0:.1f},800 {t1:.1f},800 {b1:.1f},828 {b0:.1f},828" fill="{colors[i % len(colors)]}"/>'
+        return out + snow_flat(season, p, x + 8, 800, w - 16)
+
+    def shop(x, w, top, wall):
+        """Walls, roof edge, display window, and door. Returns the drawing and
+        the display window's x, y, width, and height for what is inside it."""
+        win = (x + 12, 838, w - 78, 56)
+        body = (f'<rect x="{x}" y="{top}" width="{w}" height="{900 - top}" fill="{wall}"/>'
+                f'<rect x="{x - 4}" y="{top}" width="{w + 8}" height="14" fill="{R}"/>' + snow_flat(season, p, x - 4, top, w + 8) +
+                f'<rect x="{win[0]}" y="{win[1]}" width="{win[2]}" height="{win[3]}" fill="{Wn}"/>'
+                f'<rect x="{x + w - 56}" y="834" width="42" height="66" fill="{R}"/>')
+        return body, win
+
+    s = small_house(24, 150, 740, 676, "312", "raleway", 700)
+
+    # Cabana's ice cream shop, with a big cone on the roof
+    body, (wx, wy, ww, wh) = shop(192, 196, 716, B)
+    s += (f'<polygon points="282,712 298,712 290,742" fill="#D9A55B"/><circle cx="284" cy="704" r="10" fill="#F2B8C6"/><circle cx="296" cy="704" r="10" fill="#B8E2C8"/>'
+          f'<circle cx="290" cy="694" r="10" fill="#F6E7B0"/>' + body
+          + sign(214, 742, 152, 46, "#E86A92", "Cabana\u2019s", "pacifico", 400, 26, 774, 0)
+          + awning(192, 196, ["#E86A92", A]))
+    for i, (cx, c1, c2) in enumerate(((wx + 22, "#F2B8C6", "#F6E7B0"), (wx + 58, "#B8E2C8", "#F2B8C6"), (wx + 94, "#F6E7B0", "#B8E2C8"))):
+        s += (f'<polygon points="{cx - 8},{wy + 26} {cx + 8},{wy + 26} {cx},{wy + 50}" fill="#D9A55B"/>'
+              f'<circle cx="{cx}" cy="{wy + 22}" r="9" fill="{c1}"/><circle cx="{cx}" cy="{wy + 12}" r="7" fill="{c2}"/>')
+
+    s += small_house(406, 150, 730, 668, "402", "comfortaa", 700)
+
+    # Art supply store, with a painter's palette and a brush in the window
+    body, (wx, wy, ww, wh) = shop(574, 196, 704, W2)
+    px, py = wx + 50, wy + 30
+    s += (body + sign(596, 730, 152, 50, "#6B4A3A", "ART SUPPLIES", "amatic", 700, 32, 766, 2)
+          + f'<polygon points="584,800 760,800 768,828 576,828" fill="{p["mid"]}"/>' + snow_flat(season, p, 584, 800, 176)
+          + f'<path d="M{px - 34},{py} C{px - 36},{py - 22} {px + 10},{py - 26} {px + 30},{py - 14} C{px + 42},{py - 6} {px + 30},{py + 4} {px + 20},{py + 2} '
+            f'C{px + 8},{py} {px + 8},{py + 14} {px + 16},{py + 18} C{px + 4},{py + 26} {px - 30},{py + 24} {px - 34},{py} Z" fill="#C8A26B"/>'
+          + f'<circle cx="{px + 14}" cy="{py + 8}" r="5" fill="{Wn}"/>')
+    for dx, dy, c in ((-24, -2, "#E74C3C"), (-14, -14, "#F6C46A"), (2, -16, "#4A82A8"), (18, -10, "#2ECC71"), (-20, 12, "#F8FAFC")):
+        s += f'<circle cx="{px + dx}" cy="{py + dy}" r="4.5" fill="{c}"/>'
+    s += (f'<line x1="{px + 40}" y1="{py + 22}" x2="{px + 62}" y2="{py - 20}" stroke="#8C5A3C" stroke-width="4" stroke-linecap="round"/>'
+          f'<path d="M{px + 60},{py - 16} L{px + 68},{py - 28} L{px + 64},{py - 15} Z" fill="#E74C3C"/>')
+
+    # Photography store, with a camera in the window
+    body, (wx, wy, ww, wh) = shop(788, 196, 712, B)
+    cx, cy = wx + ww // 2, wy + 30
+    s += (body + sign(810, 736, 152, 46, "#1F2A33", "PHOTO", "montserrat", 700, 26, 768, 6)
+          + f'<polygon points="798,800 974,800 982,828 790,828" fill="{R}"/>' + snow_flat(season, p, 798, 800, 176)
+          + f'<rect x="{cx - 34}" y="{cy - 16}" width="68" height="40" rx="6" fill="#1F2A33"/><rect x="{cx - 26}" y="{cy - 24}" width="18" height="9" rx="2" fill="#1F2A33"/>'
+            f'<rect x="{cx + 14}" y="{cy - 12}" width="14" height="7" rx="1" fill="#F8FAFC"/>'
+            f'<circle cx="{cx}" cy="{cy + 4}" r="15" fill="#5B6770"/><circle cx="{cx}" cy="{cy + 4}" r="10" fill="#34495E"/><circle cx="{cx - 3}" cy="{cy + 1}" r="3" fill="#C9DAEA"/>')
+
+    s += small_house(1002, 150, 745, 680, "527", "josefin", 600)
+
+    # Pet shop, with a fish bowl and a paw print in the window
+    body, (wx, wy, ww, wh) = shop(1170, 196, 708, W2)
+    fx, fy = wx + 32, wy + 30
+    s += (body + sign(1192, 734, 152, 46, "#4A82A8", "PET SHOP", "fredoka", 600, 26, 766, 2)
+          + awning(1170, 196, ["#4A82A8", A])
+          + f'<circle cx="{fx}" cy="{fy}" r="20" fill="#A9D4EC" fill-opacity="0.9"/><rect x="{fx - 12}" y="{fy - 22}" width="24" height="5" rx="2" fill="#A9D4EC"/>'
+            f'<ellipse cx="{fx - 2}" cy="{fy + 2}" rx="7" ry="4" fill="#E8913A"/><polygon points="{fx + 4},{fy + 2} {fx + 11},{fy - 3} {fx + 11},{fy + 7}" fill="#E8913A"/>'
+            f'<rect x="{fx - 20}" y="{fy + 16}" width="40" height="6" rx="2" fill="#8C5A3C"/>')
+    qx, qy = wx + 82, wy + 32
+    s += f'<ellipse cx="{qx}" cy="{qy + 6}" rx="9" ry="8" fill="#6B4A3A"/>'
+    for dx, dy in ((-11, -6), (-4, -12), (4, -12), (11, -6)):
+        s += f'<ellipse cx="{qx + dx}" cy="{qy + dy}" rx="3.5" ry="4.5" fill="#6B4A3A"/>'
+
+    # Italian restaurant, with an awning in the colors of the Italian flag and a
+    # table with a checkered tablecloth in the window
+    body, (wx, wy, ww, wh) = shop(1384, 216, 700, B)
+    s += (body + sign(1404, 726, 176, 50, "#2F5D3A", "Trattoria", "lora", 600, 30, 760, 1)
+          + awning(1384, 216, ["#2F8F4E", A, "#C0392B"]))
+    tx, ty = wx + 18, wy + 30
+    for row in range(2):
+        for col in range(8):
+            c = "#C0392B" if (row + col) % 2 == 0 else "#F8FAFC"
+            s += f'<rect x="{tx + col * 12}" y="{ty + row * 8}" width="12" height="8" fill="{c}"/>'
+    s += (f'<rect x="{tx + 6}" y="{ty + 16}" width="4" height="10" fill="#6B4A3A"/><rect x="{tx + 86}" y="{ty + 16}" width="4" height="10" fill="#6B4A3A"/>'
+          f'<rect x="{tx + 30}" y="{ty - 16}" width="7" height="16" rx="2" fill="#2F5D3A"/><rect x="{tx + 32}" y="{ty - 22}" width="3" height="7" fill="#2F5D3A"/>'
+          f'<rect x="{tx + 58}" y="{ty - 10}" width="4" height="10" fill="#F8FAFC"/><ellipse cx="{tx + 60}" cy="{ty - 13}" rx="2" ry="3" fill="#F6C46A"/>')
+
+    s += small_house(1618, 150, 738, 674, "612", "quicksand", 700)
+    s += small_house(1786, 120, 750, 690, "1120", "bitter", 600)
+    return s + street(p, season)
+
 def sky(p):
     return (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/>'
             f'<stop offset="0.62" stop-color="{p["horizon"]}"/></linearGradient></defs><rect width="8" height="1080" fill="url(#g)"/>')
 
 # Layer crops: name -> (function, y, height)
 CROPS = {"clouds": (clouds, 90, 255), "far": (far, 295, 425), "near": (near, 400, 360),
-         "hills": (hills, 600, 310), "town_a": (town, 550, 530), "town_b": (town_b, 550, 530)}
+         "hills": (hills, 600, 310), "town_a": (town, 550, 530), "town_b": (town_b, 550, 530),
+         "town_c": (town_c, 550, 530)}
 # Remove old scenery images so a layer that gains seasons does not leave
 # unused files behind in the Roku zip.
 for f in os.listdir(OUT):
@@ -571,7 +682,7 @@ save(sports, "0 0 304 104", 304, 104, "car_sports.png")
 # Channel icons from a composite of the day scene
 def composite(pal, tile="a", season="summer"):
     p = season_palette(pal, season)
-    townFn = town if tile == "a" else town_b
+    townFn = {"a": town, "b": town_b, "c": town_c}[tile]
     mtn = season if season == "winter" else "summer"
     full = (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/><stop offset="0.62" stop-color="{p["horizon"]}"/></linearGradient></defs>'
             f'<rect width="1920" height="1080" fill="url(#g)"/><circle cx="220" cy="180" r="64" fill="{ACCENT}"/>'
@@ -587,7 +698,7 @@ for f in os.listdir(BUILD):
     os.remove(os.path.join(BUILD, f)) if f.startswith("composite_") else None
 for season in SEASONS:
     for pal in ("day", "night"):
-        for tile in ("a", "b"):
+        for tile in ("a", "b", "c"):
             composite(pal, tile, season)
 
 # Mirrored car bodies for the far lane, where cars drive right to left
