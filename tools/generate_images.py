@@ -31,19 +31,22 @@ P = {
    sidewalk="#5B6770", curb="#46525C", road="#20282E", roadLine="#C9D2DA"),
 }
 
-# Store sign fonts. These are variable fonts (one file covers a range of weights)
+# Store sign fonts. Most are variable fonts (one file covers a range of weights).
+# Kaushan Script has one weight, so the weight value is ignored for it. They are
 # stored in tools/fonts under the SIL Open Font License. Text is converted to
 # outlines here, so the images look the same on every computer.
 FONT_DIR = os.path.join(ROOT, "tools", "fonts")
 FONTS = {"oswald": "Oswald-Variable.ttf", "playfair": "PlayfairDisplay-Variable.ttf",
-         "cinzel": "Cinzel-Variable.ttf", "script": "DancingScript-Variable.ttf"}
+         "cinzel": "Cinzel-Variable.ttf", "script": "DancingScript-Variable.ttf",
+         "kaushan": "KaushanScript-Regular.ttf"}
 _glyphs = {}
 
 def glyphs(font, weight):
     key = (font, weight)
     if key not in _glyphs:
         f = TTFont(os.path.join(FONT_DIR, FONTS[font]))
-        _glyphs[key] = (f.getBestCmap(), f.getGlyphSet(location={"wght": weight}), f["head"].unitsPerEm)
+        gs = f.getGlyphSet(location={"wght": weight}) if "fvar" in f else f.getGlyphSet()
+        _glyphs[key] = (f.getBestCmap(), gs, f["head"].unitsPerEm)
     return _glyphs[key]
 
 def text(label, font, weight, size, cx, y, fill, spacing=0):
@@ -144,13 +147,15 @@ def town(p):
           f'<rect x="900" y="868" width="110" height="4" fill="{R}"/><rect x="900" y="890" width="110" height="4" fill="{R}"/>'
           f'<rect x="1030" y="840" width="46" height="60" fill="{R}"/>')
     s += (f'<rect x="1120" y="710" width="260" height="190" fill="{B}"/><rect x="1116" y="710" width="268" height="14" fill="{R}"/>'
-          + sign(1150, 734, 200, 44, "#4A82A8", "HARDWARE", "oswald", 600, 30, 767, 4) +
+          # Two lines: Luke's Diner in Gilmore Girls is in the old Williams Hardware building
+          + sign(1150, 730, 200, 54, "#4A82A8", "WILLIAMS", "oswald", 500, 16, 749, 5)
+          + text("HARDWARE", "oswald", 600, 26, 1250, 777, "#F8FAFC", 4) +
           f'<polygon points="1130,800 1370,800 1378,828 1122,828" fill="{R}"/>'
           f'<rect x="1140" y="838" width="150" height="56" fill="{Wn}"/><rect x="1310" y="834" width="46" height="66" fill="{R}"/>')
     s += house(1410, 740, 190, 672, 1432, 1534, 1485, 770)
     s += (f'<rect x="1630" y="690" width="250" height="210" fill="{W2}"/><rect x="1626" y="690" width="258" height="14" fill="{R}"/>'
           f'<rect x="1660" y="716" width="48" height="44" fill="{Wn}"/><rect x="1772" y="716" width="48" height="44" fill="{Wn}"/>'
-          + sign(1680, 772, 150, 40, R, "Luke\u2019s", "script", 700, 32, 802, 1) +
+          + sign(1680, 768, 150, 46, R, "Luke\u2019s", "kaushan", 400, 32, 802, 1) +
           f'<polygon points="1640,820 1870,820 1878,846 1632,846" fill="{ACCENT}"/>'
           f'<rect x="1650" y="854" width="140" height="42" fill="{Wn}"/><rect x="1806" y="852" width="46" height="48" fill="{R}"/>')
     return s + street(p)

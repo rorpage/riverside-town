@@ -5,7 +5,7 @@ A Roku screensaver inspired by Roku City. It shows a small town beside a river w
 ## Features
 
 - Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street.
-- The town has two sections. The first has houses, a bakery, a book store, a hardware store, and a diner called Luke's. The second has a church, a gas station with a small market, and a public library.
+- The town has two sections. The first has houses, a bakery, a book store, Williams Hardware, and a diner called Luke's. The last two are references to Gilmore Girls. The second has a church, a gas station with a small market, and a public library.
 - A car is parked at the gas station. The car and the direction it faces are chosen at random each time the screensaver starts.
 - Each store sign uses its own font.
 - Four cars: a sedan, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it.
@@ -78,12 +78,13 @@ Store sign fonts:
 
 | Font | Used for |
 |---|---|
-| Dancing Script | Bakery, Luke's |
+| Dancing Script | Bakery |
+| Kaushan Script | Luke's |
 | Playfair Display | Books |
-| Oswald | Hardware, gas station, Market |
+| Oswald | Williams Hardware, gas station, Market |
 | Cinzel | Public Library |
 
-These are variable fonts from [Google Fonts](https://fonts.google.com/): one file covers a range of weights, and the generator picks the weight for each sign. They are licensed under the SIL Open Font License; the license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
+These fonts are from [Google Fonts](https://fonts.google.com/). All of them except Kaushan Script are variable fonts: one file covers a range of weights, and the generator picks the weight for each sign. Kaushan Script has only one weight. They are licensed under the SIL Open Font License; the license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
 
 This writes every PNG into `images/`, including the mirrored car images used by the far lane. It also writes full-scene previews for day and night into `build/`, which git ignores. There is one preview for each town section (`_a` and `_b`). The `_b` previews include a parked car so its position can be checked.
 
