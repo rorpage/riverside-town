@@ -16,8 +16,10 @@
     </Group>
     <Group translation="[0,295]">
       <Group id="farStrip">
+        <!-- Two different far tiles: A (with Table Mountain), B, then A again. -->
         <Poster id="far1" width="1920" height="425" />
-        <Poster id="far2" width="1920" height="425" translation="[1920,0]" />
+        <Poster id="farB" width="1920" height="425" translation="[1920,0]" />
+        <Poster id="far2" width="1920" height="425" translation="[3840,0]" />
       </Group>
     </Group>
     <!-- Airplane, at the distance of the far mountains. It is drawn after the far
@@ -28,8 +30,10 @@
     </Group>
     <Group translation="[0,400]">
       <Group id="nearStrip">
+        <!-- Two different near tiles: A, B, then A again. -->
         <Poster id="near1" width="1920" height="360" />
-        <Poster id="near2" width="1920" height="360" translation="[1920,0]" />
+        <Poster id="nearB" width="1920" height="360" translation="[1920,0]" />
+        <Poster id="near2" width="1920" height="360" translation="[3840,0]" />
       </Group>
     </Group>
     <Group translation="[0,600]">
@@ -100,10 +104,10 @@
       <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="cloudsStrip.translation" />
     </Animation>
     <Animation id="farAnim" repeat="true" easeFunction="linear">
-      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="farStrip.translation" />
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-3840,0]]" fieldToInterp="farStrip.translation" />
     </Animation>
     <Animation id="nearAnim" repeat="true" easeFunction="linear">
-      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="nearStrip.translation" />
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-3840,0]]" fieldToInterp="nearStrip.translation" />
     </Animation>
     <Animation id="hillsAnim" repeat="true" easeFunction="linear">
       <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="hillsStrip.translation" />

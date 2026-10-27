@@ -60,7 +60,7 @@ def season_palette(pal, season):
 # listed, or a season that is not in its list, uses the summer drawing saved
 # without a season in the file name. components/MainScene.brs has the same
 # list in m.seasonalLayers.
-SEASONAL = {"far": ["winter"], "near": ["winter"], "hills": SEASONS, "town_a": SEASONS, "town_b": SEASONS, "town_c": SEASONS, "town_d": SEASONS}
+SEASONAL = {"far": ["winter"], "far_b": ["winter"], "near": ["winter"], "near_b": ["winter"], "hills": SEASONS, "town_a": SEASONS, "town_b": SEASONS, "town_c": SEASONS, "town_d": SEASONS}
 
 # Store sign fonts. Most are variable fonts (one file covers a range of weights).
 # Kaushan Script and Alegreya Sans Medium have one weight, so the weight value is
@@ -176,6 +176,26 @@ def near(p, season):
     return s + f'''<g fill="{p["snow"]}"><polygon points="180,470 130,495 150,492 165,502 182,492 200,502 230,495"/>
 <polygon points="500,420 448,455 470,450 488,462 506,450 526,462 545,455"/>
 <polygon points="1260,410 1203,445 1225,440 1242,452 1262,440 1284,452 1308,445"/></g>'''
+
+# Second far and near mountain tiles, so the mountains repeat half as often.
+# Their edge heights match the first tiles (470 for far, 560 for near), so the
+# tiles join without a seam in any order. There is no Table Mountain here.
+FAR_B_PTS = [(0,470),(150,410),(300,440),(470,350),(620,420),(780,330),(930,400),(1080,320),(1240,410),
+             (1400,360),(1560,430),(1700,370),(1820,420),(1920,470)]
+def far_b(p, season):
+    pts = " ".join(f"{x},{y}" for x, y in FAR_B_PTS)
+    s = f'<polygon fill="{p["far"]}" points="0,720 {pts} 1920,720"/>'
+    if season == "winter":
+        s += snow_caps(FAR_B_PTS, 0.4, p["snow"])
+    return s
+
+NEAR_B_PTS = [(0,560),(160,480),(330,530),(520,430),(700,540),(860,470),(1000,580),(1140,500),(1320,420),
+              (1500,530),(1660,450),(1800,510),(1920,560)]
+def near_b(p, season):
+    pts = " ".join(f"{x},{y}" for x, y in NEAR_B_PTS)
+    s = f'<polygon fill="{p["mid"]}" points="0,760 {pts} 1920,760"/>'
+    # Small snow caps on the highest peaks in other seasons, like the first tile
+    return s + snow_caps(NEAR_B_PTS, 0.5 if season == "winter" else 0.22, p["snow"])
 
 TREES = [(60,692),(110,686),(170,680),(240,672),(300,668),(620,662),(680,664),(740,658),
          (1300,668),(1360,682),(1420,692),(1700,724),(1780,724),(1860,714)]
@@ -679,7 +699,8 @@ def sky(p):
             f'<stop offset="0.62" stop-color="{p["horizon"]}"/></linearGradient></defs><rect width="8" height="1080" fill="url(#g)"/>')
 
 # Layer crops: name -> (function, y, height)
-CROPS = {"clouds": (clouds, 90, 255), "far": (far, 295, 425), "near": (near, 400, 360),
+CROPS = {"clouds": (clouds, 90, 255), "far": (far, 295, 425), "far_b": (far_b, 295, 425),
+         "near": (near, 400, 360), "near_b": (near_b, 400, 360),
          "hills": (hills, 600, 310), "town_a": (town, 550, 530), "town_b": (town_b, 550, 530),
          "town_c": (town_c, 550, 530),
          "town_d": (town_d, 550, 530)}
@@ -853,6 +874,8 @@ buggy = (f'<path d="M8,74 L8,62 Q10,54 22,52 L66,52 L70,58 L178,58 Q226,58 240,7
          f'<path d="M14,84 A38,38 0 0 1 90,84 L82,84 A30,30 0 0 0 22,84 Z" fill="{BGD}"/>'
          f'<path d="M160,84 A38,38 0 0 1 236,84 L228,84 A30,30 0 0 0 168,84 Z" fill="{BGD}"/>'
          f'<path d="M84,58 L92,22 L124,22 L128,58" stroke="#34495E" stroke-width="6" fill="none" stroke-linejoin="round"/>'
+         # Soft top from the roll bar forward to the top of the windshield
+         f'<path d="M86,24 Q90,14 100,14 L172,22 Q178,23 177,28 L90,26 Z" fill="#2F3E4C"/>'
          f'<rect x="112" y="36" width="12" height="22" rx="3" fill="#34495E"/>'
          f'<polygon points="158,58 168,30 174,30 166,58" fill="{GLASS}"/><line x1="166" y1="58" x2="176" y2="28" stroke="#34495E" stroke-width="3"/>'
          f'<rect x="4" y="54" width="18" height="16" rx="3" fill="#5B6770"/><rect x="0" y="66" width="10" height="4" rx="2" fill="#9CA6B1"/>'
@@ -877,7 +900,7 @@ def cat(body, dark, eyes, stripes=False):
         s += "".join(f'<line x1="{x}" y1="6.5" x2="{x}" y2="9" stroke="{dark}" stroke-width="1"/>' for x in (18.5, 20.5, 22.5))
     return f'<g transform="scale(2)">{s}</g>'
 save(cat("#22272B", "#22272B", "#F6C46A"), "0 0 60 64", 60, 64, "cat_black.png")
-save(cat("#8E979E", "#6E7A85", "#2ECC71"), "0 0 60 64", 60, 64, "cat_gray.png")
+save(cat("#8E979E", "#6E7A85", "#15181B"), "0 0 60 64", 60, 64, "cat_gray.png")
 save(cat("#9A6B42", "#2B2118", "#F6C46A", True), "0 0 60 64", 60, 64, "cat_tabby.png")
 
 def guinea_pig(body, spots):
@@ -981,7 +1004,10 @@ def preview(pal, season, clock, temp, cond, fx=None, x=1920, plane=None, pets=()
         body = fn(*args)
         return body + "".join(f'<g transform="translate({dx},0)">{body}</g>' for dx in (1920, 3840, 5760))
     # The full 7680 px street: town sections A, B, C, and D
-    strip = (four(clouds, p, season) + four(far, p, mtn) + four(near, p, mtn) + four(hills, p, season)
+    def ab(fn_a, fn_b, *args):
+        a, b = fn_a(*args), fn_b(*args)
+        return a + "".join(f'<g transform="translate({dx},0)">{body}</g>' for dx, body in ((1920, b), (3840, a), (5760, b)))
+    strip = (four(clouds, p, season) + ab(far, far_b, p, mtn) + ab(near, near_b, p, mtn) + four(hills, p, season)
              + town(p, season) + f'<g transform="translate(1920,0)">{town_b(p, season)}</g>'
              + f'<g transform="translate(3840,0)">{town_c(p, season)}</g>'
              + f'<g transform="translate(5760,0)">{town_d(p, season)}</g>')
