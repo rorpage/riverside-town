@@ -114,12 +114,14 @@ def clouds(p, season):
 <circle cx="1050" cy="150" r="30"/><circle cx="1100" cy="136" r="42"/><circle cx="1150" cy="150" r="32"/><rect x="1020" y="150" width="162" height="30" rx="15"/>
 <circle cx="1640" cy="300" r="34"/><circle cx="1695" cy="284" r="46"/><circle cx="1750" cy="300" r="34"/><rect x="1606" y="300" width="178" height="34" rx="17"/></g>'''
 
-def snow_caps(points, t, fill):
-    """Snow on every peak of a mountain outline. t is how far down each slope the snow reaches."""
+def snow_caps(points, t, fill, min_rise=30):
+    """Snow on every peak of a mountain outline. t is how far down each slope the
+    snow reaches. Peaks that rise less than min_rise pixels above a neighbor
+    point (small bumps such as Lion's Head) get no snow cap."""
     out = ""
     for i in range(1, len(points) - 1):
         (lx, ly), (px, py), (rx, ry) = points[i - 1], points[i], points[i + 1]
-        if py >= ly or py >= ry:
+        if ly - py < min_rise or ry - py < min_rise:
             continue
         ax, ay = px + (lx - px) * t, py + (ly - py) * t
         bx, by = px + (rx - px) * t, py + (ry - py) * t
@@ -130,22 +132,29 @@ def snow_caps(points, t, fill):
         out += f'<polygon points="{px},{py} {ax:.0f},{ay:.0f} {" ".join(zig)} {bx:.0f},{by:.0f}" fill="{fill}"/>'
     return out
 
-# The center mountain has a long flat top with steep cliffs at each end, in
-# the shape of Table Mountain in South Africa. The flat top points all have the
-# same y value, so snow_caps() does not treat them as peaks.
-TABLE_TOP = (764, 956, 310)   # left x, right x, y of the flat top
-FAR_PTS = [(0,470),(140,400),(260,450),(420,330),(560,430),(700,380),(730,356),(744,340),(752,318),
-           (TABLE_TOP[0],TABLE_TOP[2]),(TABLE_TOP[1],TABLE_TOP[2]),(968,320),(976,348),(990,372),(1000,410),
-           (1160,350),(1320,430),(1480,320),(1640,400),(1780,360),(1920,470)]
+# The center mountains are shaped like Table Mountain in South Africa, seen
+# from the city: a gentle slope up to a rocky peak (Devil's Peak), the long
+# flat top with steep cliffs at each end, a dip, and a smaller pointed peak
+# (Lion's Head). The flat top points all have the same y value, so
+# snow_caps() does not treat them as peaks.
+TABLE_TOP = (776, 1010, 310)   # left x, right x, y of the flat top
+FAR_PTS = [(0,470),(140,400),(260,450),(420,330),(560,430),
+           # Devil's Peak
+           (640,404),(700,382),(718,362),(730,350),(742,344),(752,350),(760,347),
+           # Left cliff, flat top, right cliff
+           (766,324),(772,313),(TABLE_TOP[0],TABLE_TOP[2]),(TABLE_TOP[1],TABLE_TOP[2]),(1016,316),(1024,344),(1034,360),
+           # The dip, then Lion's Head
+           (1060,372),(1090,380),(1112,377),(1132,358),(1148,336),(1162,326),(1174,342),(1200,372),(1250,400),
+           (1320,430),(1480,320),(1640,400),(1780,360),(1920,470)]
 def far(p, season):
     pts = " ".join(f"{x},{y}" for x, y in FAR_PTS)
     s = f'<polygon fill="{p["far"]}" points="0,720 {pts} 1920,720"/>'
     if season == "winter":
         s += snow_caps(FAR_PTS, 0.4, p["snow"])
-        # Snow along the flat top and down the top of each cliff
+        # Snow along the flat top and over the top of each cliff
         l, r, y = TABLE_TOP
         zig = " ".join(f"{x},{y + (12 if i % 2 else 7)}" for i, x in enumerate(range(r - 16, l + 16, -24)))
-        s += f'<polygon points="752,318 {l},{y} {r},{y} 968,320 962,330 {zig} 758,328" fill="{p["snow"]}"/>'
+        s += f'<polygon points="{l - 8},{y + 6} {l},{y} {r},{y} {r + 8},{y + 8} {r + 2},{y + 14} {zig} {l - 2},{y + 14}" fill="{p["snow"]}"/>'
     return s
 
 NEAR_PTS = [(0,560),(180,470),(320,540),(500,420),(680,560),(820,500),(960,600),(1080,520),(1260,410),(1440,540),(1600,460),(1760,520),(1920,560)]
