@@ -56,7 +56,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   | Spring | March 20 to June 20 | Light green hills, trees with pink blossoms, flower boxes under house windows, falling petals |
   | Summer | June 21 to September 21 | Green hills and trees, fireflies at night |
   | Fall | September 22 to December 20 | Gold hills, orange and red trees, pumpkins by doors, leaves on the sidewalk, falling leaves |
-  | Winter | December 21 to March 19 | Snow on the hills, mountains, roofs, sidewalk, and pine trees, bare trees, a snowbank along the curb, a frozen river |
+  | Winter | December 21 to March 19 | Snow on the hills, mountains, roofs, sidewalk, and pine trees, bare trees, a frozen river |
 
   The dates are close to the equinoxes and solstices, which move by a day or so from year to year. Pine trees stay green all year.
 - Weather effects from the current weather:

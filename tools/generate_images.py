@@ -245,10 +245,6 @@ def street(p, season):
     s = (f'<rect x="0" y="900" width="1920" height="36" fill="{walk}"/><rect x="0" y="936" width="1920" height="6" fill="{p["curb"]}"/>'
          f'<rect x="0" y="942" width="1920" height="138" fill="{p["road"]}"/>'
          f'<path d="M0,1011 L1920,1011" stroke="{p["roadLine"]}" stroke-width="6" stroke-dasharray="60 36" fill="none"/>')
-    if season == "winter":
-        # A bank of plowed snow along the curb. The bumps are 24 px apart, which
-        # divides 1920 evenly, so the half bumps at x=0 and x=1920 join up.
-        s += "".join(f'<circle cx="{x}" cy="938" r="9" fill="{p["snow"]}"/>' for x in range(0, 1921, 24))
     if season == "fall":
         # Fallen leaves on the sidewalk
         rnd = random.Random(11)
