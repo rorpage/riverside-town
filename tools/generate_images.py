@@ -464,9 +464,10 @@ save('<defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0.3
 
 # Cessna airplane for the sky. It is drawn at twice the size it is shown
 # (112x44 for a 56x22 poster) so its edges stay smooth. left=True draws it
-# facing left. A plane shows its left wingtip light (red) when it flies to the
-# right and its right wingtip light (green) when it flies to the left, so the
-# left image is drawn again instead of mirrored. The lights show at dusk and
+# facing left. Planes have a red light on the left wingtip and a green light on
+# the right wingtip. A plane flying to the right shows its right side to the
+# viewer, so the near light is green; flying to the left, it is red. For this
+# reason the left image is drawn again instead of mirrored. The lights show at dusk and
 # night. The white strobe on the tail is a separate image that blinks.
 def cessna(pal, left):
     p = P[pal]
@@ -482,7 +483,7 @@ def cessna(pal, left):
          f'<circle cx="72" cy="38" r="3" fill="#1F2A33"/><circle cx="97" cy="38" r="3" fill="#1F2A33"/>'
          '<ellipse cx="108" cy="24" rx="1.5" ry="10" fill="#9DB6C9" fill-opacity="0.6"/>')
     if pal != "day":
-        light = "#2ECC71" if left else "#E74C3C"
+        light = "#E74C3C" if left else "#2ECC71"
         s += f'<circle cx="48" cy="16" r="3" fill="{light}"/><circle cx="48" cy="16" r="6" fill="{light}" fill-opacity="0.3"/>'
     if left:
         s = f'<g transform="translate(112,0) scale(-1,1)">{s}</g>'
