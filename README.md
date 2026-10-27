@@ -2,6 +2,24 @@
 
 A Roku screensaver inspired by Roku City. It shows a small town beside a river with mountains behind it. The scenery scrolls in layers at different speeds (parallax), cars drive along the street, and a panel shows the time, the temperature, and the current weather.
 
+![Riverside Town on a summer day: a church, a gas station with a parked van, and the Hill Valley Courthouse Mall, with cars on the street and the clock and weather panel at the top left](docs/preview.png)
+
+## Seasons
+
+| Spring | Summer |
+|---|---|
+| ![Spring: light green hills, blossom trees, and falling petals](docs/preview_spring.png) | ![Summer: green hills and trees](docs/preview_summer.png) |
+| **Fall** | **Winter** |
+| ![Fall: gold hills, orange trees, pumpkins, and falling leaves](docs/preview_fall.png) | ![Winter: snow on the hills, roofs, and sidewalk, and bare trees](docs/preview_winter.png) |
+
+## Day, dusk, and night
+
+| Day | Dusk | Night |
+|---|---|---|
+| ![The shops on a summer day](docs/preview_day.png) | ![The shops at dusk, with lit windows](docs/preview_dusk.png) | ![The shops at night, with stars, the moon, and fireflies](docs/preview_night.png) |
+
+These images are drawn by `tools/generate_images.py` from the same artwork the screensaver uses.
+
 ## Features
 
 - Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street.
@@ -44,6 +62,7 @@ components/WeatherTask.brs  Calls the Open-Meteo API
 images/                     All artwork as PNG files
 tools/generate_images.py    Draws every image in images/
 tools/fonts/                Store sign fonts and their licenses (used only by the generator)
+docs/                       Preview images for this README (not part of the Roku zip)
 ```
 
 ## Installing on a Roku
@@ -115,7 +134,7 @@ Store sign fonts:
 
 These fonts are from [Google Fonts](https://fonts.google.com/). All of them except Kaushan Script and Alegreya Sans are variable fonts: one file covers a range of weights, and the generator picks the weight for each sign. Kaushan Script has only one weight, and only the Medium weight of Alegreya Sans is included. They are licensed under the SIL Open Font License; the license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
 
-This writes every PNG into `images/`, including the mirrored car images used by the far lane. It also writes full-scene previews for day and night into `build/`, which git ignores. There is one preview for each season, for day and night, and for each town section (`_a` and `_b`). The summer `_b` previews include a parked car so its position can be checked.
+This writes every PNG into `images/`, including the mirrored car images used by the far lane. It also writes the preview images for this README into `docs/`. Finally, it writes full-scene previews into `build/`, which git ignores: one for each season, for day and night, and for each town section (`_a` and `_b`). The summer `_b` previews in `build/` include a parked car so its position can be checked.
 
 Notes on the image sizes:
 

@@ -5,7 +5,7 @@ Run from the repository root:
 
 Requires: pip install cairosvg pillow fonttools
 """
-import cairosvg, math, random, os
+import cairosvg, io, math, random, os
 from PIL import Image, ImageOps
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -552,5 +552,89 @@ def park_preview(pal, name, w, h, wheels, r, bottom):
     im.save(path)
 park_preview("day", "van", 310, 130, [(66, 104), (246, 104)], 24, 128)
 park_preview("night", "sedan", 280, 104, [(62, 80), (218, 80)], 22, 102)
+
+# ---------- README previews ----------
+# Images for README.md, written to docs/. Each shows a 1920 px wide part of the
+# 3840 px street, starting at x (0 is town section A, 1920 is section B), with
+# the clock panel and a few cars, so it looks like the real screen. docs/ is not part of
+# the Roku zip. The car sizes copy m.carDefs in components/MainScene.brs.
+DOCS = os.path.join(ROOT, "docs")
+os.makedirs(DOCS, exist_ok=True)
+CARS = {"sedan": (280, 104, [(62, 80), (218, 80)], 22, 102), "van": (310, 130, [(66, 104), (246, 104)], 24, 128),
+        "jeep": (270, 140, [(68, 108), (214, 108)], 28, 136), "truck": (300, 130, [(70, 104), (238, 104)], 24, 128),
+        "sports": (304, 104, [(64, 84), (234, 84)], 18, 102)}
+
+def car_sprite(name, left):
+    w, h, wheels, r, bottom = CARS[name]
+    car = Image.new("RGBA", (w, h))
+    car.alpha_composite(Image.open(os.path.join(OUT, f"car_{name}{'_left' if left else ''}.png")).convert("RGBA"))
+    wheel = Image.open(os.path.join(OUT, "wheel.png")).convert("RGBA").resize((r * 2, r * 2), Image.LANCZOS)
+    for wx, wy in wheels:
+        car.alpha_composite(wheel, ((w - wx if left else wx) - r, wy - r))
+    return car, bottom
+
+def paste_car(im, name, x, ground, scale, left=False):
+    car, bottom = car_sprite(name, left)
+    car = car.resize((round(car.width * scale), round(car.height * scale)), Image.LANCZOS)
+    im.alpha_composite(car, (round(x), round(ground - bottom * scale)))
+
+def panel(clock, temp, cond, px):
+    """The clock and weather panel, drawn like the info group in MainScene.xml.
+    px is its left edge, one of the x values in m.infoSpots."""
+    big = text_width(clock, "hanken", 700, 54)
+    tw = text_width(temp, "hanken", 700, 54)
+    cw = text_width(cond, "hanken", 400, 30)
+    return (f'<rect x="{px}" y="60" width="580" height="150" fill="#34495E" fill-opacity="0.5"/>'
+            + text(clock, "hanken", 700, 54, px + 28 + big / 2, 134, "#F8FAFC")
+            + text(temp, "hanken", 700, 54, px + 552 - tw / 2, 134, "#F8FAFC")
+            + text(cond, "hanken", 400, 30, px + 28 + cw / 2, 184, "#ECEFF3"))
+
+def preview(pal, season, clock, temp, cond, fx=None, x=1920):
+    p = season_palette(pal, season)
+    mtn = season if season == "winter" else "summer"
+    def twice(fn, *args):
+        body = fn(*args)
+        return body + f'<g transform="translate(1920,0)">{body}</g>'
+    strip = (twice(clouds, p, season) + twice(far, p, mtn) + twice(near, p, mtn) + twice(hills, p, season)
+             + town(p, season) + f'<g transform="translate(1920,0)">{town_b(p, season)}</g>')
+    # The sky, stars, and sun or moon, placed like applyScene() in MainScene.brs,
+    # with the scenery on top
+    sky_im = Image.new("RGBA", (1920, 1080))
+    stars_im = Image.open(os.path.join(OUT, "stars.png")).convert("RGBA")
+    if pal != "day":
+        if pal == "dusk":
+            stars_im.putalpha(stars_im.getchannel("A").point(lambda v: v * 0.35))
+        sky_im.alpha_composite(stars_im, (0, 0))
+    body, pos = ("moon.png", (310, 100)) if pal == "night" else ("sun.png", (1430, 150) if pal == "day" else (1390, 400))
+    sky_im.alpha_composite(Image.open(os.path.join(OUT, body)).convert("RGBA"), pos)
+    back = Image.open(os.path.join(OUT, f"sky_{pal}.png")).convert("RGBA").resize((1920, 1080))
+    back.alpha_composite(sky_im)
+    scenery = Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg(strip, "0 0 3840 1080", 3840, 1080).encode()))).convert("RGBA")
+    back.alpha_composite(scenery.crop((x, 0, x + 1920, 1080)))
+    im = back
+    if season == "summer" and pal == "night":
+        im.alpha_composite(Image.open(os.path.join(OUT, "fireflies_a.png")).convert("RGBA").resize((1920, 400)), (0, 540))
+    # Cars: one parked at the gas station (if it is in view), one in each lane
+    if x > 1000:
+        paste_car(im, "van", 1920 + 780 - x - 310 * 0.78 / 2, 898, 0.78)
+    paste_car(im, "truck", 1150, 1002, 0.86, left=True)
+    paste_car(im, "sports", 420, 1072, 1.0)
+    if fx:
+        im.alpha_composite(Image.open(os.path.join(OUT, f"{fx}.png")).convert("RGBA").resize((1920, 1080)))
+    # At night the panel uses its middle position so it does not cover the moon
+    px = 670 if pal == "night" else 80
+    pan = Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg(panel(clock, temp, cond, px), "0 0 1920 1080", 1920, 1080).encode()))).convert("RGBA")
+    im.alpha_composite(pan)
+    return im.convert("RGB")
+
+def save_doc(im, name, width):
+    im.resize((width, width * 9 // 16), Image.LANCZOS).save(os.path.join(DOCS, name), optimize=True)
+
+save_doc(preview("day", "summer", "10:04 AM", "84\u00b0F", "Clear"), "preview.png", 1280)
+for season, temp, cond, fx in (("spring", "62\u00b0F", "Partly cloudy", "petals"), ("summer", "84\u00b0F", "Clear", None),
+                               ("fall", "55\u00b0F", "Mostly clear", "leaves"), ("winter", "28\u00b0F", "Overcast", None)):
+    save_doc(preview("day", season, "10:04 AM", temp, cond, fx), f"preview_{season}.png", 640)
+for pal, clock in (("day", "10:04 AM"), ("dusk", "7:12 PM"), ("night", "10:42 PM")):
+    save_doc(preview(pal, "summer", clock, "78\u00b0F", "Clear", x=0), f"preview_{pal}.png", 640)
 
 print("Wrote", len(os.listdir(OUT)), "images to", OUT)
