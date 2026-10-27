@@ -335,8 +335,8 @@ save(truck, "0 0 300 130", 300, 130, "car_truck.png")
 SP, SPD, CHROME = "#2C6BB3", "#16294A", "#C9D2DA"
 # The roof peak is toward the back and the windshield is long and low, so the
 # front (right side) is easy to see. The hood is lower than the rear deck.
-# The body is moved down 10 px so it sits close to the ground.
-sports = ('<g transform="translate(0,10)">'
+# The body is moved down 16 px so it sits close to the ground.
+sports = ('<g transform="translate(0,16)">'
           f'<path fill="{SP}" d="M8,72 L8,46 Q10,40 24,38 L84,36 Q108,22 142,20 Q170,20 196,30 L252,46 L284,52 Q296,55 296,64 L296,72 Q296,80 288,80 L16,80 Q8,80 8,72 Z"/>'
           f'<path fill="{SPD}" d="M134,21 Q170,20 196,30 L252,46 L284,52 Q296,55 296,64 L296,72 Q296,80 288,80 L160,80 Q132,80 130,60 Q128,38 134,21 Z"/>'
           f'<path fill="{GLASS}" d="M100,38 Q120,27 142,26 Q166,26 192,34 L236,47 L104,44 Z"/>'
