@@ -4,7 +4,7 @@ Notes for AI coding agents working on this repository. Read this before making c
 
 ## Project summary
 
-Riverside Town is a Roku screensaver written in BrightScript with SceneGraph. It shows a town beside a river with mountains behind it. Five scenery layers scroll at different speeds (parallax), five cars drive in two lanes, and a panel shows the time, temperature, and weather from the Open-Meteo API. The scene switches between day, dusk, and night palettes based on the real sunrise and sunset times.
+Riverside Town is a Roku screensaver written in BrightScript with SceneGraph. It shows a town beside a river with mountains behind it. Five scenery layers scroll at different speeds (parallax), five cars drive in two lanes, and a panel shows the time, temperature, and weather from the Open-Meteo API. The scene switches between day, dusk, and night palettes based on the real sunrise and sunset times, and between four seasons based on the date.
 
 ## Writing rules
 
@@ -32,18 +32,29 @@ These apply to code, comments, commit messages, README.md, and this file.
 - Each layer is cropped to a horizontal band to save texture memory. The crop values in `CROPS` in the generator must match the `translation` and `height` of the matching strip in `components/MainScene.xml`.
 - Layers must overlap with no gaps. A lower layer must reach below the top edge of the layer in front of it at every x position, or the sky shows through.
 - The top of the river must start below the top edge of the hills, or it sticks up into the mountains.
+- The center far mountains are shaped like Table Mountain seen from Cape Town, based on a silhouette reference from the owner: Devil's Peak on the left, the flat top with steep cliffs, a dip, and Lion's Head on the right. All points on the flat top (`TABLE_TOP` in the generator) must have the same y value, so `snow_caps()` does not treat them as a peak; `far()` draws a flat snow band there in winter instead. `snow_caps()` skips peaks that rise less than `min_rise` (30 pixels) above a neighbor point, so small bumps such as Devil's Peak and Lion's Head get no snow cap.
 - The sky is an 8 pixel wide gradient stretched to 1920 pixels. Keep it narrow.
 - The town crop starts at y=550 so the church cross and the courthouse clock tower fit. If anything in the town is drawn above y=550, it is cut off.
 - Store sign text is drawn with `text()` in the generator, which converts letters to shapes using the fonts in `tools/fonts`. It works with variable fonts and with fonts that have one weight. Do not use SVG `<text>` elements, because they depend on the fonts installed on the computer that runs the generator. To add a font, put the `.ttf` file and its license in `tools/fonts` and add it to `FONTS`. Only use fonts with a license that allows this, such as the SIL Open Font License. Write non-ASCII letters as Python escapes (for example, `"Luke\u2019s"`).
+- The generator also writes the README preview images in `docs/`. They are committed. Run the generator after any art change so they stay current. `CARS` in the generator copies `m.carDefs` and must be kept the same. The preview panel copies the `info` group in `components/MainScene.xml`.
 - The car parked at the gas station is not part of the town image. `parkCar()` in `components/MainScene.brs` adds it to `townStrip` when the screensaver starts. If the gas station moves in the generator, update the position in `parkCar()` and in `park_preview()` in the generator.
 - Car images do not include the wheels. Wheels are a separate image so they can spin. If a car's size or wheel positions change in the generator, update the matching entry in `m.carDefs` in `components/MainScene.brs` (`w`, `h`, `wheels`, `r`, and `bottom`).
+
+## Seasons
+
+- `currentSeason()` in `components/MainScene.brs` picks the season from fixed dates: spring from March 20, summer from June 21, fall from September 22, and winter from December 21. `m.seasonOverride` forces one season.
+- Season colors are in `SEASON_COLORS` in the generator. Write only the day color. `season_palette()` makes the dusk and night colors by darkening the day color the same way the summer palette darkens that key. New keys that are not in `P` must be added to `SEASON_BASE_KEY` so they darken like an existing key.
+- Every scenery layer function takes `(p, season)`. Seasonal details (snow on roofs, pumpkins, flower boxes) use helpers such as `snow_flat()`, `snow_ridge()`, `pumpkins()`, and `flower_box()`, which return an empty string in other seasons.
+- `SEASONAL` in the generator and `m.seasonalLayers` in `components/MainScene.brs` must list the same layers and seasons. Otherwise the scene asks for an image that does not exist.
+- While snow is falling, `applyScene()` uses the winter images in any season. Falling leaves, petals, and fireflies are hidden while rain or snow is falling.
+- The winter snowbank bumps along the curb are 24 pixels apart, which divides 1920 evenly. Keep any repeating pattern on the street at a spacing that divides 1920.
 
 ## Scene behavior to keep consistent
 
 - `m.cameraSpeed` must equal the `town` value in `m.layerSpeeds`. A car's on-screen speed is its `ground` speed minus the camera speed in the near lane (moving right) and plus the camera speed in the far lane (moving left).
 - Car ground speeds are ordered on purpose: the sports car fastest by a clear amount, then the sedan, then the van and Jeep, then the old truck slowest. Keep that order unless the owner asks for a change.
 - Only one car uses a lane at a time so that faster cars never overlap slower ones.
-- The clock panel moves between the positions in `m.infoSpots` to protect TVs from burn-in. Keep each position fully on screen for the current panel width (580 pixels).
+- The clock panel stays in the top-right corner and the sun and moon stay in the top-left corner, as the owner asked. The panel moves between the positions in `m.infoSpots`, which are small moves within the top-right corner, to protect TVs from burn-in. Keep each position fully on screen for the current panel width (580 pixels) and height (150 pixels), and away from the sun and moon positions in `applyScene()`. The README previews copy these positions in `preview()` in the generator.
 
 ## Packaging
 
