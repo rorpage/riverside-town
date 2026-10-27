@@ -497,7 +497,11 @@ def town_c(p, season):
     s += f'<ellipse cx="{qx}" cy="{qy + 4}" rx="6" ry="5" fill="#F8FAFC"/>'
     for dx, dy in ((-7, -4), (-2.5, -8), (2.5, -8), (7, -4)):
         s += f'<ellipse cx="{qx + dx}" cy="{qy + dy}" rx="2.2" ry="3" fill="#F8FAFC"/>'
-    base = wy + wh - 4   # The animals and the bowl sit on the bottom of the window
+    # A small table across the window. The fish bowl and the animals sit on it.
+    base = wy + wh - 12
+    s += (f'<rect x="{wx + 4}" y="{base}" width="{ww - 8}" height="4" rx="1" fill="#8C5A3C"/>'
+          f'<rect x="{wx + 10}" y="{base + 4}" width="4" height="{wy + wh - base - 4}" fill="#6B4A3A"/>'
+          f'<rect x="{wx + ww - 14}" y="{base + 4}" width="4" height="{wy + wh - base - 4}" fill="#6B4A3A"/>')
     fx, fy = wx + 18, base - 14
     s += (f'<circle cx="{fx}" cy="{fy}" r="13" fill="#A9D4EC" fill-opacity="0.9"/><rect x="{fx - 8}" y="{fy - 15}" width="16" height="4" rx="2" fill="#A9D4EC"/>'
           f'<ellipse cx="{fx - 1}" cy="{fy + 1}" rx="5" ry="3" fill="#E8913A"/><polygon points="{fx + 3},{fy + 1} {fx + 8},{fy - 2} {fx + 8},{fy + 4}" fill="#E8913A"/>')
