@@ -53,7 +53,7 @@ These apply to code, comments, commit messages, README.md, and this file.
 - `m.cameraSpeed` must equal the `town` value in `m.layerSpeeds`. A car's on-screen speed is its `ground` speed minus the camera speed in the near lane (moving right) and plus the camera speed in the far lane (moving left).
 - Car ground speeds are ordered on purpose: the sports car fastest by a clear amount, then the sedan, then the van and Jeep, then the old truck slowest. Keep that order unless the owner asks for a change.
 - Only one car uses a lane at a time so that faster cars never overlap slower ones.
-- The clock panel moves between the positions in `m.infoSpots` to protect TVs from burn-in. Keep each position fully on screen for the current panel width (580 pixels).
+- The clock panel stays in the top-right corner and the sun and moon stay in the top-left corner, as the owner asked. The panel moves between the positions in `m.infoSpots`, which are small moves within the top-right corner, to protect TVs from burn-in. Keep each position fully on screen for the current panel width (580 pixels) and height (150 pixels), and away from the sun and moon positions in `applyScene()`. The README previews copy these positions in `preview()` in the generator.
 
 ## Packaging
 

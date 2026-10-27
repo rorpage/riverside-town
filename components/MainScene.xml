@@ -75,7 +75,7 @@
     <Rectangle id="flash" width="1920" height="1080" color="0xFFFFFFFF" opacity="0" />
 
     <!-- Clock and weather panel -->
-    <Group id="info" translation="[80,60]">
+    <Group id="info" translation="[1260,60]">
       <Rectangle width="580" height="150" color="0x34495E80" />
       <Label id="clockLabel" translation="[28,20]" width="340" height="70" vertAlign="center" color="0xF8FAFCFF">
         <Font role="font" uri="font:BoldSystemFontFile" size="54" />

@@ -48,8 +48,10 @@ sub init()
     allSeasons = ["spring", "summer", "fall", "winter"]
     m.seasonalLayers = { far: ["winter"], near: ["winter"], hills: allSeasons, town_a: allSeasons, town_b: allSeasons }
 
-    ' Positions for the clock panel. It moves every few minutes to protect TVs from burn-in.
-    m.infoSpots = [[80, 60], [1260, 60], [670, 60]]
+    ' Positions for the clock panel. It stays in the top-right corner and moves a
+    ' small amount every few minutes to protect TVs from burn-in. The sun and
+    ' moon stay in the top-left corner, so the panel never covers them.
+    m.infoSpots = [[1260, 60], [1230, 80], [1245, 45]]
     m.infoIndex = 0
 
     ' ---------- Node references ----------
@@ -191,15 +193,15 @@ sub applyScene()
     if period = "day"
         m.stars.opacity = 0
         m.sun.uri = "pkg:/images/sun.png"
-        m.sun.translation = [1430, 150]
+        m.sun.translation = [150, 110]
     else if period = "dusk"
         m.stars.opacity = 0.35
         m.sun.uri = "pkg:/images/sun.png"
-        m.sun.translation = [1390, 400]
+        m.sun.translation = [180, 340]
     else
         m.stars.opacity = 1
         m.sun.uri = "pkg:/images/moon.png"
-        m.sun.translation = [310, 100]
+        m.sun.translation = [150, 100]
     end if
 end sub
 

@@ -2,7 +2,7 @@
 
 A Roku screensaver inspired by Roku City. It shows a small town beside a river with mountains behind it. The scenery scrolls in layers at different speeds (parallax), cars drive along the street, and a panel shows the time, the temperature, and the current weather.
 
-![Riverside Town on a summer day: a church, a gas station with a parked van, and the Hill Valley Courthouse Mall, with cars on the street and the clock and weather panel at the top left](docs/preview.png)
+![Riverside Town on a summer day: a church, a gas station with a parked van, and the Hill Valley Courthouse Mall, with cars on the street and the clock and weather panel at the top right](docs/preview.png)
 
 ## Seasons
 
@@ -47,7 +47,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   - Thunderstorms: rain and lightning flashes at random times.
 
   Falling leaves, petals, and fireflies are hidden while rain or snow is falling.
-- A clock and weather panel that moves to a new position every 5 minutes to protect TVs from burn-in.
+- A clock and weather panel in the top-right corner. Every 5 minutes it moves a small amount within the corner to protect TVs from burn-in. The sun and moon are in the top-left corner, so the panel never covers them.
 
 ## Project layout
 
@@ -97,7 +97,7 @@ All settings are at the top of `init()` in `components/MainScene.brs`.
 | `m.layerWidths` | Width of each scenery layer before it repeats. The town is 3840 because it is two different 1920 pixel sections. |
 | `m.cameraSpeed` | Must match the `town` layer speed. Cars use it so their speed looks correct relative to the street. |
 | `m.carDefs` | Each car's image size, wheel positions, wheel radius, and `ground` speed in pixels per second. |
-| `m.infoSpots` | The positions the clock panel moves between. |
+| `m.infoSpots` | The positions the clock panel moves between. They are all in the top-right corner. |
 | `m.seasonOverride` | Set to `"spring"`, `"summer"`, `"fall"`, or `"winter"` to always show that season, for example to preview it. Leave it as `""` to choose the season from the date. |
 | `m.seasonalLayers` | Which scenery layers have a different image for some seasons. It must match `SEASONAL` in `tools/generate_images.py`. |
 

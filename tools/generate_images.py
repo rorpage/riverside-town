@@ -516,7 +516,7 @@ def composite(pal, tile="a", season="summer"):
     townFn = town if tile == "a" else town_b
     mtn = season if season == "winter" else "summer"
     full = (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/><stop offset="0.62" stop-color="{p["horizon"]}"/></linearGradient></defs>'
-            f'<rect width="1920" height="1080" fill="url(#g)"/><circle cx="1500" cy="220" r="64" fill="{ACCENT}"/>'
+            f'<rect width="1920" height="1080" fill="url(#g)"/><circle cx="220" cy="180" r="64" fill="{ACCENT}"/>'
             + clouds(p, season) + far(p, mtn) + near(p, mtn) + hills(p, season) + townFn(p, season))
     path = os.path.join(BUILD, f"composite_{season}_{pal}_{tile}.png")
     cairosvg.svg2png(bytestring=svg(full, "0 0 1920 1080", 1920, 1080).encode(), write_to=path)
@@ -605,7 +605,7 @@ def preview(pal, season, clock, temp, cond, fx=None, x=1920):
         if pal == "dusk":
             stars_im.putalpha(stars_im.getchannel("A").point(lambda v: v * 0.35))
         sky_im.alpha_composite(stars_im, (0, 0))
-    body, pos = ("moon.png", (310, 100)) if pal == "night" else ("sun.png", (1430, 150) if pal == "day" else (1390, 400))
+    body, pos = ("moon.png", (150, 100)) if pal == "night" else ("sun.png", (150, 110) if pal == "day" else (180, 340))
     sky_im.alpha_composite(Image.open(os.path.join(OUT, body)).convert("RGBA"), pos)
     back = Image.open(os.path.join(OUT, f"sky_{pal}.png")).convert("RGBA").resize((1920, 1080))
     back.alpha_composite(sky_im)
@@ -621,8 +621,8 @@ def preview(pal, season, clock, temp, cond, fx=None, x=1920):
     paste_car(im, "sports", 420, 1072, 1.0)
     if fx:
         im.alpha_composite(Image.open(os.path.join(OUT, f"{fx}.png")).convert("RGBA").resize((1920, 1080)))
-    # At night the panel uses its middle position so it does not cover the moon
-    px = 670 if pal == "night" else 80
+    # The panel's first position in m.infoSpots
+    px = 1260
     pan = Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg(panel(clock, temp, cond, px), "0 0 1920 1080", 1920, 1080).encode()))).convert("RGBA")
     im.alpha_composite(pan)
     return im.convert("RGB")
