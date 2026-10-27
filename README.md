@@ -18,6 +18,14 @@ A Roku screensaver inspired by Roku City. It shows a small town beside a river w
 |---|---|---|
 | ![The shops on a summer day](docs/preview_day.png) | ![The shops at dusk, with lit windows](docs/preview_dusk.png) | ![The shops at night, with stars, the moon, and fireflies](docs/preview_night.png) |
 
+## The third block
+
+![Town section C on a summer day: five houses, Cabana's ice cream shop, an art supply store, a photography store, a pet shop, and Mama BreeBree's Italian restaurant](docs/preview_section_c.png)
+
+| Fall night | Winter day |
+|---|---|
+| ![Section C on a fall night, with lit windows, pumpkins, and falling leaves](docs/preview_section_c_fall_night.png) | ![Section C on a winter day, with snow on the roofs, awnings, and sidewalk](docs/preview_section_c_winter.png) |
+
 These images are drawn by `tools/generate_images.py` from the same artwork the screensaver uses.
 
 ## Features

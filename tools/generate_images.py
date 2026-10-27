@@ -795,11 +795,13 @@ def preview(pal, season, clock, temp, cond, fx=None, x=1920, plane=None):
     """plane is the (x, y) of an airplane to draw, or None."""
     p = season_palette(pal, season)
     mtn = season if season == "winter" else "summer"
-    def twice(fn, *args):
+    def thrice(fn, *args):
         body = fn(*args)
-        return body + f'<g transform="translate(1920,0)">{body}</g>'
-    strip = (twice(clouds, p, season) + twice(far, p, mtn) + twice(near, p, mtn) + twice(hills, p, season)
-             + town(p, season) + f'<g transform="translate(1920,0)">{town_b(p, season)}</g>')
+        return body + "".join(f'<g transform="translate({dx},0)">{body}</g>' for dx in (1920, 3840))
+    # The full 5760 px street: town sections A, B, and C
+    strip = (thrice(clouds, p, season) + thrice(far, p, mtn) + thrice(near, p, mtn) + thrice(hills, p, season)
+             + town(p, season) + f'<g transform="translate(1920,0)">{town_b(p, season)}</g>'
+             + f'<g transform="translate(3840,0)">{town_c(p, season)}</g>')
     # The sky, stars, and sun or moon, placed like applyScene() in MainScene.brs,
     # with the scenery on top
     sky_im = Image.new("RGBA", (1920, 1080))
@@ -812,7 +814,7 @@ def preview(pal, season, clock, temp, cond, fx=None, x=1920, plane=None):
     sky_im.alpha_composite(Image.open(os.path.join(OUT, body)).convert("RGBA"), pos)
     back = Image.open(os.path.join(OUT, f"sky_{pal}.png")).convert("RGBA").resize((1920, 1080))
     back.alpha_composite(sky_im)
-    scenery = Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg(strip, "0 0 3840 1080", 3840, 1080).encode()))).convert("RGBA")
+    scenery = Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg(strip, "0 0 5760 1080", 5760, 1080).encode()))).convert("RGBA")
     back.alpha_composite(scenery.crop((x, 0, x + 1920, 1080)))
     im = back
     if season == "summer" and pal == "night":
@@ -820,7 +822,7 @@ def preview(pal, season, clock, temp, cond, fx=None, x=1920, plane=None):
     if plane:
         im.alpha_composite(Image.open(os.path.join(OUT, f"plane_{pal}.png")).convert("RGBA").resize((56, 22), Image.LANCZOS), plane)
     # Cars: one parked at the gas station (if it is in view), one in each lane
-    if x > 1000:
+    if 1920 - 600 < x < 3840:
         paste_car(im, "van", 1920 + 780 - x - 310 * 0.78 / 2, 898, 0.78)
     paste_car(im, "truck", 1150, 1002, 0.86, left=True)
     paste_car(im, "sports", 420, 1072, 1.0)
@@ -841,5 +843,9 @@ for season, temp, cond, fx in (("spring", "62\u00b0F", "Partly cloudy", "petals"
     save_doc(preview("day", season, "10:04 AM", temp, cond, fx), f"preview_{season}.png", 640)
 for pal, clock in (("day", "10:04 AM"), ("dusk", "7:12 PM"), ("night", "10:42 PM")):
     save_doc(preview(pal, "summer", clock, "78\u00b0F", "Clear", x=0), f"preview_{pal}.png", 640)
+# Town section C (the houses, Cabana's, and the other shops on the third block)
+save_doc(preview("day", "summer", "10:04 AM", "84\u00b0F", "Clear", x=3840), "preview_section_c.png", 1280)
+save_doc(preview("night", "fall", "10:42 PM", "48\u00b0F", "Clear", "leaves", x=3840), "preview_section_c_fall_night.png", 640)
+save_doc(preview("day", "winter", "10:04 AM", "28\u00b0F", "Overcast", x=3840), "preview_section_c_winter.png", 640)
 
 print("Wrote", len(os.listdir(OUT)), "images to", OUT)
