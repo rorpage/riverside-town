@@ -38,14 +38,15 @@
         <Poster id="hills2" width="1920" height="310" translation="[1920,0]" />
       </Group>
     </Group>
-    <!-- The town is three different tiles, A, B, then C, so it holds A, B, C, A and slides left by 5760 px.
+    <!-- The town is four different tiles, A, B, C, then D, so it holds A, B, C, D, A and slides left by 7680 px.
          MainScene.brs adds the car parked at the gas station in tile B to townStrip. -->
     <Group translation="[0,550]">
       <Group id="townStrip">
         <Poster id="townA1" width="1920" height="530" />
         <Poster id="townB" width="1920" height="530" translation="[1920,0]" />
         <Poster id="townC" width="1920" height="530" translation="[3840,0]" />
-        <Poster id="townA2" width="1920" height="530" translation="[5760,0]" />
+        <Poster id="townD" width="1920" height="530" translation="[5760,0]" />
+        <Poster id="townA2" width="1920" height="530" translation="[7680,0]" />
       </Group>
     </Group>
 
@@ -108,7 +109,7 @@
       <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="hillsStrip.translation" />
     </Animation>
     <Animation id="townAnim" repeat="true" easeFunction="linear">
-      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-5760,0]]" fieldToInterp="townStrip.translation" />
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-7680,0]]" fieldToInterp="townStrip.translation" />
     </Animation>
     <Animation id="precipAnim" repeat="true" easeFunction="linear" duration="1">
       <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[0,1080]]" fieldToInterp="precipStrip.translation" />
