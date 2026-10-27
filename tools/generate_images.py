@@ -462,6 +462,36 @@ save('<defs><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0.3
      '<stop offset="0.62" stop-color="#E3E9EE" stop-opacity="0.75"/><stop offset="1" stop-color="#E3E9EE" stop-opacity="0.5"/></linearGradient></defs>'
      '<rect width="8" height="1080" fill="url(#f)"/>', "0 0 8 1080", 8, 1080, "fog.png")
 
+# Cessna airplane for the sky. It is drawn at twice the size it is shown
+# (112x44 for a 56x22 poster) so its edges stay smooth. left=True draws it
+# facing left. A plane shows its left wingtip light (red) when it flies to the
+# right and its right wingtip light (green) when it flies to the left, so the
+# left image is drawn again instead of mirrored. The lights show at dusk and
+# night. The white strobe on the tail is a separate image that blinks.
+def cessna(pal, left):
+    p = P[pal]
+    body, stripe = p["houseA"], p["roof"]
+    s = (f'<polygon points="8,24 6,4 16,4 28,22" fill="{body}"/>'
+         f'<ellipse cx="17" cy="24" rx="11" ry="2.5" fill="{stripe}"/>'
+         f'<path d="M8,26 L24,21 L62,18 Q82,15 94,18 L104,22 Q108,25 104,28 L90,31 L40,31 Z" fill="{body}"/>'
+         f'<path d="M14,27 L100,26" stroke="{stripe}" stroke-width="2.5"/>'
+         f'<rect x="46" y="14" width="44" height="6" rx="2" fill="{body}"/>'
+         f'<line x1="62" y1="19" x2="70" y2="29" stroke="{stripe}" stroke-width="1.5"/>'
+         f'<polygon points="72,19 88,19 96,23 72,23" fill="{"#C9DAEA" if pal == "day" else stripe}"/>'
+         f'<line x1="74" y1="31" x2="72" y2="37" stroke="{stripe}" stroke-width="2"/><line x1="96" y1="29" x2="97" y2="37" stroke="{stripe}" stroke-width="2"/>'
+         f'<circle cx="72" cy="38" r="3" fill="#1F2A33"/><circle cx="97" cy="38" r="3" fill="#1F2A33"/>'
+         '<ellipse cx="108" cy="24" rx="1.5" ry="10" fill="#9DB6C9" fill-opacity="0.6"/>')
+    if pal != "day":
+        light = "#2ECC71" if left else "#E74C3C"
+        s += f'<circle cx="48" cy="16" r="3" fill="{light}"/><circle cx="48" cy="16" r="6" fill="{light}" fill-opacity="0.3"/>'
+    if left:
+        s = f'<g transform="translate(112,0) scale(-1,1)">{s}</g>'
+    return s
+for pal in P:
+    save(cessna(pal, False), "0 0 112 44", 112, 44, f"plane_{pal}.png")
+    save(cessna(pal, True), "0 0 112 44", 112, 44, f"plane_left_{pal}.png")
+save('<circle cx="8" cy="8" r="7" fill="#FFFFFF" fill-opacity="0.35"/><circle cx="8" cy="8" r="3" fill="#FFFFFF"/>', "0 0 16 16", 16, 16, "plane_strobe.png")
+
 # Wheel (drawn separately so it can spin)
 save('<circle cx="32" cy="32" r="32" fill="#1F2A33"/><circle cx="32" cy="32" r="18" fill="#C9D2DA"/>'
      '<g stroke="#5B6770" stroke-width="4"><line x1="32" y1="16" x2="32" y2="48"/><line x1="16" y1="32" x2="48" y2="32"/></g>'
@@ -608,7 +638,8 @@ def panel(clock, temp, cond, px):
             + text(temp, "hanken", 700, 54, px + 552 - tw / 2, 134, "#F8FAFC")
             + text(cond, "hanken", 400, 30, px + 28 + cw / 2, 184, "#ECEFF3"))
 
-def preview(pal, season, clock, temp, cond, fx=None, x=1920):
+def preview(pal, season, clock, temp, cond, fx=None, x=1920, plane=None):
+    """plane is the (x, y) of an airplane to draw, or None."""
     p = season_palette(pal, season)
     mtn = season if season == "winter" else "summer"
     def twice(fn, *args):
@@ -633,6 +664,8 @@ def preview(pal, season, clock, temp, cond, fx=None, x=1920):
     im = back
     if season == "summer" and pal == "night":
         im.alpha_composite(Image.open(os.path.join(OUT, "fireflies_a.png")).convert("RGBA").resize((1920, 400)), (0, 540))
+    if plane:
+        im.alpha_composite(Image.open(os.path.join(OUT, f"plane_{pal}.png")).convert("RGBA").resize((56, 22), Image.LANCZOS), plane)
     # Cars: one parked at the gas station (if it is in view), one in each lane
     if x > 1000:
         paste_car(im, "van", 1920 + 780 - x - 310 * 0.78 / 2, 898, 0.78)
@@ -649,7 +682,7 @@ def preview(pal, season, clock, temp, cond, fx=None, x=1920):
 def save_doc(im, name, width):
     im.resize((width, width * 9 // 16), Image.LANCZOS).save(os.path.join(DOCS, name), optimize=True)
 
-save_doc(preview("day", "summer", "10:04 AM", "84\u00b0F", "Clear"), "preview.png", 1280)
+save_doc(preview("day", "summer", "10:04 AM", "84\u00b0F", "Clear", plane=(560, 262)), "preview.png", 1280)
 for season, temp, cond, fx in (("spring", "62\u00b0F", "Partly cloudy", "petals"), ("summer", "84\u00b0F", "Clear", None),
                                ("fall", "55\u00b0F", "Mostly clear", "leaves"), ("winter", "28\u00b0F", "Overcast", None)):
     save_doc(preview("day", season, "10:04 AM", temp, cond, fx), f"preview_{season}.png", 640)

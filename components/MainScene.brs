@@ -48,6 +48,17 @@ sub init()
     allSeasons = ["spring", "summer", "fall", "winter"]
     m.seasonalLayers = { far: ["winter"], near: ["winter"], hills: allSeasons, town_a: allSeasons, town_b: allSeasons }
 
+    ' Airplane (a Cessna). It flies at the distance of the far mountains, so the
+    ' camera adds or takes away m.layerSpeeds.far from its speed on screen, the
+    ' same way m.cameraSpeed works for cars. planeSpeed is its own speed at that
+    ' distance in pixels per second: a Cessna is about 4 times as fast as the
+    ' sedan (300), and the far mountains move 5 / 55 as fast as the street, so
+    ' 4 * 300 * 5 / 55 is about 110.
+    m.planeSpeed = 110
+    ' Seconds to wait between flights: at least planeWaitMin, plus up to planeWaitMore.
+    m.planeWaitMin = 45
+    m.planeWaitMore = 120
+
     ' Positions for the clock panel. It stays in the top-right corner and moves a
     ' small amount every few minutes to protect TVs from burn-in. The sun and
     ' moon stay in the top-left corner, so the panel never covers them.
@@ -76,6 +87,13 @@ sub init()
     m.seasonFxAnim = m.top.findNode("seasonFxAnim")
     m.fog = m.top.findNode("fog")
     m.flashAnim = m.top.findNode("flashAnim")
+    m.plane = m.top.findNode("plane")
+    m.planeBody = m.top.findNode("planeBody")
+    m.planeStrobe = m.top.findNode("planeStrobe")
+    m.planeAnim = m.top.findNode("planeAnim")
+    m.planeMove = m.top.findNode("planeMove")
+    m.strobeAnim = m.top.findNode("strobeAnim")
+    m.planeLeft = false
 
     m.top.backgroundColor = "0x16242FFF"
 
@@ -89,6 +107,13 @@ sub init()
     m.lightningTimer = m.top.createChild("Timer")
     m.lightningTimer.repeat = false
     m.lightningTimer.observeField("fire", "onLightning")
+
+    m.planeAnim.observeField("state", "onPlaneState")
+    m.planeTimer = m.top.createChild("Timer")
+    m.planeTimer.repeat = false
+    m.planeTimer.observeField("fire", "onPlaneTimer")
+    m.planeTimer.duration = 10 + Rnd(30)
+    m.planeTimer.control = "start"
 
     ' ---------- Start ----------
     applyScene()
@@ -185,6 +210,7 @@ sub applyScene()
     m.top.findNode("townA2").uri = layerUri("town_a", ground, period)
     m.top.findNode("townB").uri = layerUri("town_b", ground, period)
     updateSeasonFx(season, period)
+    updatePlaneImage()
     if period = "night"
         m.fog.opacity = 0.6
     else
@@ -273,6 +299,65 @@ sub setStorm(code as dynamic)
         m.lightningTimer.control = "start"
     end if
     m.storm = storm
+end sub
+
+' ================= Airplane =================
+
+' Starts a flight, or waits again if the weather is bad for flying.
+sub onPlaneTimer()
+    if m.precipKind <> "" or m.fog.visible or m.storm
+        schedulePlane()
+        return
+    end if
+    m.planeLeft = Rnd(2) = 2
+    y = 236 + Rnd(50)
+    if m.planeLeft
+        ' Flying against the scroll direction looks faster
+        fromX = 1980
+        toX = -80
+        speed = m.planeSpeed + m.layerSpeeds.far
+    else
+        fromX = -80
+        toX = 1980
+        speed = m.planeSpeed - m.layerSpeeds.far
+    end if
+    m.planeMove.keyValue = [[fromX, y], [toX, y]]
+    m.planeAnim.duration = Abs(toX - fromX) / speed
+    m.plane.translation = [fromX, y]
+    m.plane.visible = true
+    updatePlaneImage()
+    m.planeAnim.control = "start"
+end sub
+
+sub onPlaneState(event as object)
+    if event.getData() <> "stopped" then return
+    m.plane.visible = false
+    m.strobeAnim.control = "stop"
+    schedulePlane()
+end sub
+
+sub schedulePlane()
+    m.planeTimer.duration = m.planeWaitMin + Rnd(m.planeWaitMore)
+    m.planeTimer.control = "start"
+end sub
+
+' Sets the plane image for its direction and the time of day. The strobe on
+' the tail blinks at dusk and night.
+sub updatePlaneImage()
+    suffix = ""
+    strobeX = 1
+    if m.planeLeft
+        suffix = "_left"
+        strobeX = 47
+    end if
+    m.planeBody.uri = "pkg:/images/plane" + suffix + "_" + m.period + ".png"
+    m.planeStrobe.translation = [strobeX, -2]
+    if m.period = "day"
+        m.strobeAnim.control = "stop"
+        m.planeStrobe.opacity = 0
+    else if m.plane.visible
+        m.strobeAnim.control = "start"
+    end if
 end sub
 
 sub onLightning()

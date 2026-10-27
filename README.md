@@ -28,6 +28,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 - Each store sign uses its own font.
 - Five cars: a sports car in the style of a Bugatti, a sedan, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest.
 - Two lanes. The near lane drives left to right at full size. The far lane drives right to left and draws the cars slightly smaller.
+- A small Cessna airplane flies across the sky now and then, about every 1 to 3 minutes, in either direction. It flies at the distance of the far mountains, so it is small and its speed matches that distance: it takes about 17 seconds to cross the screen. At dusk and night its wingtip light and a blinking white tail light are on. It does not fly in rain, snow, fog, or thunderstorms.
 - Weather from [Open-Meteo](https://open-meteo.com/), refreshed every 15 minutes. No API key is needed.
 - Day, dusk, and night versions of the scene, chosen from today's real sunrise and sunset times.
 - Four seasons, chosen from today's date:
@@ -97,6 +98,8 @@ All settings are at the top of `init()` in `components/MainScene.brs`.
 | `m.layerWidths` | Width of each scenery layer before it repeats. The town is 3840 because it is two different 1920 pixel sections. |
 | `m.cameraSpeed` | Must match the `town` layer speed. Cars use it so their speed looks correct relative to the street. |
 | `m.carDefs` | Each car's image size, wheel positions, wheel radius, and `ground` speed in pixels per second. |
+| `m.planeSpeed` | The airplane's own speed at the distance of the far mountains, in pixels per second. The comment above it in `MainScene.brs` shows how it was worked out. |
+| `m.planeWaitMin`, `m.planeWaitMore` | Seconds between airplane flights: at least `m.planeWaitMin`, plus a random amount up to `m.planeWaitMore`. |
 | `m.infoSpots` | The positions the clock panel moves between. They are all in the top-right corner. |
 | `m.seasonOverride` | Set to `"spring"`, `"summer"`, `"fall"`, or `"winter"` to always show that season, for example to preview it. Leave it as `""` to choose the season from the date. |
 | `m.seasonalLayers` | Which scenery layers have a different image for some seasons. It must match `SEASONAL` in `tools/generate_images.py`. |
