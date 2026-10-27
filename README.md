@@ -19,6 +19,7 @@ A Roku screensaver inspired by Roku City. It shows a small town beside a river w
 
 ```
 manifest                    Roku channel manifest
+build.sh                    Builds riverside-town.zip and installs it on a Roku
 source/main.brs             Entry point (RunScreenSaver)
 components/MainScene.xml    Scene layout: layers, lanes, panel, animations
 components/MainScene.brs    Scene logic: parallax, cars, clock, weather, time of day
@@ -32,13 +33,19 @@ tools/fonts/                Store sign fonts and their licenses (used only by th
 ## Installing on a Roku
 
 1. Turn on developer mode on the Roku. On the remote, press Home 3 times, Up 2 times, then Right, Left, Right, Left, Right. Follow the steps on screen and set a password.
-2. From the repository root, build the zip:
+2. Build the zip and install it with `build.sh`. There are two ways:
+   - **Install from the script.** Run this from the repository root, with the Roku's IP address:
+     ```
+     ROKU_DEV_TARGET=<roku-ip-address> ./build.sh
+     ```
+     The script checks that the Roku responds, builds `riverside-town.zip`, asks for the developer password, and uploads the zip to the Roku.
+   - **Install by hand.** Run `./build.sh --zip-only` to only build `riverside-town.zip`. Then, in a web browser, go to `http://<roku-ip-address>`, sign in with the username `rokudev` and your password, and upload the zip.
+
+   Either way, the zip contains only the files the Roku needs, with the manifest at the top level. If you cannot run the script, run this from the repository root instead:
    ```
    zip -r riverside-town.zip manifest source components images -x "*.DS_Store"
    ```
-   The manifest must be at the top level of the zip, not inside a folder.
-3. In a web browser, go to `http://<roku-ip-address>`, sign in with the username `rokudev` and your password, and upload the zip.
-4. On the Roku, go to Settings > Theme > Screensavers and choose Riverside Town.
+3. On the Roku, go to Settings > Theme > Screensavers and choose Riverside Town.
 
 Because a screensaver cannot be opened from the home screen, use the Preview option in Settings > Theme > Screensavers to see it without waiting for the Roku to go idle.
 
