@@ -126,7 +126,7 @@ def town(p):
                 # House number plaque above the door
                 f'<rect x="{doorX-2}" y="808" width="44" height="18" rx="3" fill="{R}"/>'
                 + text(number, font, weight, 14, doorX + 20, 822, "#F8FAFC", 1))
-    s = house(40, 750, 200, 680, 62, 174, 120, 780, "5401", "signika")
+    s = house(40, 750, 200, 680, 62, 174, 120, 780, "5401", "signika", 500)
     s += (f'<rect x="270" y="700" width="240" height="200" fill="{B}"/><rect x="266" y="700" width="248" height="14" fill="{R}"/>'
           + sign(300, 724, 180, 44, R, "Bakery", "script", 700, 34, 757, 1) +
           f'<polygon points="280,790 500,790 510,822 270,822" fill="{ACCENT}"/>'

@@ -84,7 +84,7 @@ Store sign fonts:
 | Oswald | Williams Hardware, gas station, Market |
 | Cinzel | Public Library |
 | Alegreya Sans | New City church |
-| Signika | House number 5401 |
+| Signika (Medium) | House number 5401 |
 | Hanken Grotesk (Light) | House number 135 |
 | Cabin | House number 5334 |
 
