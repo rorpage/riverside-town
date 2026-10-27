@@ -20,6 +20,12 @@
         <Poster id="far2" width="1920" height="425" translation="[1920,0]" />
       </Group>
     </Group>
+    <!-- Airplane, at the distance of the far mountains. It is drawn after the far
+         mountains and before the near mountains. -->
+    <Group id="plane" visible="false">
+      <Poster id="planeBody" width="56" height="22" />
+      <Poster id="planeStrobe" width="8" height="8" uri="pkg:/images/plane_strobe.png" opacity="0" />
+    </Group>
     <Group translation="[0,400]">
       <Group id="nearStrip">
         <Poster id="near1" width="1920" height="360" />
@@ -113,6 +119,12 @@
     <Animation id="firefliesAnim" repeat="true" easeFunction="inOutQuad" duration="4">
       <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[0.15, 1.0, 0.15]" fieldToInterp="firefliesA.opacity" />
       <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[1.0, 0.15, 1.0]" fieldToInterp="firefliesB.opacity" />
+    </Animation>
+    <Animation id="planeAnim" repeat="false" easeFunction="linear">
+      <Vector2DFieldInterpolator id="planeMove" key="[0.0, 1.0]" fieldToInterp="plane.translation" />
+    </Animation>
+    <Animation id="strobeAnim" repeat="true" easeFunction="linear" duration="1.4">
+      <FloatFieldInterpolator key="[0.0, 0.05, 0.1, 1.0]" keyValue="[1.0, 1.0, 0.0, 0.0]" fieldToInterp="planeStrobe.opacity" />
     </Animation>
     <Animation id="flashAnim" repeat="false" easeFunction="linear" duration="0.7">
       <FloatFieldInterpolator key="[0.0, 0.08, 0.18, 0.3, 1.0]" keyValue="[0.0, 0.55, 0.1, 0.4, 0.0]" fieldToInterp="flash.opacity" />
