@@ -18,12 +18,20 @@ A Roku screensaver inspired by Roku City. It shows a small town beside a river w
 |---|---|---|
 | ![The shops on a summer day](docs/preview_day.png) | ![The shops at dusk, with lit windows](docs/preview_dusk.png) | ![The shops at night, with stars, the moon, and fireflies](docs/preview_night.png) |
 
+## The third block
+
+![Town section C on a summer day: five houses, Cabana's ice cream shop, an art supply store, a photography store, a pet shop, and Mama BreeBree's Italian restaurant](docs/preview_section_c.png)
+
+| Fall night | Winter day |
+|---|---|
+| ![Section C on a fall night, with lit windows, pumpkins, and falling leaves](docs/preview_section_c_fall_night.png) | ![Section C on a winter day, with snow on the roofs, awnings, and sidewalk](docs/preview_section_c_winter.png) |
+
 These images are drawn by `tools/generate_images.py` from the same artwork the screensaver uses.
 
 ## Features
 
 - Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street. The center far mountain has a flat top, in the shape of Table Mountain in South Africa.
-- The town has two sections. The first has three houses (numbered 5401, 135, and 5334), a donut shop called Long's Donuts, a book store called Forever Books, Williams Hardware, and a diner called Luke's. The last two are references to Gilmore Girls. The second has a church named New City, a gas station with a small market, and the Hill Valley Courthouse Mall from Back to the Future, with its clock stopped at 10:04.
+- The town has three sections. The first has three houses (numbered 5401, 135, and 5334), a donut shop called Long's Donuts, a book store called Forever Books, Williams Hardware, and a diner called Luke's. The last two are references to Gilmore Girls. The second has a church named New City, a gas station with a small market, and the Hill Valley Courthouse Mall from Back to the Future, with its clock stopped at 10:04. The third has five more houses (numbered 312, 402, 527, 612, and 1120), an ice cream shop called Cabana's, an art supply store with a small painter's palette icon in the window, a photography store with a small camera icon in the window, a pet shop with a fish bowl, a puppy, and a kitten on a table in the window, and an Italian restaurant called Mama BreeBree's.
 - A car is parked at the gas station. The car and the direction it faces are chosen at random each time the screensaver starts.
 - Each store sign uses its own font.
 - Five cars: a sports car in the style of a Bugatti, a sedan, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest.
@@ -95,7 +103,7 @@ All settings are at the top of `init()` in `components/MainScene.brs`.
 |---|---|
 | `m.LAT`, `m.LON` | Location for the weather. The default is ZIP code 46220 (Indianapolis). Roku does not give apps the device's ZIP code, so the location must be set here. |
 | `m.layerSpeeds` | Scroll speed of each scenery layer, in pixels per second. |
-| `m.layerWidths` | Width of each scenery layer before it repeats. The town is 3840 because it is two different 1920 pixel sections. |
+| `m.layerWidths` | Width of each scenery layer before it repeats. The town is 5760 because it is three different 1920 pixel sections. |
 | `m.cameraSpeed` | Must match the `town` layer speed. Cars use it so their speed looks correct relative to the street. |
 | `m.carDefs` | Each car's image size, wheel positions, wheel radius, and `ground` speed in pixels per second. |
 | `m.planeSpeed` | The airplane's own speed at the distance of the far mountains, in pixels per second. The comment above it in `MainScene.brs` shows how it was worked out. |
@@ -134,6 +142,16 @@ Store sign fonts:
 | Signika (Medium) | House number 5401 |
 | Hanken Grotesk (Light) | House number 135 |
 | Cabin | House number 5334 |
+| Raleway (Bold) | House number 312 |
+| Comfortaa (Bold) | House number 402 |
+| Josefin Sans (SemiBold) | House number 527 |
+| Quicksand (Bold) | House number 612 |
+| Bitter (SemiBold) | House number 1120 |
+| Pacifico | Cabana's |
+| Amatic SC | Art Supplies |
+| Montserrat | Photo |
+| Fredoka | Pet Shop |
+| Lora (Italic) | Mama BreeBree's |
 
 These fonts are from [Google Fonts](https://fonts.google.com/). All of them except Kaushan Script and Alegreya Sans are variable fonts: one file covers a range of weights, and the generator picks the weight for each sign. Kaushan Script has only one weight, and only the Medium weight of Alegreya Sans is included. They are licensed under the SIL Open Font License; the license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
 
@@ -141,7 +159,7 @@ This writes every PNG into `images/`, including the mirrored car images used by 
 
 Notes on the image sizes:
 
-- Each scenery layer is exactly 1920 pixels wide and its left and right edges line up, so two copies placed side by side repeat without a visible seam. The town layer is two different images (`town_a` and `town_b`) placed in the order A, B, A, so the street is 3840 pixels long before it repeats.
+- Each scenery layer is exactly 1920 pixels wide and its left and right edges line up, so two copies placed side by side repeat without a visible seam. The town layer is three different images (`town_a`, `town_b`, and `town_c`) placed in the order A, B, C, A, so the street is 5760 pixels long before it repeats.
 - The sky is an 8 pixel wide gradient that the scene stretches to full width. This uses much less memory than a full-size image. The fog image works the same way.
 - Seasonal layers are named `<layer>_<season>_<period>.png`, for example `hills_fall_night.png`. The hills and both town sections have an image for every season. The far and near mountains only have a winter image (`far_winter_day.png`); in other seasons they use the image without a season in the name (`far_day.png`). The clouds and sky do not change with the seasons.
 - The generator deletes the old scenery images before it writes new ones, so files that are no longer used do not stay in `images/`.
