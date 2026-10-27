@@ -873,8 +873,10 @@ BG, BGD = "#8BC34A", "#5E8F2E"
 buggy = (f'<path d="M8,74 L8,62 Q10,54 22,52 L66,52 L70,58 L178,58 Q226,58 240,70 L242,80 L10,80 Z" fill="{BG}"/>'
          f'<path d="M14,84 A38,38 0 0 1 90,84 L82,84 A30,30 0 0 0 22,84 Z" fill="{BGD}"/>'
          f'<path d="M160,84 A38,38 0 0 1 236,84 L228,84 A30,30 0 0 0 168,84 Z" fill="{BGD}"/>'
-         # A green arch over the seats, in the same shape and color as the fenders
-         f'<path d="M84,58 A46,40 0 0 1 176,58 L167,58 A37,31 0 0 0 93,58 Z" fill="{BGD}"/>'
+         # A green arch over the seats, in the same color and thickness as the
+         # fenders. Its ends sit on the top middle of each fender (x=52 and
+         # x=198, the wheel centers).
+         f'<path d="M48,50 A77,46 0 0 1 202,50 L194,50 A69,38 0 0 0 56,50 Z" fill="{BGD}"/>'
          f'<rect x="112" y="36" width="12" height="22" rx="3" fill="#34495E"/>'
          f'<rect x="4" y="54" width="18" height="16" rx="3" fill="#5B6770"/><rect x="0" y="66" width="10" height="4" rx="2" fill="#9CA6B1"/>'
          f'<circle cx="214" cy="56" r="6" fill="#F6C46A"/><rect x="8" y="62" width="6" height="8" fill="#C0392B"/>'
