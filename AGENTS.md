@@ -4,7 +4,7 @@ Notes for AI coding agents working on this repository. Read this before making c
 
 ## Project summary
 
-Riverside Town is a Roku screensaver written in BrightScript with SceneGraph. It shows a town beside a river with mountains behind it. Five scenery layers scroll at different speeds (parallax), four cars drive in two lanes, and a panel shows the time, temperature, and weather from the Open-Meteo API. The scene switches between day, dusk, and night palettes based on the real sunrise and sunset times.
+Riverside Town is a Roku screensaver written in BrightScript with SceneGraph. It shows a town beside a river with mountains behind it. Five scenery layers scroll at different speeds (parallax), five cars drive in two lanes, and a panel shows the time, temperature, and weather from the Open-Meteo API. The scene switches between day, dusk, and night palettes based on the real sunrise and sunset times.
 
 ## Writing rules
 
@@ -41,7 +41,7 @@ These apply to code, comments, commit messages, README.md, and this file.
 ## Scene behavior to keep consistent
 
 - `m.cameraSpeed` must equal the `town` value in `m.layerSpeeds`. A car's on-screen speed is its `ground` speed minus the camera speed in the near lane (moving right) and plus the camera speed in the far lane (moving left).
-- Car ground speeds are ordered on purpose: sedan fastest, then van and Jeep, then the old truck slowest. Keep that order unless the owner asks for a change.
+- Car ground speeds are ordered on purpose: the sports car fastest by a clear amount, then the sedan, then the van and Jeep, then the old truck slowest. Keep that order unless the owner asks for a change.
 - Only one car uses a lane at a time so that faster cars never overlap slower ones.
 - The clock panel moves between the positions in `m.infoSpots` to protect TVs from burn-in. Keep each position fully on screen for the current panel width (580 pixels).
 

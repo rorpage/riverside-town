@@ -330,6 +330,19 @@ truck = (f'<rect x="8" y="50" width="112" height="46" rx="4" fill="{TR}"/>'
          '<rect x="276" y="92" width="16" height="8" rx="3" fill="#C9D2DA"/><rect x="2" y="88" width="10" height="8" rx="3" fill="#C9D2DA"/>')
 save(truck, "0 0 300 130", 300, 130, "car_truck.png")
 
+# Sports car in the style of a Bugatti: low and long, two-tone blue, a curved
+# line on the side, and a horseshoe-shaped grille at the front
+SP, SPD, CHROME = "#2C6BB3", "#16294A", "#C9D2DA"
+sports = (f'<path fill="{SP}" d="M8,72 L8,50 Q10,44 24,42 L100,38 Q140,22 172,22 Q208,22 240,40 L282,48 Q296,52 296,62 L296,72 Q296,80 288,80 L16,80 Q8,80 8,72 Z"/>'
+          f'<path fill="{SPD}" d="M160,22 Q208,22 240,40 L282,48 Q296,52 296,62 L296,72 Q296,80 288,80 L170,80 Q142,80 140,60 Q138,40 160,22 Z"/>'
+          f'<path d="M162,24 Q140,42 140,60 Q142,76 162,78" stroke="{CHROME}" stroke-width="4" fill="none" stroke-linecap="round"/>'
+          f'<path fill="{GLASS}" d="M118,38 Q142,27 170,27 Q200,27 226,40 Z"/>'
+          f'<path fill="{DARK}" d="M108,52 L128,49 L130,64 L110,64 Z"/>'
+          f'<path d="M290,56 Q296,56 296,62 Q296,68 290,68" stroke="{CHROME}" stroke-width="3" fill="{DARK}"/>'
+          '<rect x="268" y="50" width="18" height="4" rx="2" fill="#F6C46A"/><rect x="8" y="48" width="14" height="4" fill="#C0392B"/>'
+          + wells([(64, 80), (234, 80)], 26))
+save(sports, "0 0 304 104", 304, 104, "car_sports.png")
+
 # Channel icons from a composite of the day scene
 def composite(pal, tile="a"):
     p = P[pal]
@@ -349,7 +362,7 @@ composite("night")
 composite("night", "b")
 
 # Mirrored car bodies for the far lane, where cars drive right to left
-for n in ["sedan", "van", "jeep", "truck"]:
+for n in ["sedan", "van", "jeep", "truck", "sports"]:
     ImageOps.mirror(Image.open(os.path.join(OUT, f"car_{n}.png"))).save(os.path.join(OUT, f"car_{n}_left.png"))
 
 # Add a parked car to the tile B previews to check its position. These numbers
