@@ -131,7 +131,7 @@ def town(p):
           + sign(300, 724, 180, 44, R, "Bakery", "script", 700, 34, 757, 1) +
           f'<polygon points="280,790 500,790 510,822 270,822" fill="{ACCENT}"/>'
           f'<rect x="290" y="832" width="130" height="58" fill="{Wn}"/><rect x="440" y="832" width="46" height="68" fill="{R}"/>')
-    s += house(540, 730, 180, 664, 562, 654, 610, 760, "135", "hanken", 100)
+    s += house(540, 730, 180, 664, 562, 654, 610, 760, "135", "hanken", 200)
     # Book store: the display window shows rows of book spines
     spines = ""
     colors = ["#B5523F", "#4A82A8", "#6B7B3A", "#F6C46A", "#34495E", "#C9D2DA"]
