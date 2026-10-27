@@ -118,20 +118,20 @@ def arch(x, y, w, h, fill):
 # 3840 pixels long before it repeats.
 def town(p):
     A, B, W2, R, Wn = p["houseA"], p["houseB"], p["wall2"], p["roof"], p["window"]
-    def house(x, y, w, roofPeak, win1, win2, doorX, winY, number, font):
+    def house(x, y, w, roofPeak, win1, win2, doorX, winY, number, font, weight=600):
         return (f'<rect x="{x}" y="{y}" width="{w}" height="{900-y}" fill="{A}"/>'
                 f'<polygon points="{x-12},{y} {x+w//2},{roofPeak} {x+w+12},{y}" fill="{R}"/>'
                 f'<rect x="{win1}" y="{winY}" width="44" height="40" fill="{Wn}"/><rect x="{win2}" y="{winY}" width="44" height="40" fill="{Wn}"/>'
                 f'<rect x="{doorX}" y="830" width="40" height="70" fill="{R}"/>'
                 # House number plaque above the door
                 f'<rect x="{doorX-2}" y="808" width="44" height="18" rx="3" fill="{R}"/>'
-                + text(number, font, 600, 14, doorX + 20, 822, "#F8FAFC", 1))
+                + text(number, font, weight, 14, doorX + 20, 822, "#F8FAFC", 1))
     s = house(40, 750, 200, 680, 62, 174, 120, 780, "5401", "signika")
     s += (f'<rect x="270" y="700" width="240" height="200" fill="{B}"/><rect x="266" y="700" width="248" height="14" fill="{R}"/>'
           + sign(300, 724, 180, 44, R, "Bakery", "script", 700, 34, 757, 1) +
           f'<polygon points="280,790 500,790 510,822 270,822" fill="{ACCENT}"/>'
           f'<rect x="290" y="832" width="130" height="58" fill="{Wn}"/><rect x="440" y="832" width="46" height="68" fill="{R}"/>')
-    s += house(540, 730, 180, 664, 562, 654, 610, 760, "135", "hanken")
+    s += house(540, 730, 180, 664, 562, 654, 610, 760, "135", "hanken", 100)
     # Book store: the display window shows rows of book spines
     spines = ""
     colors = ["#B5523F", "#4A82A8", "#6B7B3A", "#F6C46A", "#34495E", "#C9D2DA"]
