@@ -137,14 +137,14 @@ def snow_caps(points, t, fill, min_rise=30):
 # flat top with steep cliffs at each end, a dip, and a smaller pointed peak
 # (Lion's Head). The flat top points all have the same y value, so
 # snow_caps() does not treat them as peaks.
-TABLE_TOP = (776, 1010, 310)   # left x, right x, y of the flat top
+TABLE_TOP = (746, 1066, 310)   # left x, right x, y of the flat top
 FAR_PTS = [(0,470),(140,400),(260,450),(420,330),(560,430),
            # Devil's Peak
-           (640,404),(700,382),(718,362),(730,350),(742,344),(752,350),(760,347),
+           (612,408),(668,384),(688,364),(700,352),(712,346),(722,352),(730,349),
            # Left cliff, flat top, right cliff
-           (766,324),(772,313),(TABLE_TOP[0],TABLE_TOP[2]),(TABLE_TOP[1],TABLE_TOP[2]),(1016,316),(1024,344),(1034,360),
+           (736,326),(742,314),(TABLE_TOP[0],TABLE_TOP[2]),(TABLE_TOP[1],TABLE_TOP[2]),(1072,316),(1080,344),(1090,360),
            # The dip, then Lion's Head
-           (1060,372),(1090,380),(1112,377),(1132,358),(1148,336),(1162,326),(1174,342),(1200,372),(1250,400),
+           (1112,372),(1136,380),(1154,377),(1172,358),(1186,336),(1198,326),(1208,342),(1230,372),(1270,400),
            (1320,430),(1480,320),(1640,400),(1780,360),(1920,470)]
 def far(p, season):
     pts = " ".join(f"{x},{y}" for x, y in FAR_PTS)
