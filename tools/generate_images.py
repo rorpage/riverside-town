@@ -266,6 +266,10 @@ def arch(x, y, w, h, fill):
 HOUSE_COLORS = {"5401": "#F3E3B8", "135": "#CFE3D4", "5334": "#D6E4F0", "312": "#F2D4D7",
                 "402": "#E8DCCB", "527": "#DCD6EC", "612": "#F8FAFC", "1120": "#CFE6E3"}
 
+# Store wall colors, written as day colors and darkened with wall() like the houses
+STORE_COLORS = {"longs": "#F6D9C8", "books": "#DCCBB2", "bits": "#D2D4E2", "lukes": "#EAD7B4", "kroger": "#E2E7EE",
+                "cabanas": "#D6EEF0", "art": "#F2E4C6", "photo": "#D3D8DE", "pet": "#DCEFD6", "mama": "#F3DCB6"}
+
 def wall(day, p):
     ratio = [n / d for n, d in zip(hex_rgb(p["houseA"]), hex_rgb(P["day"]["houseA"]))]
     return "#" + "".join(f"{min(255, round(c * r)):02X}" for c, r in zip(hex_rgb(day), ratio))
@@ -286,7 +290,7 @@ def town(p, season):
                 + text(number, font, weight, 14, doorX + 20, 822, "#F8FAFC", 1)
                 + pumpkins(season, doorX + 54))
     s = house(40, 750, 200, 680, 62, 174, 120, 780, "5401", "signika", 500)
-    s += (f'<rect x="270" y="700" width="240" height="200" fill="{B}"/><rect x="266" y="700" width="248" height="14" fill="{R}"/>'
+    s += (f'<rect x="270" y="700" width="240" height="200" fill="{wall(STORE_COLORS["longs"], p)}"/><rect x="266" y="700" width="248" height="14" fill="{R}"/>'
           + snow_flat(season, p, 266, 700, 248) + snow_flat(season, p, 276, 790, 228)
           + sign(296, 724, 188, 44, R, "Long\u2019s Donuts", "script", 700, 28, 755, 0) +
           f'<polygon points="280,790 500,790 510,822 270,822" fill="{ACCENT}"/>'
@@ -304,7 +308,7 @@ def town(p, season):
             spines += f'<rect x="{bx}" y="{base-bh}" width="{bw}" height="{bh}" fill="{colors[i % len(colors)]}"/>'
             bx += bw + 2
             i += 1
-    s += (f'<rect x="880" y="670" width="220" height="230" fill="{W2}"/><rect x="876" y="670" width="228" height="14" fill="{R}"/>'
+    s += (f'<rect x="880" y="670" width="220" height="230" fill="{wall(STORE_COLORS["books"], p)}"/><rect x="876" y="670" width="228" height="14" fill="{R}"/>'
           + snow_flat(season, p, 876, 670, 228) + snow_flat(season, p, 892, 808, 196) +
           f'<rect x="906" y="698" width="48" height="48" fill="{Wn}"/><rect x="1026" y="698" width="48" height="48" fill="{Wn}"/>'
           # Two lines: a small FOREVER above a large BOOKS
@@ -314,7 +318,7 @@ def town(p, season):
           f'<rect x="900" y="846" width="110" height="48" fill="{Wn}"/>{spines}'
           f'<rect x="900" y="868" width="110" height="4" fill="{R}"/><rect x="900" y="890" width="110" height="4" fill="{R}"/>'
           f'<rect x="1030" y="840" width="46" height="60" fill="{R}"/>')
-    s += (f'<rect x="1120" y="710" width="260" height="190" fill="{B}"/><rect x="1116" y="710" width="268" height="14" fill="{R}"/>'
+    s += (f'<rect x="1120" y="710" width="260" height="190" fill="{wall(STORE_COLORS["bits"], p)}"/><rect x="1116" y="710" width="268" height="14" fill="{R}"/>'
           + snow_flat(season, p, 1116, 710, 268) + snow_flat(season, p, 1132, 800, 236)
           # Bits and Bytes, a computer store, with green letters like an old
           # computer screen and a small gray computer icon in the window
@@ -327,7 +331,7 @@ def town(p, season):
           f'<rect x="1212" y="871" width="6" height="6" fill="{ICON}"/><rect x="1204" y="877" width="22" height="3" rx="1" fill="{ICON}"/>'
           f'<rect x="1193" y="883" width="44" height="6" rx="1.5" fill="{ICON}"/>')
     s += house(1410, 740, 190, 672, 1432, 1534, 1485, 770, "5334", "cabin")
-    s += (f'<rect x="1630" y="690" width="250" height="210" fill="{W2}"/><rect x="1626" y="690" width="258" height="14" fill="{R}"/>'
+    s += (f'<rect x="1630" y="690" width="250" height="210" fill="{wall(STORE_COLORS["lukes"], p)}"/><rect x="1626" y="690" width="258" height="14" fill="{R}"/>'
           + snow_flat(season, p, 1626, 690, 258) + snow_flat(season, p, 1642, 820, 226) +
           f'<rect x="1660" y="716" width="48" height="44" fill="{Wn}"/><rect x="1772" y="716" width="48" height="44" fill="{Wn}"/>'
           + sign(1680, 768, 150, 46, R, "Luke\u2019s", "kaushan", 400, 32, 802, 1) +
@@ -379,7 +383,7 @@ def town_b(p, season):
           f'<rect x="588" y="812" width="40" height="76" fill="{B}"/><rect x="588" y="812" width="40" height="10" fill="{ACCENT}"/>'
           f'<rect x="594" y="828" width="28" height="18" fill="{Wn}"/>'
           f'<path d="M628,836 Q646,840 642,870" stroke="#1F2A33" stroke-width="4" fill="none"/>'
-          f'<rect x="980" y="770" width="200" height="130" fill="{B}"/><rect x="976" y="770" width="208" height="14" fill="{R}"/>'
+          f'<rect x="980" y="770" width="200" height="130" fill="{wall(STORE_COLORS["kroger"], p)}"/><rect x="976" y="770" width="208" height="14" fill="{R}"/>'
           + snow_flat(season, p, 976, 770, 208)
           + sign(1006, 792, 148, 36, "#1F4E9C", "Kroger", "oswald", 600, 22, 818, 2) +
           f'<rect x="996" y="842" width="96" height="50" fill="{Wn}"/><rect x="1110" y="836" width="46" height="64" fill="{R}"/>')
@@ -465,7 +469,7 @@ def town_c(p, season):
     s = small_house(24, 150, 740, 676, "312", "raleway", 700)
 
     # Cabana's ice cream shop, with a big cone on the roof
-    body, (wx, wy, ww, wh) = shop(192, 196, 716, B)
+    body, (wx, wy, ww, wh) = shop(192, 196, 716, wall(STORE_COLORS["cabanas"], p))
     s += (f'<polygon points="282,712 298,712 290,742" fill="#D9A55B"/><circle cx="284" cy="704" r="10" fill="#F2B8C6"/><circle cx="296" cy="704" r="10" fill="#B8E2C8"/>'
           f'<circle cx="290" cy="694" r="10" fill="#F6E7B0"/>' + body
           + sign(214, 742, 152, 46, "#E86A92", "Cabana\u2019s", "pacifico", 400, 26, 774, 0)
@@ -479,7 +483,7 @@ def town_c(p, season):
     # Art supply store. A small gray painter's palette and brush in the window,
     # drawn like an icon. The paint spots and thumb hole are cut out in the
     # window color.
-    body, (wx, wy, ww, wh) = shop(574, 196, 704, W2)
+    body, (wx, wy, ww, wh) = shop(574, 196, 704, wall(STORE_COLORS["art"], p))
     px, py, k = wx + ww / 2 - 6, wy + wh / 2, 0.6
     def pt(dx, dy):
         return f"{px + dx * k:.1f},{py + dy * k:.1f}"
@@ -495,7 +499,7 @@ def town_c(p, season):
 
     # Photography store. A small gray camera in the window, drawn like an icon.
     # The lens and flash are cut out in the window color.
-    body, (wx, wy, ww, wh) = shop(788, 196, 712, B)
+    body, (wx, wy, ww, wh) = shop(788, 196, 712, wall(STORE_COLORS["photo"], p))
     cx, cy = wx + ww // 2, wy + wh // 2 + 2
     s += (body + sign(810, 736, 152, 46, "#1F2A33", "PHOTO", "montserrat", 700, 26, 768, 6)
           + f'<polygon points="798,800 974,800 982,828 790,828" fill="{R}"/>' + snow_flat(season, p, 798, 800, 176)
@@ -507,7 +511,7 @@ def town_c(p, season):
 
     # Pet shop. A fish bowl, a puppy, and a kitten in the window, and a paw
     # print on the sign.
-    body, (wx, wy, ww, wh) = shop(1170, 196, 708, W2)
+    body, (wx, wy, ww, wh) = shop(1170, 196, 708, wall(STORE_COLORS["pet"], p))
     s += (body + sign(1192, 734, 152, 46, "#4A82A8", "", "fredoka", 600, 22, 764)
           + text("PET SHOP", "fredoka", 600, 20, 1252, 763, "#F8FAFC", 2)
           + awning(1170, 196, ["#4A82A8", A]))
@@ -545,7 +549,7 @@ def town_c(p, season):
 
     # Mama BreeBree's, an Italian restaurant, with an awning in the colors of
     # the Italian flag and a table with a checkered tablecloth in the window
-    body, (wx, wy, ww, wh) = shop(1384, 216, 700, B)
+    body, (wx, wy, ww, wh) = shop(1384, 216, 700, wall(STORE_COLORS["mama"], p))
     s += (body + sign(1392, 726, 200, 50, "#2F5D3A", "Mama BreeBree\u2019s", "lora", 600, 21, 758, 0.5)
           + awning(1384, 216, ["#2F8F4E", A, "#C0392B"]))
     tx, ty = wx + 18, wy + 30
@@ -672,9 +676,11 @@ GLASS, DARK = "#C9DAEA", "#1F2A33"
 def wells(pts, r):
     return "".join(f'<circle cx="{x}" cy="{y}" r="{r}" fill="{DARK}"/>' for x, y in pts)
 
-sedan = (f'<path fill="#4A82A8" d="M6,72 L6,56 Q8,40 30,38 L70,36 L100,10 Q105,6 115,6 L180,6 Q190,6 196,12 L228,36 L262,40 Q276,42 276,56 L276,72 Q276,80 268,80 L14,80 Q6,80 6,72 Z"/>'
-         f'<polygon points="80,36 104,12 144,12 144,36" fill="{GLASS}"/><polygon points="150,12 188,12 216,36 150,36" fill="{GLASS}"/>'
-         '<line x1="147" y1="38" x2="147" y2="76" stroke="#34495E" stroke-width="2"/>'
+# The roof is toward the back and the windshield slopes a long way forward, so
+# the front (right side) is easy to see.
+sedan = (f'<path fill="#4A82A8" d="M6,72 L6,56 Q8,40 30,38 L70,36 L90,10 Q94,6 104,6 L156,6 Q166,6 174,12 L236,38 L262,40 Q276,42 276,56 L276,72 Q276,80 268,80 L14,80 Q6,80 6,72 Z"/>'
+         f'<polygon points="80,36 98,12 136,12 136,36" fill="{GLASS}"/><polygon points="142,12 168,12 222,36 142,36" fill="{GLASS}"/>'
+         '<line x1="139" y1="38" x2="139" y2="76" stroke="#34495E" stroke-width="2"/>'
          '<rect x="266" y="46" width="10" height="8" fill="#F6C46A"/><rect x="6" y="46" width="8" height="10" fill="#C0392B"/>'
          + wells([(62, 80), (218, 80)], 26))
 save(sedan, "0 0 280 104", 280, 104, "car_sedan.png")
