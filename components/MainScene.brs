@@ -10,6 +10,8 @@ sub init()
 
     ' Scroll speed of each scenery layer in pixels per second. Farther = slower.
     m.layerSpeeds = { clouds: 8, far: 5, near: 12, hills: 24, town: 55 }
+    ' Width of each layer before it repeats. The town is two different 1920 px tiles.
+    m.layerWidths = { clouds: 1920, far: 1920, near: 1920, hills: 1920, town: 3840 }
     ' The street moves with the town layer, so cars use this as the ground speed offset.
     m.cameraSpeed = 55
 
@@ -20,7 +22,8 @@ sub init()
         { name: "sedan", w: 280, h: 104, wheels: [[62, 80], [218, 80]],   r: 22, bottom: 102, ground: 300 },
         { name: "van",   w: 310, h: 130, wheels: [[66, 104], [246, 104]], r: 24, bottom: 128, ground: 220 },
         { name: "jeep",  w: 270, h: 140, wheels: [[68, 108], [214, 108]], r: 28, bottom: 136, ground: 200 },
-        { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 140 }
+        { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 140 },
+        { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 }
     ]
 
     ' Open-Meteo weather codes (WMO) to text
@@ -66,6 +69,7 @@ sub init()
     applyPeriod(currentPeriod())
     startParallax()
     buildCars()
+    parkCar()
     updateClock()
 
     m.weatherTask = m.top.findNode("weatherTask")
@@ -85,7 +89,7 @@ end sub
 sub startParallax()
     for each name in m.layerSpeeds
         anim = m.top.findNode(name + "Anim")
-        anim.duration = 1920 / m.layerSpeeds[name]
+        anim.duration = m.layerWidths[name] / m.layerSpeeds[name]
         anim.control = "start"
     end for
 end sub
@@ -109,11 +113,14 @@ sub applyPeriod(period as string)
     if period = m.period then return
     m.period = period
     m.sky.uri = "pkg:/images/sky_" + period + ".png"
-    for each name in ["clouds", "far", "near", "hills", "town"]
+    for each name in ["clouds", "far", "near", "hills"]
         uri = "pkg:/images/" + name + "_" + period + ".png"
         m.top.findNode(name + "1").uri = uri
         m.top.findNode(name + "2").uri = uri
     end for
+    m.top.findNode("townA1").uri = "pkg:/images/town_a_" + period + ".png"
+    m.top.findNode("townA2").uri = "pkg:/images/town_a_" + period + ".png"
+    m.top.findNode("townB").uri = "pkg:/images/town_b_" + period + ".png"
     if period = "day"
         m.stars.opacity = 0
         m.sun.uri = "pkg:/images/sun.png"
@@ -361,6 +368,41 @@ sub onCarMoveState(event as object)
     c.lane = ""
     c.timer.duration = 2 + Rnd(7)
     c.timer.control = "start"
+end sub
+
+' Parks a randomly chosen car, facing a random direction, at the gas station in
+' town tile B. It is a child of townStrip, so it scrolls with the town. The
+' wheels do not spin.
+sub parkCar()
+    d = m.carDefs[Rnd(m.carDefs.Count()) - 1]
+    facingLeft = Rnd(2) = 2
+    s = 0.78
+    ' Center of the parking space and the ground line, in townStrip coordinates.
+    ' Tile B starts at x = 1920. The strip starts at screen y = 550, and the
+    ' station ground is at screen y = 898.
+    centerX = 1920 + 780
+    groundY = 898 - 550
+
+    car = m.top.findNode("townStrip").createChild("Group")
+    car.id = "parked_car"
+    car.scale = [s, s]
+    car.translation = [centerX - d.w * s / 2, groundY - d.bottom * s]
+
+    suffix = ""
+    if facingLeft then suffix = "_left"
+    body = car.createChild("Poster")
+    body.uri = "pkg:/images/car_" + d.name + suffix + ".png"
+    body.width = d.w
+    body.height = d.h
+    for each w in d.wheels
+        wx = w[0]
+        if facingLeft then wx = d.w - wx
+        wheel = car.createChild("Poster")
+        wheel.uri = "pkg:/images/wheel.png"
+        wheel.width = d.r * 2
+        wheel.height = d.r * 2
+        wheel.translation = [wx - d.r, w[1] - d.r]
+    end for
 end sub
 
 ' ================= Helpers =================

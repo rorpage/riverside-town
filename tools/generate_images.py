@@ -3,10 +3,13 @@
 Run from the repository root:
     python3 tools/generate_images.py
 
-Requires: pip install cairosvg pillow
+Requires: pip install cairosvg pillow fonttools
 """
-import cairosvg, random, os
+import cairosvg, math, random, os
 from PIL import Image, ImageOps
+from fontTools.ttLib import TTFont
+from fontTools.pens.svgPathPen import SVGPathPen
+from fontTools.pens.transformPen import TransformPen
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "images")
 BUILD = os.path.join(ROOT, "build")
@@ -17,17 +20,55 @@ P = {
  "day": dict(sky="#C9DAEA", horizon="#EEF3F8", cloud="#FFFFFF", far="#A9C0D2", mid="#6F93AE", snow="#FFFFFF",
    hillFar="#7FA487", hill="#5E8B6B", tree="#3F6B52", river="#4A82A8", riverHi="#A9C8DD",
    houseA="#F8FAFC", houseB="#ECEFF3", wall2="#D9E2EA", roof="#34495E", window="#9DB6C9",
-   sidewalk="#D9E2EA", curb="#B7C4CF", road="#3E4A53", roadLine="#F8FAFC"),
+   sidewalk="#D9E2EA", curb="#B7C4CF", road="#3E4A53", roadLine="#F8FAFC", clockFace="#F8FAFC"),
  "dusk": dict(sky="#5E6F93", horizon="#F2A27E", cloud="#F3D6CC", far="#7A8BA8", mid="#56708C", snow="#E8D9D3",
    hillFar="#5E7C6C", hill="#4A6A58", tree="#34523F", river="#5C7493", riverHi="#F2B79C",
    houseA="#E3E1E4", houseB="#D4D3DA", wall2="#C3C6D0", roof="#2A3F50", window="#F6C46A",
-   sidewalk="#BFC6CF", curb="#9CA6B1", road="#333E47", roadLine="#E3E1E4"),
+   sidewalk="#BFC6CF", curb="#9CA6B1", road="#333E47", roadLine="#E3E1E4", clockFace="#F6E7B0"),
  "night": dict(sky="#16242F", horizon="#34495E", cloud="#3A4E5E", far="#3A5468", mid="#2E465A", snow="#9FB2C2",
    hillFar="#2F4A3F", hill="#263E34", tree="#1D3229", river="#34495E", riverHi="#6E8BA3",
    houseA="#5B6770", houseB="#4E5A63", wall2="#46525C", roof="#1A2A36", window="#F6C46A",
-   sidewalk="#5B6770", curb="#46525C", road="#20282E", roadLine="#C9D2DA"),
+   sidewalk="#5B6770", curb="#46525C", road="#20282E", roadLine="#C9D2DA", clockFace="#F6C46A"),
 }
-FONT = "DejaVu Sans"
+
+# Store sign fonts. Most are variable fonts (one file covers a range of weights).
+# Kaushan Script and Alegreya Sans Medium have one weight, so the weight value is
+# ignored for them. They are
+# stored in tools/fonts under the SIL Open Font License. Text is converted to
+# outlines here, so the images look the same on every computer.
+FONT_DIR = os.path.join(ROOT, "tools", "fonts")
+FONTS = {"oswald": "Oswald-Variable.ttf", "playfair": "PlayfairDisplay-Variable.ttf",
+         "cinzel": "Cinzel-Variable.ttf", "script": "DancingScript-Variable.ttf",
+         "kaushan": "KaushanScript-Regular.ttf", "alegreya": "AlegreyaSans-Medium.ttf",
+         "signika": "Signika-Variable.ttf", "cabin": "Cabin-Variable.ttf", "hanken": "HankenGrotesk-Variable.ttf"}
+_glyphs = {}
+
+def glyphs(font, weight):
+    key = (font, weight)
+    if key not in _glyphs:
+        f = TTFont(os.path.join(FONT_DIR, FONTS[font]))
+        gs = f.getGlyphSet(location={"wght": weight}) if "fvar" in f else f.getGlyphSet()
+        _glyphs[key] = (f.getBestCmap(), gs, f["head"].unitsPerEm)
+    return _glyphs[key]
+
+def text_width(label, font, weight, size, spacing=0):
+    cmap, gs, upm = glyphs(font, weight)
+    k = size / upm
+    return sum(gs[cmap[ord(ch)]].width * k for ch in label) + spacing * (len(label) - 1)
+
+def text(label, font, weight, size, cx, y, fill, spacing=0):
+    """Draws label as outlines, centered on cx, with its baseline at y."""
+    cmap, gs, upm = glyphs(font, weight)
+    k = size / upm
+    names = [cmap[ord(ch)] for ch in label]
+    x = cx - text_width(label, font, weight, size, spacing) / 2
+    d = ""
+    for n in names:
+        pen = SVGPathPen(gs)
+        gs[n].draw(TransformPen(pen, (k, 0, 0, -k, x, y)))
+        d += pen.getCommands()
+        x += gs[n].width * k + spacing
+    return f'<path d="{d}" fill="{fill}"/>'
 
 def svg(content, vb, w, h):
     return f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="{vb}">{content}</svg>'
@@ -63,42 +104,149 @@ def hills(p):
 <g stroke="{p["riverHi"]}" stroke-width="4" stroke-linecap="round" fill="none">
 <path d="M962,672 L980,672"/><path d="M930,700 L972,700"/><path d="M860,758 L930,758"/><path d="M1010,770 L1080,770"/><path d="M760,832 L850,832"/><path d="M930,850 L1030,850"/></g>'''
 
-def sign(x, y, w, h, fill, label, size, cx, ty):
+def sign(x, y, w, h, fill, label, font, weight, size, ty, spacing=2):
     return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="4" fill="{fill}"/>'
-            f'<text x="{cx}" y="{ty}" text-anchor="middle" font-family="{FONT}" font-weight="bold" font-size="{size}" letter-spacing="2" fill="#F8FAFC">{label}</text>')
+            + text(label, font, weight, size, x + w / 2, ty, "#F8FAFC", spacing))
 
+def street(p):
+    return (f'<rect x="0" y="900" width="1920" height="36" fill="{p["sidewalk"]}"/><rect x="0" y="936" width="1920" height="6" fill="{p["curb"]}"/>'
+            f'<rect x="0" y="942" width="1920" height="138" fill="{p["road"]}"/>'
+            f'<path d="M0,1011 L1920,1011" stroke="{p["roadLine"]}" stroke-width="6" stroke-dasharray="60 36" fill="none"/>')
+
+def arch(x, y, w, h, fill):
+    """A window or door with a round top. (x, y) is the top left corner."""
+    r = w / 2
+    return f'<path d="M{x},{y+h} L{x},{y+r} A{r},{r} 0 0 1 {x+w},{y+r} L{x+w},{y+h} Z" fill="{fill}"/>'
+
+# The town layer is two different 1920 pixel tiles, A then B, so the street is
+# 3840 pixels long before it repeats.
 def town(p):
     A, B, W2, R, Wn = p["houseA"], p["houseB"], p["wall2"], p["roof"], p["window"]
-    def house(x, y, w, roofPeak, win1, win2, doorX, winY):
+    def house(x, y, w, roofPeak, win1, win2, doorX, winY, number, font, weight=600):
         return (f'<rect x="{x}" y="{y}" width="{w}" height="{900-y}" fill="{A}"/>'
                 f'<polygon points="{x-12},{y} {x+w//2},{roofPeak} {x+w+12},{y}" fill="{R}"/>'
                 f'<rect x="{win1}" y="{winY}" width="44" height="40" fill="{Wn}"/><rect x="{win2}" y="{winY}" width="44" height="40" fill="{Wn}"/>'
-                f'<rect x="{doorX}" y="830" width="40" height="70" fill="{R}"/>')
-    s = house(40, 750, 200, 680, 62, 174, 120, 780)
+                f'<rect x="{doorX}" y="830" width="40" height="70" fill="{R}"/>'
+                # House number plaque above the door
+                f'<rect x="{doorX-2}" y="808" width="44" height="18" rx="3" fill="{R}"/>'
+                + text(number, font, weight, 14, doorX + 20, 822, "#F8FAFC", 1))
+    s = house(40, 750, 200, 680, 62, 174, 120, 780, "5401", "signika", 500)
     s += (f'<rect x="270" y="700" width="240" height="200" fill="{B}"/><rect x="266" y="700" width="248" height="14" fill="{R}"/>'
-          + sign(300, 724, 180, 44, R, "BAKERY", 24, 390, 755) +
+          + sign(296, 724, 188, 44, R, "Long\u2019s Donuts", "script", 700, 28, 755, 0) +
           f'<polygon points="280,790 500,790 510,822 270,822" fill="{ACCENT}"/>'
           f'<rect x="290" y="832" width="130" height="58" fill="{Wn}"/><rect x="440" y="832" width="46" height="68" fill="{R}"/>')
-    s += house(540, 730, 180, 664, 562, 654, 610, 760)
+    s += house(540, 730, 180, 664, 562, 654, 610, 760, "135", "hanken", 300)
+    # Book store: the display window shows rows of book spines
+    spines = ""
+    colors = ["#B5523F", "#4A82A8", "#6B7B3A", "#F6C46A", "#34495E", "#C9D2DA"]
+    for row, (top, base) in enumerate([(850, 868), (872, 890)]):
+        bx = 904 + row * 4
+        i = row * 2
+        while bx < 1004:
+            bw = [8, 10, 7, 9][i % 4]
+            bh = base - top - [0, 3, 1, 4, 2][i % 5]
+            spines += f'<rect x="{bx}" y="{base-bh}" width="{bw}" height="{bh}" fill="{colors[i % len(colors)]}"/>'
+            bx += bw + 2
+            i += 1
     s += (f'<rect x="880" y="670" width="220" height="230" fill="{W2}"/><rect x="876" y="670" width="228" height="14" fill="{R}"/>'
           f'<rect x="906" y="698" width="48" height="48" fill="{Wn}"/><rect x="1026" y="698" width="48" height="48" fill="{Wn}"/>'
-          + sign(910, 758, 160, 40, R, "BOOKS", 22, 990, 786) +
+          # Two lines: a small FOREVER above a large BOOKS
+          + sign(906, 752, 168, 52, "#6B4A3A", "FOREVER", "playfair", 700, 14, 770, 5)
+          + text("BOOKS", "playfair", 800, 26, 990, 797, "#F8FAFC", 4) +
           f'<polygon points="890,808 1090,808 1098,836 882,836" fill="{p["mid"]}"/>'
-          f'<rect x="900" y="846" width="110" height="48" fill="{Wn}"/><rect x="1030" y="840" width="46" height="60" fill="{R}"/>')
+          f'<rect x="900" y="846" width="110" height="48" fill="{Wn}"/>{spines}'
+          f'<rect x="900" y="868" width="110" height="4" fill="{R}"/><rect x="900" y="890" width="110" height="4" fill="{R}"/>'
+          f'<rect x="1030" y="840" width="46" height="60" fill="{R}"/>')
     s += (f'<rect x="1120" y="710" width="260" height="190" fill="{B}"/><rect x="1116" y="710" width="268" height="14" fill="{R}"/>'
-          + sign(1150, 734, 200, 44, "#4A82A8", "HARDWARE", 22, 1250, 764) +
+          # Two lines: Luke's Diner in Gilmore Girls is in the old Williams Hardware building
+          + sign(1150, 730, 200, 54, "#4A82A8", "WILLIAMS", "oswald", 500, 16, 749, 5)
+          + text("HARDWARE", "oswald", 600, 26, 1250, 777, "#F8FAFC", 4) +
           f'<polygon points="1130,800 1370,800 1378,828 1122,828" fill="{R}"/>'
           f'<rect x="1140" y="838" width="150" height="56" fill="{Wn}"/><rect x="1310" y="834" width="46" height="66" fill="{R}"/>')
-    s += house(1410, 740, 190, 672, 1432, 1534, 1485, 770)
+    s += house(1410, 740, 190, 672, 1432, 1534, 1485, 770, "5334", "cabin")
     s += (f'<rect x="1630" y="690" width="250" height="210" fill="{W2}"/><rect x="1626" y="690" width="258" height="14" fill="{R}"/>'
           f'<rect x="1660" y="716" width="48" height="44" fill="{Wn}"/><rect x="1772" y="716" width="48" height="44" fill="{Wn}"/>'
-          + sign(1680, 772, 150, 40, R, "CAF&#201;", 22, 1755, 800) +
+          + sign(1680, 768, 150, 46, R, "Luke\u2019s", "kaushan", 400, 32, 802, 1) +
           f'<polygon points="1640,820 1870,820 1878,846 1632,846" fill="{ACCENT}"/>'
           f'<rect x="1650" y="854" width="140" height="42" fill="{Wn}"/><rect x="1806" y="852" width="46" height="48" fill="{R}"/>')
-    s += (f'<rect x="0" y="900" width="1920" height="36" fill="{p["sidewalk"]}"/><rect x="0" y="936" width="1920" height="6" fill="{p["curb"]}"/>'
-          f'<rect x="0" y="942" width="1920" height="138" fill="{p["road"]}"/>'
-          f'<path d="M0,1011 L1920,1011" stroke="{p["roadLine"]}" stroke-width="6" stroke-dasharray="60 36" fill="none"/>')
-    return s
+    return s + street(p)
+
+def town_b(p):
+    A, B, W2, R, Wn = p["houseA"], p["houseB"], p["wall2"], p["roof"], p["window"]
+    RED, GOLD, BLUE = "#B5523F", "#F6C46A", "#4A82A8"
+    # Church: bell tower with a spire and a cross, and a nave with stained glass windows
+    s = (f'<rect x="166" y="760" width="264" height="140" fill="{A}"/>'
+         f'<polygon points="156,762 300,692 440,762" fill="{R}"/>'
+         f'<rect x="70" y="690" width="100" height="210" fill="{A}"/>'
+         f'<polygon points="62,692 120,590 178,692" fill="{R}"/>'
+         f'<rect x="116" y="556" width="8" height="38" fill="{R}"/><rect x="106" y="566" width="28" height="8" fill="{R}"/>'
+         + arch(100, 708, 40, 56, R) +
+         f'<g stroke="{A}" stroke-width="3"><line x1="104" y1="738" x2="136" y2="738"/><line x1="104" y1="750" x2="136" y2="750"/></g>'
+         f'<circle cx="120" cy="790" r="13" fill="{GOLD}"/><circle cx="120" cy="790" r="6" fill="{RED}"/>'
+         + arch(98, 826, 44, 74, R))
+    s += sign(196, 768, 204, 30, R, "New City", "alegreya", 400, 22, 790, 2)
+    for wx in (196, 280, 364):
+        s += (arch(wx, 806, 36, 66, BLUE) + f'<rect x="{wx+12}" y="826" width="12" height="46" fill="{RED}"/>'
+              f'<circle cx="{wx+18}" cy="822" r="7" fill="{GOLD}"/>'
+              f'<g stroke="{R}" stroke-width="2"><line x1="{wx}" y1="846" x2="{wx+36}" y2="846"/><line x1="{wx}" y1="860" x2="{wx+36}" y2="860"/></g>')
+    s += f'<rect x="60" y="892" width="120" height="8" fill="{p["curb"]}"/>'
+    # Gas station: price sign, canopy over one pump, and a small market.
+    # The parked car is added by MainScene.brs so it can change each time.
+    # Price sign: $2.05 with a small 9 at the top right for the 9/10 of a cent
+    priceW = text_width("$2.05", "oswald", 500, 22, 1)
+    nineW = text_width("9", "oswald", 500, 11)
+    priceX = 484 - (priceW + 2 + nineW) / 2
+    s += (f'<rect x="480" y="746" width="8" height="154" fill="{W2}"/>'
+          f'<rect x="448" y="690" width="72" height="62" rx="4" fill="{R}"/>'
+          + text("GAS", "oswald", 700, 20, 484, 714, ACCENT, 2)
+          + text("$2.05", "oswald", 500, 22, priceX + priceW / 2, 742, "#F8FAFC", 1)
+          + text("9", "oswald", 500, 11, priceX + priceW + 2 + nineW / 2, 731, "#F8FAFC") +
+          f'<rect x="556" y="772" width="12" height="128" fill="{W2}"/><rect x="912" y="772" width="12" height="128" fill="{W2}"/>'
+          f'<rect x="520" y="740" width="440" height="34" fill="{R}"/><rect x="520" y="766" width="440" height="8" fill="{ACCENT}"/>'
+          + text("FUEL STOP", "oswald", 600, 22, 740, 762, "#F8FAFC", 5) +
+          f'<rect x="578" y="886" width="62" height="14" fill="{p["curb"]}"/>'
+          f'<rect x="588" y="812" width="40" height="76" fill="{B}"/><rect x="588" y="812" width="40" height="10" fill="{ACCENT}"/>'
+          f'<rect x="594" y="828" width="28" height="18" fill="{Wn}"/>'
+          f'<path d="M628,836 Q646,840 642,870" stroke="#1F2A33" stroke-width="4" fill="none"/>'
+          f'<rect x="980" y="770" width="200" height="130" fill="{B}"/><rect x="976" y="770" width="208" height="14" fill="{R}"/>'
+          + sign(1006, 792, 148, 36, ACCENT, "MARKET", "oswald", 600, 22, 818, 4) +
+          f'<rect x="996" y="842" width="96" height="50" fill="{Wn}"/><rect x="1110" y="836" width="46" height="64" fill="{R}"/>')
+    # Hill Valley Courthouse Mall from Back to the Future: stone front with
+    # columns and steps, and a clock tower stopped at 10:04
+    cx, cy, cr = 1500, 636, 28
+    clock = f'<circle cx="{cx}" cy="{cy}" r="{cr}" fill="{p["clockFace"]}" stroke="{R}" stroke-width="3"/>'
+    for i in range(12):
+        a = math.radians(i * 30)
+        r1 = cr - (7 if i % 3 == 0 else 5)
+        clock += (f'<line x1="{cx + r1 * math.sin(a):.1f}" y1="{cy - r1 * math.cos(a):.1f}" '
+                  f'x2="{cx + (cr - 3) * math.sin(a):.1f}" y2="{cy - (cr - 3) * math.cos(a):.1f}" stroke="{R}" stroke-width="2"/>')
+    for deg, length, width in (((10 + 4 / 60) * 30, 14, 4), (4 * 6, 21, 3)):
+        a = math.radians(deg)
+        clock += (f'<line x1="{cx}" y1="{cy}" x2="{cx + length * math.sin(a):.1f}" y2="{cy - length * math.cos(a):.1f}" '
+                  f'stroke="{R}" stroke-width="{width}" stroke-linecap="round"/>')
+    clock += f'<circle cx="{cx}" cy="{cy}" r="3" fill="{R}"/>'
+    s += (f'<rect x="1456" y="600" width="88" height="112" fill="{A}"/>'
+          f'<rect x="1448" y="592" width="104" height="10" fill="{W2}"/>'
+          f'<rect x="1470" y="574" width="60" height="18" fill="{A}"/>'
+          + arch(1478, 578, 12, 14, R) + arch(1494, 578, 12, 14, R) + arch(1510, 578, 12, 14, R) +
+          f'<polygon points="1462,575 1500,552 1538,575" fill="{R}"/>'
+          + clock +
+          f'<rect x="1250" y="888" width="500" height="12" fill="{p["curb"]}"/><rect x="1262" y="876" width="476" height="12" fill="{W2}"/>'
+          f'<rect x="1280" y="730" width="440" height="146" fill="{A}"/>'
+          f'<polygon points="1262,712 1500,672 1738,712" fill="{B}"/>'
+          f'<polygon points="1300,706 1500,680 1700,706" fill="none" stroke="{W2}" stroke-width="4"/>'
+          f'<rect x="1270" y="708" width="460" height="24" fill="{W2}"/>'
+          + text("HILL VALLEY COURTHOUSE MALL", "cinzel", 700, 18, 1500, 727, R, 2))
+    for cx in (1320, 1392, 1464, 1536, 1608, 1680):
+        s += (f'<rect x="{cx-11}" y="740" width="22" height="136" fill="{B}"/>'
+              f'<rect x="{cx-15}" y="732" width="30" height="8" fill="{W2}"/><rect x="{cx-15}" y="868" width="30" height="8" fill="{W2}"/>')
+    for wx in (1356, 1428, 1572, 1644):
+        s += arch(wx - 15, 760, 30, 80, Wn)
+    s += arch(1478, 796, 44, 80, R)
+    # Trees at the end of the tile
+    s += (f'<g fill="{p["tree"]}"><rect x="1814" y="836" width="12" height="64"/><circle cx="1820" cy="816" r="36"/>'
+          f'<rect x="1202" y="846" width="10" height="54"/><circle cx="1207" cy="830" r="26"/></g>')
+    return s + street(p)
 
 def sky(p):
     return (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/>'
@@ -106,7 +254,7 @@ def sky(p):
 
 # Layer crops: name -> (function, y, height)
 CROPS = {"clouds": (clouds, 90, 255), "far": (far, 295, 425), "near": (near, 400, 360),
-         "hills": (hills, 600, 310), "town": (town, 660, 420)}
+         "hills": (hills, 600, 310), "town_a": (town, 550, 530), "town_b": (town_b, 550, 530)}
 for pal, p in P.items():
     save(sky(p), "0 0 8 1080", 8, 1080, f"sky_{pal}.png")
     for name, (fn, y, h) in CROPS.items():
@@ -182,23 +330,60 @@ truck = (f'<rect x="8" y="50" width="112" height="46" rx="4" fill="{TR}"/>'
          '<rect x="276" y="92" width="16" height="8" rx="3" fill="#C9D2DA"/><rect x="2" y="88" width="10" height="8" rx="3" fill="#C9D2DA"/>')
 save(truck, "0 0 300 130", 300, 130, "car_truck.png")
 
+# Sports car in the style of a Bugatti: low and long, two-tone blue, a curved
+# line on the side, and a horseshoe-shaped grille at the front
+SP, SPD, CHROME = "#2C6BB3", "#16294A", "#C9D2DA"
+# The roof peak is toward the back and the windshield is long and low, so the
+# front (right side) is easy to see. The hood is lower than the rear deck.
+# The body is moved down 16 px so it sits close to the ground.
+sports = ('<g transform="translate(0,16)">'
+          f'<path fill="{SP}" d="M8,72 L8,46 Q10,40 24,38 L84,36 Q108,22 142,20 Q170,20 196,30 L252,46 L284,52 Q296,55 296,64 L296,72 Q296,80 288,80 L16,80 Q8,80 8,72 Z"/>'
+          f'<path fill="{SPD}" d="M134,21 Q170,20 196,30 L252,46 L284,52 Q296,55 296,64 L296,72 Q296,80 288,80 L160,80 Q132,80 130,60 Q128,38 134,21 Z"/>'
+          f'<path fill="{GLASS}" d="M100,38 Q120,27 142,26 Q166,26 192,34 L236,47 L104,44 Z"/>'
+          f'<path d="M136,22 Q128,42 130,60 Q132,76 152,78" stroke="{CHROME}" stroke-width="4" fill="none" stroke-linecap="round"/>'
+          f'<path fill="{DARK}" d="M100,54 L118,51 L120,64 L102,64 Z"/>'
+          f'<path d="M290,58 Q296,58 296,64 Q296,70 290,70" stroke="{CHROME}" stroke-width="3" fill="{DARK}"/>'
+          '<rect x="266" y="55" width="18" height="4" rx="2" fill="#F6C46A"/><rect x="8" y="44" width="14" height="4" fill="#C0392B"/></g>'
+          + wells([(64, 84), (234, 84)], 22))
+save(sports, "0 0 304 104", 304, 104, "car_sports.png")
+
 # Channel icons from a composite of the day scene
-def composite(pal):
+def composite(pal, tile="a"):
     p = P[pal]
+    townFn = town if tile == "a" else town_b
     full = (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/><stop offset="0.62" stop-color="{p["horizon"]}"/></linearGradient></defs>'
             f'<rect width="1920" height="1080" fill="url(#g)"/><circle cx="1500" cy="220" r="64" fill="{ACCENT}"/>'
-            + clouds(p) + far(p) + near(p) + hills(p) + town(p))
-    path = os.path.join(BUILD, f"composite_{pal}.png")
+            + clouds(p) + far(p) + near(p) + hills(p) + townFn(p))
+    path = os.path.join(BUILD, f"composite_{pal}_{tile}.png")
     cairosvg.svg2png(bytestring=svg(full, "0 0 1920 1080", 1920, 1080).encode(), write_to=path)
     return path
 im = Image.open(composite("day")).convert("RGB")
 crop = im.crop((240, 0, 1680, 1080))
 crop.resize((290, 218), Image.LANCZOS).save(os.path.join(OUT, "icon_hd.png"))
 crop.resize((540, 405), Image.LANCZOS).save(os.path.join(OUT, "icon_fhd.png"))
+composite("day", "b")
 composite("night")
+composite("night", "b")
 
 # Mirrored car bodies for the far lane, where cars drive right to left
-for n in ["sedan", "van", "jeep", "truck"]:
+for n in ["sedan", "van", "jeep", "truck", "sports"]:
     ImageOps.mirror(Image.open(os.path.join(OUT, f"car_{n}.png"))).save(os.path.join(OUT, f"car_{n}_left.png"))
+
+# Add a parked car to the tile B previews to check its position. These numbers
+# copy parkCar() and m.carDefs in components/MainScene.brs.
+def park_preview(pal, name, w, h, wheels, r, bottom):
+    path = os.path.join(BUILD, f"composite_{pal}_b.png")
+    im = Image.open(path).convert("RGBA")
+    car = Image.new("RGBA", (w, h))
+    car.alpha_composite(Image.open(os.path.join(OUT, f"car_{name}.png")).convert("RGBA").resize((w, h)))
+    wheel = Image.open(os.path.join(OUT, "wheel.png")).convert("RGBA").resize((r * 2, r * 2))
+    for wx, wy in wheels:
+        car.alpha_composite(wheel, (wx - r, wy - r))
+    s = 0.78
+    car = car.resize((round(w * s), round(h * s)), Image.LANCZOS)
+    im.alpha_composite(car, (round(780 - w * s / 2), round(898 - bottom * s)))
+    im.save(path)
+park_preview("day", "van", 310, 130, [(66, 104), (246, 104)], 24, 128)
+park_preview("night", "sedan", 280, 104, [(62, 80), (218, 80)], 22, 102)
 
 print("Wrote", len(os.listdir(OUT)), "images to", OUT)
