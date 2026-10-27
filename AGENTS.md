@@ -21,7 +21,6 @@ These apply to code, comments, commit messages, README.md, and this file.
 - Network requests must run in a Task node. `components/WeatherTask.brs` does this with `roUrlTransfer` and the `common:/certs/ca-bundle.crt` certificate file.
 - Animation interpolators find nodes by id through `fieldToInterp` (for example, `sedan_car.translation`). Animations created in code are appended to the scene root so the id lookup works. Keep node ids unique.
 - Label text that is too wide is cut off with "...". When changing font sizes or text, check that the longest expected value (for example, "10:42 PM") fits the label width.
-- Screensaver debug output is on telnet port 8087, not 8085.
 - Roku does not give apps the device's ZIP code. The weather location is set with `m.LAT` and `m.LON` in `components/MainScene.brs` (currently ZIP code 46220).
 
 ## Artwork rules
@@ -53,9 +52,4 @@ These apply to code, comments, commit messages, README.md, and this file.
 
 ## Testing
 
-There are no automated tests. After a change:
-
-1. Regenerate images if the generator changed.
-2. Sideload the zip and select the screensaver under Settings > Theme > Screensavers. Use Preview to start it.
-3. Watch the debug console on port 8087 for errors.
-4. Check day, dusk, and night. To test a palette without waiting, temporarily make `currentPeriod()` return `"day"`, `"dusk"`, or `"night"` on its first line. Changing only the default sunrise and sunset values does not work, because the weather response replaces them. Remove the change before committing.
+The owner tests every change on a Roku. Do not test on a Roku, and do not mention Roku testing in replies or commit messages. If the generator changed, run it and check the previews in `build/` before committing.
