@@ -42,6 +42,12 @@
       </Group>
     </Group>
 
+    <!-- Fireflies on summer nights. Two images fade in and out in turn. -->
+    <Group id="fireflies" visible="false" translation="[0,540]">
+      <Poster id="firefliesA" width="1920" height="400" uri="pkg:/images/fireflies_a.png" />
+      <Poster id="firefliesB" width="1920" height="400" uri="pkg:/images/fireflies_b.png" />
+    </Group>
+
     <!-- Cars. The far lane is added first so near-lane cars draw on top of it. -->
     <Group id="farLane" />
     <Group id="nearLane" />
@@ -53,6 +59,20 @@
         <Poster id="precip2" width="1920" height="1080" translation="[0,-1080]" />
       </Group>
     </Group>
+
+    <!-- Falling leaves in fall or petals in spring. Works the same way as rain and snow. -->
+    <Group id="seasonFx" visible="false">
+      <Group id="seasonFxStrip">
+        <Poster id="seasonFx1" width="1920" height="1080" />
+        <Poster id="seasonFx2" width="1920" height="1080" translation="[0,-1080]" />
+      </Group>
+    </Group>
+
+    <!-- Fog: an 8 px wide gradient stretched across the screen, like the sky -->
+    <Poster id="fog" width="1920" height="1080" loadDisplayMode="scaleToFill" uri="pkg:/images/fog.png" visible="false" />
+
+    <!-- Lightning flash during thunderstorms -->
+    <Rectangle id="flash" width="1920" height="1080" color="0xFFFFFFFF" opacity="0" />
 
     <!-- Clock and weather panel -->
     <Group id="info" translation="[80,60]">
@@ -85,6 +105,17 @@
     </Animation>
     <Animation id="precipAnim" repeat="true" easeFunction="linear" duration="1">
       <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[0,1080]]" fieldToInterp="precipStrip.translation" />
+    </Animation>
+
+    <Animation id="seasonFxAnim" repeat="true" easeFunction="linear" duration="16">
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[0,1080]]" fieldToInterp="seasonFxStrip.translation" />
+    </Animation>
+    <Animation id="firefliesAnim" repeat="true" easeFunction="inOutQuad" duration="4">
+      <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[0.15, 1.0, 0.15]" fieldToInterp="firefliesA.opacity" />
+      <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[1.0, 0.15, 1.0]" fieldToInterp="firefliesB.opacity" />
+    </Animation>
+    <Animation id="flashAnim" repeat="false" easeFunction="linear" duration="0.7">
+      <FloatFieldInterpolator key="[0.0, 0.08, 0.18, 0.3, 1.0]" keyValue="[0.0, 0.55, 0.1, 0.4, 0.0]" fieldToInterp="flash.opacity" />
     </Animation>
 
     <WeatherTask id="weatherTask" />

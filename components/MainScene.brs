@@ -40,6 +40,14 @@ sub init()
         "95": "Thunderstorm", "96": "Thunderstorm with hail", "99": "Thunderstorm with hail"
     }
 
+    ' Season to always show, for previewing: "spring", "summer", "fall", or "winter".
+    ' Leave it as "" to choose the season from today's date.
+    m.seasonOverride = ""
+    ' Layers that have a different image for some seasons. This must match
+    ' SEASONAL in tools/generate_images.py.
+    allSeasons = ["spring", "summer", "fall", "winter"]
+    m.seasonalLayers = { far: ["winter"], near: ["winter"], hills: allSeasons, town_a: allSeasons, town_b: allSeasons }
+
     ' Positions for the clock panel. It moves every few minutes to protect TVs from burn-in.
     m.infoSpots = [[80, 60], [1260, 60], [670, 60]]
     m.infoIndex = 0
@@ -58,15 +66,30 @@ sub init()
     m.clockLabel = m.top.findNode("clockLabel")
     m.tempLabel = m.top.findNode("tempLabel")
     m.condLabel = m.top.findNode("condLabel")
+    m.fireflies = m.top.findNode("fireflies")
+    m.firefliesAnim = m.top.findNode("firefliesAnim")
+    m.seasonFx = m.top.findNode("seasonFx")
+    m.seasonFx1 = m.top.findNode("seasonFx1")
+    m.seasonFx2 = m.top.findNode("seasonFx2")
+    m.seasonFxAnim = m.top.findNode("seasonFxAnim")
+    m.fog = m.top.findNode("fog")
+    m.flashAnim = m.top.findNode("flashAnim")
 
     m.top.backgroundColor = "0x16242FFF"
 
     m.weather = invalid
     m.period = ""
+    m.season = ""
+    m.sceneKey = ""
     m.precipKind = ""
+    m.storm = false
+
+    m.lightningTimer = m.top.createChild("Timer")
+    m.lightningTimer.repeat = false
+    m.lightningTimer.observeField("fire", "onLightning")
 
     ' ---------- Start ----------
-    applyPeriod(currentPeriod())
+    applyScene()
     startParallax()
     buildCars()
     parkCar()
@@ -109,18 +132,62 @@ function currentPeriod() as string
     return "night"
 end function
 
-sub applyPeriod(period as string)
-    if period = m.period then return
+' Returns "spring", "summer", "fall", or "winter" from today's date. The
+' dates are close to the equinoxes and solstices, which move by a day or so
+' from year to year.
+function currentSeason() as string
+    if m.seasonOverride <> "" then return m.seasonOverride
+    dt = CreateObject("roDateTime")
+    dt.ToLocalTime()
+    md = dt.GetMonth() * 100 + dt.GetDayOfMonth()
+    if md >= 1221 or md < 320 then return "winter"
+    if md < 621 then return "spring"
+    if md < 922 then return "summer"
+    return "fall"
+end function
+
+' Returns the image for a scenery layer. variant is the season to draw. A
+' layer without an image for that season uses its summer image, which has no
+' season in the file name.
+function layerUri(name as string, variant as string, period as string) as string
+    seasons = m.seasonalLayers[name]
+    if seasons <> invalid
+        for each s in seasons
+            if s = variant then return "pkg:/images/" + name + "_" + variant + "_" + period + ".png"
+        end for
+    end if
+    return "pkg:/images/" + name + "_" + period + ".png"
+end function
+
+' Sets every image for the time of day, the season, and the weather. It does
+' nothing when none of them changed.
+sub applyScene()
+    period = currentPeriod()
+    season = currentSeason()
+    ' While snow is falling, the ground shows snow in any season.
+    ground = season
+    if m.precipKind = "snow" then ground = "winter"
+    key = period + "," + season + "," + ground + "," + m.precipKind
+    if key = m.sceneKey then return
+    m.sceneKey = key
     m.period = period
+    m.season = season
+
     m.sky.uri = "pkg:/images/sky_" + period + ".png"
     for each name in ["clouds", "far", "near", "hills"]
-        uri = "pkg:/images/" + name + "_" + period + ".png"
+        uri = layerUri(name, ground, period)
         m.top.findNode(name + "1").uri = uri
         m.top.findNode(name + "2").uri = uri
     end for
-    m.top.findNode("townA1").uri = "pkg:/images/town_a_" + period + ".png"
-    m.top.findNode("townA2").uri = "pkg:/images/town_a_" + period + ".png"
-    m.top.findNode("townB").uri = "pkg:/images/town_b_" + period + ".png"
+    m.top.findNode("townA1").uri = layerUri("town_a", ground, period)
+    m.top.findNode("townA2").uri = layerUri("town_a", ground, period)
+    m.top.findNode("townB").uri = layerUri("town_b", ground, period)
+    updateSeasonFx(season, period)
+    if period = "night"
+        m.fog.opacity = 0.6
+    else
+        m.fog.opacity = 1
+    end if
     if period = "day"
         m.stars.opacity = 0
         m.sun.uri = "pkg:/images/sun.png"
@@ -137,7 +204,39 @@ sub applyPeriod(period as string)
 end sub
 
 sub onPeriodTick()
-    applyPeriod(currentPeriod())
+    applyScene()
+end sub
+
+' Falling leaves in fall, falling petals in spring, and fireflies on summer
+' nights. They are hidden while rain or snow is falling.
+sub updateSeasonFx(season as string, period as string)
+    fx = ""
+    if m.precipKind = ""
+        if season = "fall" then fx = "leaves"
+        if season = "spring" then fx = "petals"
+    end if
+    m.seasonFxAnim.control = "stop"
+    if fx = ""
+        m.seasonFx.visible = false
+    else
+        m.seasonFx1.uri = "pkg:/images/" + fx + ".png"
+        m.seasonFx2.uri = "pkg:/images/" + fx + ".png"
+        if fx = "leaves"
+            m.seasonFxAnim.duration = 16
+        else
+            m.seasonFxAnim.duration = 22
+        end if
+        m.seasonFx.visible = true
+        m.seasonFxAnim.control = "start"
+    end if
+
+    flies = season = "summer" and period = "night" and m.precipKind = ""
+    m.fireflies.visible = flies
+    if flies
+        m.firefliesAnim.control = "start"
+    else
+        m.firefliesAnim.control = "stop"
+    end if
 end sub
 
 ' ================= Weather =================
@@ -154,7 +253,31 @@ sub onWeather()
     m.tempLabel.text = CInt(r.temp).ToStr() + Chr(176) + "F"
     m.condLabel.text = weatherText(r.code)
     setPrecip(r.code)
-    applyPeriod(currentPeriod())
+    setFog(r.code)
+    setStorm(r.code)
+    applyScene()
+end sub
+
+sub setFog(code as dynamic)
+    c = Int(code)
+    m.fog.visible = c = 45 or c = 48
+end sub
+
+' Thunderstorm codes flash lightning at random times.
+sub setStorm(code as dynamic)
+    storm = Int(code) >= 95
+    if storm and not m.storm
+        m.lightningTimer.duration = 3 + Rnd(8)
+        m.lightningTimer.control = "start"
+    end if
+    m.storm = storm
+end sub
+
+sub onLightning()
+    if not m.storm then return
+    m.flashAnim.control = "start"
+    m.lightningTimer.duration = 6 + Rnd(14)
+    m.lightningTimer.control = "start"
 end sub
 
 function weatherText(code as dynamic) as string

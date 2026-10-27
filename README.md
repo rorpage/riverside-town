@@ -12,7 +12,23 @@ A Roku screensaver inspired by Roku City. It shows a small town beside a river w
 - Two lanes. The near lane drives left to right at full size. The far lane drives right to left and draws the cars slightly smaller.
 - Weather from [Open-Meteo](https://open-meteo.com/), refreshed every 15 minutes. No API key is needed.
 - Day, dusk, and night versions of the scene, chosen from today's real sunrise and sunset times.
-- Rain and snow effects when the current weather is rain or snow.
+- Four seasons, chosen from today's date:
+
+  | Season | Dates | What changes |
+  |---|---|---|
+  | Spring | March 20 to June 20 | Light green hills, trees with pink blossoms, flower boxes under house windows, falling petals |
+  | Summer | June 21 to September 21 | Green hills and trees, fireflies at night |
+  | Fall | September 22 to December 20 | Gold hills, orange and red trees, pumpkins by doors, leaves on the sidewalk, falling leaves |
+  | Winter | December 21 to March 19 | Snow on the hills, mountains, roofs, sidewalk, and pine trees, bare trees, a snowbank along the curb, a frozen river |
+
+  The dates are close to the equinoxes and solstices, which move by a day or so from year to year. Pine trees stay green all year.
+- Weather effects from the current weather:
+  - Rain and drizzle: falling rain.
+  - Snow: falling snow. While snow is falling, the ground shows snow in any season.
+  - Fog: a fog layer over the scene.
+  - Thunderstorms: rain and lightning flashes at random times.
+
+  Falling leaves, petals, and fireflies are hidden while rain or snow is falling.
 - A clock and weather panel that moves to a new position every 5 minutes to protect TVs from burn-in.
 
 ## Project layout
@@ -63,6 +79,8 @@ All settings are at the top of `init()` in `components/MainScene.brs`.
 | `m.cameraSpeed` | Must match the `town` layer speed. Cars use it so their speed looks correct relative to the street. |
 | `m.carDefs` | Each car's image size, wheel positions, wheel radius, and `ground` speed in pixels per second. |
 | `m.infoSpots` | The positions the clock panel moves between. |
+| `m.seasonOverride` | Set to `"spring"`, `"summer"`, `"fall"`, or `"winter"` to always show that season, for example to preview it. Leave it as `""` to choose the season from the date. |
+| `m.seasonalLayers` | Which scenery layers have a different image for some seasons. It must match `SEASONAL` in `tools/generate_images.py`. |
 
 The panel's transparency is set by the `color` value on the `Rectangle` inside the `info` group in `components/MainScene.xml`. The last two characters are the opacity: `00` is fully clear and `FF` is fully solid.
 
@@ -97,12 +115,15 @@ Store sign fonts:
 
 These fonts are from [Google Fonts](https://fonts.google.com/). All of them except Kaushan Script and Alegreya Sans are variable fonts: one file covers a range of weights, and the generator picks the weight for each sign. Kaushan Script has only one weight, and only the Medium weight of Alegreya Sans is included. They are licensed under the SIL Open Font License; the license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
 
-This writes every PNG into `images/`, including the mirrored car images used by the far lane. It also writes full-scene previews for day and night into `build/`, which git ignores. There is one preview for each town section (`_a` and `_b`). The `_b` previews include a parked car so its position can be checked.
+This writes every PNG into `images/`, including the mirrored car images used by the far lane. It also writes full-scene previews for day and night into `build/`, which git ignores. There is one preview for each season, for day and night, and for each town section (`_a` and `_b`). The summer `_b` previews include a parked car so its position can be checked.
 
 Notes on the image sizes:
 
 - Each scenery layer is exactly 1920 pixels wide and its left and right edges line up, so two copies placed side by side repeat without a visible seam. The town layer is two different images (`town_a` and `town_b`) placed in the order A, B, A, so the street is 3840 pixels long before it repeats.
-- The sky is an 8 pixel wide gradient that the scene stretches to full width. This uses much less memory than a full-size image.
+- The sky is an 8 pixel wide gradient that the scene stretches to full width. This uses much less memory than a full-size image. The fog image works the same way.
+- Seasonal layers are named `<layer>_<season>_<period>.png`, for example `hills_fall_night.png`. The hills and both town sections have an image for every season. The far and near mountains only have a winter image (`far_winter_day.png`); in other seasons they use the image without a season in the name (`far_day.png`). The clouds and sky do not change with the seasons.
+- The generator deletes the old scenery images before it writes new ones, so files that are no longer used do not stay in `images/`.
+- The `build/` previews are named `composite_<season>_<period>_<section>.png`, for day and night in each season.
 - If you change a car's size or wheel positions in the generator, update the matching entry in `m.carDefs`.
 
 ## Debugging
