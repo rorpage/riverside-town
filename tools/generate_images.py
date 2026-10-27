@@ -5,7 +5,7 @@ Run from the repository root:
 
 Requires: pip install cairosvg pillow fonttools
 """
-import cairosvg, random, os
+import cairosvg, math, random, os
 from PIL import Image, ImageOps
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -20,15 +20,15 @@ P = {
  "day": dict(sky="#C9DAEA", horizon="#EEF3F8", cloud="#FFFFFF", far="#A9C0D2", mid="#6F93AE", snow="#FFFFFF",
    hillFar="#7FA487", hill="#5E8B6B", tree="#3F6B52", river="#4A82A8", riverHi="#A9C8DD",
    houseA="#F8FAFC", houseB="#ECEFF3", wall2="#D9E2EA", roof="#34495E", window="#9DB6C9",
-   sidewalk="#D9E2EA", curb="#B7C4CF", road="#3E4A53", roadLine="#F8FAFC"),
+   sidewalk="#D9E2EA", curb="#B7C4CF", road="#3E4A53", roadLine="#F8FAFC", clockFace="#F8FAFC"),
  "dusk": dict(sky="#5E6F93", horizon="#F2A27E", cloud="#F3D6CC", far="#7A8BA8", mid="#56708C", snow="#E8D9D3",
    hillFar="#5E7C6C", hill="#4A6A58", tree="#34523F", river="#5C7493", riverHi="#F2B79C",
    houseA="#E3E1E4", houseB="#D4D3DA", wall2="#C3C6D0", roof="#2A3F50", window="#F6C46A",
-   sidewalk="#BFC6CF", curb="#9CA6B1", road="#333E47", roadLine="#E3E1E4"),
+   sidewalk="#BFC6CF", curb="#9CA6B1", road="#333E47", roadLine="#E3E1E4", clockFace="#F6E7B0"),
  "night": dict(sky="#16242F", horizon="#34495E", cloud="#3A4E5E", far="#3A5468", mid="#2E465A", snow="#9FB2C2",
    hillFar="#2F4A3F", hill="#263E34", tree="#1D3229", river="#34495E", riverHi="#6E8BA3",
    houseA="#5B6770", houseB="#4E5A63", wall2="#46525C", roof="#1A2A36", window="#F6C46A",
-   sidewalk="#5B6770", curb="#46525C", road="#20282E", roadLine="#C9D2DA"),
+   sidewalk="#5B6770", curb="#46525C", road="#20282E", roadLine="#C9D2DA", clockFace="#F6C46A"),
 }
 
 # Store sign fonts. Most are variable fonts (one file covers a range of weights).
@@ -211,13 +211,32 @@ def town_b(p):
           f'<rect x="980" y="770" width="200" height="130" fill="{B}"/><rect x="976" y="770" width="208" height="14" fill="{R}"/>'
           + sign(1006, 792, 148, 36, ACCENT, "MARKET", "oswald", 600, 22, 818, 4) +
           f'<rect x="996" y="842" width="96" height="50" fill="{Wn}"/><rect x="1110" y="836" width="46" height="64" fill="{R}"/>')
-    # Library: stone front with columns, steps, and a carved name
-    s += (f'<rect x="1250" y="888" width="500" height="12" fill="{p["curb"]}"/><rect x="1262" y="876" width="476" height="12" fill="{W2}"/>'
+    # Hill Valley Courthouse Mall from Back to the Future: stone front with
+    # columns and steps, and a clock tower stopped at 10:04
+    cx, cy, cr = 1500, 636, 28
+    clock = f'<circle cx="{cx}" cy="{cy}" r="{cr}" fill="{p["clockFace"]}" stroke="{R}" stroke-width="3"/>'
+    for i in range(12):
+        a = math.radians(i * 30)
+        r1 = cr - (7 if i % 3 == 0 else 5)
+        clock += (f'<line x1="{cx + r1 * math.sin(a):.1f}" y1="{cy - r1 * math.cos(a):.1f}" '
+                  f'x2="{cx + (cr - 3) * math.sin(a):.1f}" y2="{cy - (cr - 3) * math.cos(a):.1f}" stroke="{R}" stroke-width="2"/>')
+    for deg, length, width in (((10 + 4 / 60) * 30, 14, 4), (4 * 6, 21, 3)):
+        a = math.radians(deg)
+        clock += (f'<line x1="{cx}" y1="{cy}" x2="{cx + length * math.sin(a):.1f}" y2="{cy - length * math.cos(a):.1f}" '
+                  f'stroke="{R}" stroke-width="{width}" stroke-linecap="round"/>')
+    clock += f'<circle cx="{cx}" cy="{cy}" r="3" fill="{R}"/>'
+    s += (f'<rect x="1456" y="600" width="88" height="112" fill="{A}"/>'
+          f'<rect x="1448" y="592" width="104" height="10" fill="{W2}"/>'
+          f'<rect x="1470" y="574" width="60" height="18" fill="{A}"/>'
+          + arch(1478, 578, 12, 14, R) + arch(1494, 578, 12, 14, R) + arch(1510, 578, 12, 14, R) +
+          f'<polygon points="1462,575 1500,552 1538,575" fill="{R}"/>'
+          + clock +
+          f'<rect x="1250" y="888" width="500" height="12" fill="{p["curb"]}"/><rect x="1262" y="876" width="476" height="12" fill="{W2}"/>'
           f'<rect x="1280" y="730" width="440" height="146" fill="{A}"/>'
-          f'<polygon points="1262,712 1500,646 1738,712" fill="{B}"/>'
-          f'<polygon points="1300,706 1500,656 1700,706" fill="none" stroke="{W2}" stroke-width="4"/>'
+          f'<polygon points="1262,712 1500,672 1738,712" fill="{B}"/>'
+          f'<polygon points="1300,706 1500,680 1700,706" fill="none" stroke="{W2}" stroke-width="4"/>'
           f'<rect x="1270" y="708" width="460" height="24" fill="{W2}"/>'
-          + text("PUBLIC LIBRARY", "cinzel", 700, 18, 1500, 727, R, 4))
+          + text("HILL VALLEY COURTHOUSE MALL", "cinzel", 700, 18, 1500, 727, R, 2))
     for cx in (1320, 1392, 1464, 1536, 1608, 1680):
         s += (f'<rect x="{cx-11}" y="740" width="22" height="136" fill="{B}"/>'
               f'<rect x="{cx-15}" y="732" width="30" height="8" fill="{W2}"/><rect x="{cx-15}" y="868" width="30" height="8" fill="{W2}"/>')
