@@ -48,10 +48,6 @@ sub init()
     allSeasons = ["spring", "summer", "fall", "winter"]
     m.seasonalLayers = { far: ["winter"], near: ["winter"], hills: allSeasons, town_a: allSeasons, town_b: allSeasons }
 
-    ' Chance (in percent) that the tablecloth cloud is on the flat-topped mountain.
-    ' It is checked when the screensaver starts and every 10 minutes after.
-    m.tableclothChance = 40
-
     ' Positions for the clock panel. It stays in the top-right corner and moves a
     ' small amount every few minutes to protect TVs from burn-in. The sun and
     ' moon stay in the top-left corner, so the panel never covers them.
@@ -80,10 +76,6 @@ sub init()
     m.seasonFxAnim = m.top.findNode("seasonFxAnim")
     m.fog = m.top.findNode("fog")
     m.flashAnim = m.top.findNode("flashAnim")
-    m.tablecloth1 = m.top.findNode("tablecloth1")
-    m.tablecloth2 = m.top.findNode("tablecloth2")
-    m.tableclothAnim = m.top.findNode("tableclothAnim")
-    m.tableclothFades = [m.top.findNode("tablecloth1Fade"), m.top.findNode("tablecloth2Fade")]
 
     m.top.backgroundColor = "0x16242FFF"
 
@@ -100,11 +92,6 @@ sub init()
 
     ' ---------- Start ----------
     applyScene()
-    ' Start with the tablecloth already in place, or not, without a fade
-    if Rnd(100) <= m.tableclothChance
-        m.tablecloth1.opacity = 1
-        m.tablecloth2.opacity = 1
-    end if
     startParallax()
     buildCars()
     parkCar()
@@ -120,7 +107,6 @@ sub init()
     makeTimer(60, "onPeriodTick")
     makeTimer(900, "onWeatherTick")
     makeTimer(300, "onMoveInfo")
-    makeTimer(600, "onTablecloth")
 end sub
 
 ' ================= Scenery =================
@@ -198,8 +184,6 @@ sub applyScene()
     m.top.findNode("townA1").uri = layerUri("town_a", ground, period)
     m.top.findNode("townA2").uri = layerUri("town_a", ground, period)
     m.top.findNode("townB").uri = layerUri("town_b", ground, period)
-    m.tablecloth1.uri = "pkg:/images/tablecloth_" + period + ".png"
-    m.tablecloth2.uri = "pkg:/images/tablecloth_" + period + ".png"
     updateSeasonFx(season, period)
     if period = "night"
         m.fog.opacity = 0.6
@@ -289,19 +273,6 @@ sub setStorm(code as dynamic)
         m.lightningTimer.control = "start"
     end if
     m.storm = storm
-end sub
-
-' Every 10 minutes, picks whether the tablecloth cloud is on the mountain and
-' fades it in or out over 20 seconds when that changes.
-sub onTablecloth()
-    target = 0.0
-    if Rnd(100) <= m.tableclothChance then target = 1.0
-    current = m.tablecloth1.opacity
-    if Abs(current - target) < 0.01 then return
-    for each fade in m.tableclothFades
-        fade.keyValue = [current, target]
-    end for
-    m.tableclothAnim.control = "start"
 end sub
 
 sub onLightning()

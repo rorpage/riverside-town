@@ -18,10 +18,6 @@
       <Group id="farStrip">
         <Poster id="far1" width="1920" height="425" />
         <Poster id="far2" width="1920" height="425" translation="[1920,0]" />
-        <!-- The tablecloth cloud on the flat-topped mountain, one for each far image.
-             It must match TABLECLOTH_POS in tools/generate_images.py. -->
-        <Poster id="tablecloth1" width="280" height="100" translation="[720,-29]" opacity="0" />
-        <Poster id="tablecloth2" width="280" height="100" translation="[2640,-29]" opacity="0" />
       </Group>
     </Group>
     <Group translation="[0,400]">
@@ -117,10 +113,6 @@
     <Animation id="firefliesAnim" repeat="true" easeFunction="inOutQuad" duration="4">
       <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[0.15, 1.0, 0.15]" fieldToInterp="firefliesA.opacity" />
       <FloatFieldInterpolator key="[0.0, 0.5, 1.0]" keyValue="[1.0, 0.15, 1.0]" fieldToInterp="firefliesB.opacity" />
-    </Animation>
-    <Animation id="tableclothAnim" repeat="false" easeFunction="inOutQuad" duration="20">
-      <FloatFieldInterpolator id="tablecloth1Fade" key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="tablecloth1.opacity" />
-      <FloatFieldInterpolator id="tablecloth2Fade" key="[0.0, 1.0]" keyValue="[0.0, 1.0]" fieldToInterp="tablecloth2.opacity" />
     </Animation>
     <Animation id="flashAnim" repeat="false" easeFunction="linear" duration="0.7">
       <FloatFieldInterpolator key="[0.0, 0.08, 0.18, 0.3, 1.0]" keyValue="[0.0, 0.55, 0.1, 0.4, 0.0]" fieldToInterp="flash.opacity" />

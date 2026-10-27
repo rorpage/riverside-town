@@ -416,25 +416,6 @@ random.seed(7)
 stars = "".join(f'<circle cx="{random.randint(10,1910)}" cy="{random.randint(10,390)}" r="{random.choice([1.5,2,2.5])}" fill="#F8FAFC"/>' for _ in range(70))
 save(stars, "0 0 1920 400", 1920, 400, "stars.png")
 save(f'<circle cx="70" cy="70" r="64" fill="{ACCENT}"/>', "0 0 140 140", 140, 140, "sun.png")
-
-# The "tablecloth": a flat cloud that lies on top of the Table Mountain and
-# hangs over its cliffs. It is a separate image so the scene can fade it in and
-# out. TABLECLOTH_POS is its top left corner in screen coordinates; the
-# tablecloth posters in components/MainScene.xml use the same place, relative
-# to the far strip (which starts at y=295).
-TABLECLOTH_POS = (720, 266)
-def tablecloth(p):
-    c = p["cloud"]
-    s = f'<g fill="{c}" fill-opacity="0.95">'
-    # A thick, soft layer over the flat top (the top is at x 44 to 236 here)
-    s += "".join(f'<circle cx="{x}" cy="{30 + (4 if i % 2 else 0)}" r="{16 + (i % 3) * 3}"/>' for i, x in enumerate(range(40, 250, 24)))
-    s += '<rect x="22" y="30" width="236" height="26" rx="13"/>'
-    # Cloud flowing down over the left and right cliffs
-    s += ('<path d="M24,40 C10,56 12,76 20,94 C30,84 34,70 46,56 Z"/>'
-          '<path d="M256,40 C270,58 268,80 258,98 C248,86 244,70 234,56 Z"/></g>')
-    return s
-for pal in P:
-    save(tablecloth(P[pal]), "0 0 280 100", 280, 100, f"tablecloth_{pal}.png")
 save('<circle cx="70" cy="70" r="64" fill="#ECEFF3"/><circle cx="50" cy="58" r="12" fill="#D9E2EA"/><circle cx="88" cy="90" r="9" fill="#D9E2EA"/><circle cx="92" cy="48" r="6" fill="#D9E2EA"/>',
      "0 0 140 140", 140, 140, "moon.png")
 
@@ -618,15 +599,13 @@ def panel(clock, temp, cond, px):
             + text(temp, "hanken", 700, 54, px + 552 - tw / 2, 134, "#F8FAFC")
             + text(cond, "hanken", 400, 30, px + 28 + cw / 2, 184, "#ECEFF3"))
 
-def preview(pal, season, clock, temp, cond, fx=None, x=1920, cloth=False):
+def preview(pal, season, clock, temp, cond, fx=None, x=1920):
     p = season_palette(pal, season)
     mtn = season if season == "winter" else "summer"
     def twice(fn, *args):
         body = fn(*args)
         return body + f'<g transform="translate(1920,0)">{body}</g>'
-    tx, ty = TABLECLOTH_POS
-    cloth_svg = f'<g transform="translate({tx + 1920},{ty})">{tablecloth(p)}</g>' if cloth else ""
-    strip = (twice(clouds, p, season) + twice(far, p, mtn) + cloth_svg + twice(near, p, mtn) + twice(hills, p, season)
+    strip = (twice(clouds, p, season) + twice(far, p, mtn) + twice(near, p, mtn) + twice(hills, p, season)
              + town(p, season) + f'<g transform="translate(1920,0)">{town_b(p, season)}</g>')
     # The sky, stars, and sun or moon, placed like applyScene() in MainScene.brs,
     # with the scenery on top
@@ -661,7 +640,7 @@ def preview(pal, season, clock, temp, cond, fx=None, x=1920, cloth=False):
 def save_doc(im, name, width):
     im.resize((width, width * 9 // 16), Image.LANCZOS).save(os.path.join(DOCS, name), optimize=True)
 
-save_doc(preview("day", "summer", "10:04 AM", "84\u00b0F", "Clear", cloth=True), "preview.png", 1280)
+save_doc(preview("day", "summer", "10:04 AM", "84\u00b0F", "Clear"), "preview.png", 1280)
 for season, temp, cond, fx in (("spring", "62\u00b0F", "Partly cloudy", "petals"), ("summer", "84\u00b0F", "Clear", None),
                                ("fall", "55\u00b0F", "Mostly clear", "leaves"), ("winter", "28\u00b0F", "Overcast", None)):
     save_doc(preview("day", season, "10:04 AM", temp, cond, fx), f"preview_{season}.png", 640)
