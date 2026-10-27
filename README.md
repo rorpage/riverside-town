@@ -31,7 +31,8 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 ## Features
 
 - Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street. The center far mountain has a flat top, in the shape of Table Mountain in South Africa.
-- The town has three sections. The first has three houses (numbered 5401, 135, and 5334), a donut shop called Long's Donuts, a book store called Forever Books, Williams Hardware, and a diner called Luke's. The last two are references to Gilmore Girls. The second has a church named New City, a gas station with a small market, and the Hill Valley Courthouse Mall from Back to the Future, with its clock stopped at 10:04. The third has five more houses (numbered 312, 402, 527, 612, and 1120), an ice cream shop called Cabana's, an art supply store with a small painter's palette icon in the window, a photography store with a small camera icon in the window, a pet shop with a fish bowl, a puppy, and a kitten on a table in the window, and an Italian restaurant called Mama BreeBree's.
+- The houses have different wall colors (yellow, green, blue, pink, tan, lavender, mint, and white). Like the rest of the scene, the colors are darker at dusk and night.
+- The town has three sections. The first has three houses (numbered 5401, 135, and 5334), a donut shop called Long's Donuts, a book store called Forever Books, a computer store called Bits and Bytes, and a diner called Luke's. Luke's is a reference to Gilmore Girls: in the show, the diner is in the old Williams Hardware building, so "Williams Hardware" is lettered in gray on its window. The second has a church named New City, a gas station with a small Kroger store, and the Hill Valley Courthouse Mall from Back to the Future, with its clock stopped at 10:04. The third has five more houses (numbered 312, 402, 527, 612, and 1120), an ice cream shop called Cabana's, an art supply store with a small painter's palette icon in the window, a photography store with a small camera icon in the window, a pet shop with a fish bowl, a puppy, and a kitten on a table in the window, and an Italian restaurant called Mama BreeBree's.
 - A car is parked at the gas station. The car and the direction it faces are chosen at random each time the screensaver starts.
 - Each store sign uses its own font.
 - Five cars: a sports car in the style of a Bugatti, a sedan, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest.
@@ -136,7 +137,8 @@ Store sign fonts:
 | Dancing Script | Long's Donuts |
 | Kaushan Script | Luke's |
 | Playfair Display | Forever Books |
-| Oswald | Williams Hardware, gas station, Market |
+| Oswald | Gas station, Kroger, the Williams Hardware lettering on Luke's window |
+| Share Tech Mono | Bits and Bytes |
 | Cinzel | Hill Valley Courthouse Mall |
 | Alegreya Sans | New City church |
 | Signika (Medium) | House number 5401 |
