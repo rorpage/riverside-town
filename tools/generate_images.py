@@ -404,6 +404,9 @@ def town_b(p, season):
     s += round_tree(1820, 900, 64, 36, p, season) + round_tree(1207, 900, 54, 26, p, season)
     return s + street(p, season)
 
+# Gray used for the icons in shop windows (the art palette and the camera)
+ICON = "#6E7A85"
+
 # Town section C: five houses and five shops. The houses are narrower than the
 # ones in section A so all ten buildings fit in 1920 pixels.
 def town_c(p, season):
@@ -455,47 +458,73 @@ def town_c(p, season):
 
     s += small_house(406, 150, 730, 668, "402", "comfortaa", 700)
 
-    # Art supply store, with a painter's palette and a brush in the window
+    # Art supply store. A small gray painter's palette and brush in the window,
+    # drawn like an icon. The paint spots and thumb hole are cut out in the
+    # window color.
     body, (wx, wy, ww, wh) = shop(574, 196, 704, W2)
-    px, py = wx + 50, wy + 30
+    px, py, k = wx + ww / 2 - 6, wy + wh / 2, 0.6
+    def pt(dx, dy):
+        return f"{px + dx * k:.1f},{py + dy * k:.1f}"
     s += (body + sign(596, 730, 152, 50, "#6B4A3A", "ART SUPPLIES", "amatic", 700, 32, 766, 2)
           + f'<polygon points="584,800 760,800 768,828 576,828" fill="{p["mid"]}"/>' + snow_flat(season, p, 584, 800, 176)
-          + f'<path d="M{px - 34},{py} C{px - 36},{py - 22} {px + 10},{py - 26} {px + 30},{py - 14} C{px + 42},{py - 6} {px + 30},{py + 4} {px + 20},{py + 2} '
-            f'C{px + 8},{py} {px + 8},{py + 14} {px + 16},{py + 18} C{px + 4},{py + 26} {px - 30},{py + 24} {px - 34},{py} Z" fill="#C8A26B"/>'
-          + f'<circle cx="{px + 14}" cy="{py + 8}" r="5" fill="{Wn}"/>')
-    for dx, dy, c in ((-24, -2, "#E74C3C"), (-14, -14, "#F6C46A"), (2, -16, "#4A82A8"), (18, -10, "#2ECC71"), (-20, 12, "#F8FAFC")):
-        s += f'<circle cx="{px + dx}" cy="{py + dy}" r="4.5" fill="{c}"/>'
-    s += (f'<line x1="{px + 40}" y1="{py + 22}" x2="{px + 62}" y2="{py - 20}" stroke="#8C5A3C" stroke-width="4" stroke-linecap="round"/>'
-          f'<path d="M{px + 60},{py - 16} L{px + 68},{py - 28} L{px + 64},{py - 15} Z" fill="#E74C3C"/>')
+          + f'<path d="M{pt(-34, 0)} C{pt(-36, -22)} {pt(10, -26)} {pt(30, -14)} C{pt(42, -6)} {pt(30, 4)} {pt(20, 2)} '
+            f'C{pt(8, 0)} {pt(8, 14)} {pt(16, 18)} C{pt(4, 26)} {pt(-30, 24)} {pt(-34, 0)} Z" fill="{ICON}"/>'
+          + f'<circle cx="{px + 14 * k:.1f}" cy="{py + 8 * k:.1f}" r="{5 * k:.1f}" fill="{Wn}"/>')
+    for dx, dy in ((-24, -2), (-14, -14), (2, -16), (18, -10), (-20, 12)):
+        s += f'<circle cx="{px + dx * k:.1f}" cy="{py + dy * k:.1f}" r="{4.5 * k:.1f}" fill="{Wn}"/>'
+    s += (f'<line x1="{px + 40 * k:.1f}" y1="{py + 22 * k:.1f}" x2="{px + 62 * k:.1f}" y2="{py - 20 * k:.1f}" stroke="{ICON}" stroke-width="3" stroke-linecap="round"/>'
+          f'<path d="M{pt(60, -16)} L{pt(68, -28)} L{pt(64, -15)} Z" fill="{ICON}"/>')
 
-    # Photography store, with a camera in the window
+    # Photography store. A small gray camera in the window, drawn like an icon.
+    # The lens and flash are cut out in the window color.
     body, (wx, wy, ww, wh) = shop(788, 196, 712, B)
-    cx, cy = wx + ww // 2, wy + 30
+    cx, cy = wx + ww // 2, wy + wh // 2 + 2
     s += (body + sign(810, 736, 152, 46, "#1F2A33", "PHOTO", "montserrat", 700, 26, 768, 6)
           + f'<polygon points="798,800 974,800 982,828 790,828" fill="{R}"/>' + snow_flat(season, p, 798, 800, 176)
-          + f'<rect x="{cx - 34}" y="{cy - 16}" width="68" height="40" rx="6" fill="#1F2A33"/><rect x="{cx - 26}" y="{cy - 24}" width="18" height="9" rx="2" fill="#1F2A33"/>'
-            f'<rect x="{cx + 14}" y="{cy - 12}" width="14" height="7" rx="1" fill="#F8FAFC"/>'
-            f'<circle cx="{cx}" cy="{cy + 4}" r="15" fill="#5B6770"/><circle cx="{cx}" cy="{cy + 4}" r="10" fill="#34495E"/><circle cx="{cx - 3}" cy="{cy + 1}" r="3" fill="#C9DAEA"/>')
+          + f'<rect x="{cx - 20}" y="{cy - 10}" width="40" height="24" rx="4" fill="{ICON}"/><rect x="{cx - 15}" y="{cy - 15}" width="11" height="6" rx="1.5" fill="{ICON}"/>'
+            f'<rect x="{cx + 8}" y="{cy - 7}" width="8" height="4" rx="1" fill="{Wn}"/>'
+            f'<circle cx="{cx}" cy="{cy + 2}" r="8" fill="{Wn}"/><circle cx="{cx}" cy="{cy + 2}" r="5" fill="{ICON}"/>')
 
     s += small_house(1002, 150, 745, 680, "527", "josefin", 600)
 
-    # Pet shop, with a fish bowl and a paw print in the window
+    # Pet shop. A fish bowl, a puppy, and a kitten in the window, and a paw
+    # print on the sign.
     body, (wx, wy, ww, wh) = shop(1170, 196, 708, W2)
-    fx, fy = wx + 32, wy + 30
-    s += (body + sign(1192, 734, 152, 46, "#4A82A8", "PET SHOP", "fredoka", 600, 26, 766, 2)
-          + awning(1170, 196, ["#4A82A8", A])
-          + f'<circle cx="{fx}" cy="{fy}" r="20" fill="#A9D4EC" fill-opacity="0.9"/><rect x="{fx - 12}" y="{fy - 22}" width="24" height="5" rx="2" fill="#A9D4EC"/>'
-            f'<ellipse cx="{fx - 2}" cy="{fy + 2}" rx="7" ry="4" fill="#E8913A"/><polygon points="{fx + 4},{fy + 2} {fx + 11},{fy - 3} {fx + 11},{fy + 7}" fill="#E8913A"/>'
-            f'<rect x="{fx - 20}" y="{fy + 16}" width="40" height="6" rx="2" fill="#8C5A3C"/>')
-    qx, qy = wx + 82, wy + 32
-    s += f'<ellipse cx="{qx}" cy="{qy + 6}" rx="9" ry="8" fill="#6B4A3A"/>'
-    for dx, dy in ((-11, -6), (-4, -12), (4, -12), (11, -6)):
-        s += f'<ellipse cx="{qx + dx}" cy="{qy + dy}" rx="3.5" ry="4.5" fill="#6B4A3A"/>'
+    s += (body + sign(1192, 734, 152, 46, "#4A82A8", "", "fredoka", 600, 22, 764)
+          + text("PET SHOP", "fredoka", 600, 20, 1252, 763, "#F8FAFC", 2)
+          + awning(1170, 196, ["#4A82A8", A]))
+    qx, qy = 1325, 757
+    s += f'<ellipse cx="{qx}" cy="{qy + 4}" rx="6" ry="5" fill="#F8FAFC"/>'
+    for dx, dy in ((-7, -4), (-2.5, -8), (2.5, -8), (7, -4)):
+        s += f'<ellipse cx="{qx + dx}" cy="{qy + dy}" rx="2.2" ry="3" fill="#F8FAFC"/>'
+    base = wy + wh - 4   # The animals and the bowl sit on the bottom of the window
+    fx, fy = wx + 18, base - 14
+    s += (f'<circle cx="{fx}" cy="{fy}" r="13" fill="#A9D4EC" fill-opacity="0.9"/><rect x="{fx - 8}" y="{fy - 15}" width="16" height="4" rx="2" fill="#A9D4EC"/>'
+          f'<ellipse cx="{fx - 1}" cy="{fy + 1}" rx="5" ry="3" fill="#E8913A"/><polygon points="{fx + 3},{fy + 1} {fx + 8},{fy - 2} {fx + 8},{fy + 4}" fill="#E8913A"/>')
+    # Puppy, sitting and facing right
+    dx = wx + 56
+    PUP, PUPD = "#B07A4A", "#7A4E2C"
+    s += (f'<ellipse cx="{dx}" cy="{base - 9}" rx="10" ry="9" fill="{PUP}"/>'
+          f'<path d="M{dx - 9},{base - 8} Q{dx - 17},{base - 14} {dx - 15},{base - 20}" stroke="{PUP}" stroke-width="3" fill="none" stroke-linecap="round"/>'
+          f'<circle cx="{dx + 6}" cy="{base - 21}" r="8" fill="{PUP}"/><ellipse cx="{dx + 14}" cy="{base - 18}" rx="5" ry="3.5" fill="{PUP}"/>'
+          f'<ellipse cx="{dx + 2}" cy="{base - 20}" rx="3" ry="6" fill="{PUPD}"/>'
+          f'<circle cx="{dx + 9}" cy="{base - 23}" r="1.4" fill="#1F2A33"/><circle cx="{dx + 18}" cy="{base - 19}" r="1.6" fill="#1F2A33"/>'
+          f'<rect x="{dx + 2}" y="{base - 6}" width="4" height="6" rx="1.5" fill="{PUP}"/><rect x="{dx + 7}" y="{base - 6}" width="4" height="6" rx="1.5" fill="{PUP}"/>')
+    # Kitten, sitting and facing left, with its tail curled up
+    kx = wx + 92
+    KIT, KITD = "#E8913A", "#C8662E"
+    s += (f'<path d="M{kx + 7},{base - 4} Q{kx + 18},{base - 6} {kx + 14},{base - 18}" stroke="{KIT}" stroke-width="3" fill="none" stroke-linecap="round"/>'
+          f'<ellipse cx="{kx}" cy="{base - 8}" rx="8" ry="8" fill="{KIT}"/>'
+          f'<circle cx="{kx - 3}" cy="{base - 19}" r="6.5" fill="{KIT}"/>'
+          f'<polygon points="{kx - 9},{base - 22} {kx - 8},{base - 30} {kx - 3},{base - 25}" fill="{KIT}"/>'
+          f'<polygon points="{kx - 1},{base - 25} {kx + 3},{base - 30} {kx + 3},{base - 21}" fill="{KIT}"/>'
+          f'<path d="M{kx - 4},{base - 12} L{kx + 4},{base - 12}" stroke="{KITD}" stroke-width="2"/><path d="M{kx - 5},{base - 7} L{kx + 5},{base - 7}" stroke="{KITD}" stroke-width="2"/>'
+          f'<circle cx="{kx - 6}" cy="{base - 20}" r="1.2" fill="#1F2A33"/><circle cx="{kx - 1}" cy="{base - 20}" r="1.2" fill="#1F2A33"/>')
 
-    # Italian restaurant, with an awning in the colors of the Italian flag and a
-    # table with a checkered tablecloth in the window
+    # Mama BreeBree's, an Italian restaurant, with an awning in the colors of
+    # the Italian flag and a table with a checkered tablecloth in the window
     body, (wx, wy, ww, wh) = shop(1384, 216, 700, B)
-    s += (body + sign(1404, 726, 176, 50, "#2F5D3A", "Trattoria", "lora", 600, 30, 760, 1)
+    s += (body + sign(1392, 726, 200, 50, "#2F5D3A", "Mama BreeBree\u2019s", "lora", 600, 21, 758, 0.5)
           + awning(1384, 216, ["#2F8F4E", A, "#C0392B"]))
     tx, ty = wx + 18, wy + 30
     for row in range(2):
