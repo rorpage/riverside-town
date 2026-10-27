@@ -47,8 +47,12 @@ These apply to code, comments, commit messages, README.md, and this file.
 
 ## Packaging
 
-- Build the sideload zip from the repository root with `zip -r riverside-town.zip manifest source components images -x "*.DS_Store"`. The manifest must be at the top level of the zip.
+- Build the sideload zip with `./tools/package.sh`. It runs `zip -r riverside-town.zip manifest source components images -x "*.DS_Store"` from the repository root. The manifest must be at the top level of the zip. If a new top-level folder is needed on the Roku, add it to the script and to the command in README.md.
 - Do not commit zip files, `out/` (created by the BrightScript Language extension for VS Code), `build/` (preview images from the generator), or `.vscode/` (it can contain the Roku developer password).
+
+## Branches
+
+- Name a branch for a new feature `feature/<short-name>` (for example, `feature/util-scripts`). Do not use the `claude/` prefix for new features.
 
 ## Testing
 

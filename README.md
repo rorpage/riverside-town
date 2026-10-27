@@ -26,13 +26,18 @@ components/WeatherTask.xml  Task node definition for the weather request
 components/WeatherTask.brs  Calls the Open-Meteo API
 images/                     All artwork as PNG files
 tools/generate_images.py    Draws every image in images/
+tools/package.sh            Builds riverside-town.zip for installing on a Roku
 tools/fonts/                Store sign fonts and their licenses (used only by the generator)
 ```
 
 ## Installing on a Roku
 
 1. Turn on developer mode on the Roku. On the remote, press Home 3 times, Up 2 times, then Right, Left, Right, Left, Right. Follow the steps on screen and set a password.
-2. From the repository root, build the zip:
+2. Build the zip:
+   ```
+   ./tools/package.sh
+   ```
+   This writes `riverside-town.zip` to the repository root and replaces any older copy. It contains only the files the Roku needs. If you cannot run the script, run this from the repository root instead:
    ```
    zip -r riverside-town.zip manifest source components images -x "*.DS_Store"
    ```
