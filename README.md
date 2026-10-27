@@ -85,7 +85,7 @@ Store sign fonts:
 | Cinzel | Public Library |
 | Alegreya Sans | New City church |
 | Signika | House number 5401 |
-| Hanken Grotesk (ExtraLight) | House number 135 |
+| Hanken Grotesk (Light) | House number 135 |
 | Cabin | House number 5334 |
 
 These fonts are from [Google Fonts](https://fonts.google.com/). All of them except Kaushan Script and Alegreya Sans are variable fonts: one file covers a range of weights, and the generator picks the weight for each sign. Kaushan Script has only one weight, and only the Medium weight of Alegreya Sans is included. They are licensed under the SIL Open Font License; the license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
