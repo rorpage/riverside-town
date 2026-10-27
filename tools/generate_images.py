@@ -117,17 +117,20 @@ def arch(x, y, w, h, fill):
 # 3840 pixels long before it repeats.
 def town(p):
     A, B, W2, R, Wn = p["houseA"], p["houseB"], p["wall2"], p["roof"], p["window"]
-    def house(x, y, w, roofPeak, win1, win2, doorX, winY):
+    def house(x, y, w, roofPeak, win1, win2, doorX, winY, number):
         return (f'<rect x="{x}" y="{y}" width="{w}" height="{900-y}" fill="{A}"/>'
                 f'<polygon points="{x-12},{y} {x+w//2},{roofPeak} {x+w+12},{y}" fill="{R}"/>'
                 f'<rect x="{win1}" y="{winY}" width="44" height="40" fill="{Wn}"/><rect x="{win2}" y="{winY}" width="44" height="40" fill="{Wn}"/>'
-                f'<rect x="{doorX}" y="830" width="40" height="70" fill="{R}"/>')
-    s = house(40, 750, 200, 680, 62, 174, 120, 780)
+                f'<rect x="{doorX}" y="830" width="40" height="70" fill="{R}"/>'
+                # House number plaque above the door
+                f'<rect x="{doorX-2}" y="808" width="44" height="18" rx="3" fill="{R}"/>'
+                + text(number, "oswald", 500, 14, doorX + 20, 822, "#F8FAFC", 1))
+    s = house(40, 750, 200, 680, 62, 174, 120, 780, "5401")
     s += (f'<rect x="270" y="700" width="240" height="200" fill="{B}"/><rect x="266" y="700" width="248" height="14" fill="{R}"/>'
           + sign(300, 724, 180, 44, R, "Bakery", "script", 700, 34, 757, 1) +
           f'<polygon points="280,790 500,790 510,822 270,822" fill="{ACCENT}"/>'
           f'<rect x="290" y="832" width="130" height="58" fill="{Wn}"/><rect x="440" y="832" width="46" height="68" fill="{R}"/>')
-    s += house(540, 730, 180, 664, 562, 654, 610, 760)
+    s += house(540, 730, 180, 664, 562, 654, 610, 760, "135")
     # Book store: the display window shows rows of book spines
     spines = ""
     colors = ["#B5523F", "#4A82A8", "#6B7B3A", "#F6C46A", "#34495E", "#C9D2DA"]
@@ -153,7 +156,7 @@ def town(p):
           + text("HARDWARE", "oswald", 600, 26, 1250, 777, "#F8FAFC", 4) +
           f'<polygon points="1130,800 1370,800 1378,828 1122,828" fill="{R}"/>'
           f'<rect x="1140" y="838" width="150" height="56" fill="{Wn}"/><rect x="1310" y="834" width="46" height="66" fill="{R}"/>')
-    s += house(1410, 740, 190, 672, 1432, 1534, 1485, 770)
+    s += house(1410, 740, 190, 672, 1432, 1534, 1485, 770, "5334")
     s += (f'<rect x="1630" y="690" width="250" height="210" fill="{W2}"/><rect x="1626" y="690" width="258" height="14" fill="{R}"/>'
           f'<rect x="1660" y="716" width="48" height="44" fill="{Wn}"/><rect x="1772" y="716" width="48" height="44" fill="{Wn}"/>'
           + sign(1680, 768, 150, 46, R, "Luke\u2019s", "kaushan", 400, 32, 802, 1) +
