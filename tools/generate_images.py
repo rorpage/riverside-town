@@ -51,13 +51,17 @@ def glyphs(font, weight):
         _glyphs[key] = (f.getBestCmap(), gs, f["head"].unitsPerEm)
     return _glyphs[key]
 
+def text_width(label, font, weight, size, spacing=0):
+    cmap, gs, upm = glyphs(font, weight)
+    k = size / upm
+    return sum(gs[cmap[ord(ch)]].width * k for ch in label) + spacing * (len(label) - 1)
+
 def text(label, font, weight, size, cx, y, fill, spacing=0):
     """Draws label as outlines, centered on cx, with its baseline at y."""
     cmap, gs, upm = glyphs(font, weight)
     k = size / upm
     names = [cmap[ord(ch)] for ch in label]
-    width = sum(gs[n].width * k for n in names) + spacing * (len(names) - 1)
-    x = cx - width / 2
+    x = cx - text_width(label, font, weight, size, spacing) / 2
     d = ""
     for n in names:
         pen = SVGPathPen(gs)
@@ -128,7 +132,7 @@ def town(p):
                 + text(number, font, weight, 14, doorX + 20, 822, "#F8FAFC", 1))
     s = house(40, 750, 200, 680, 62, 174, 120, 780, "5401", "signika", 500)
     s += (f'<rect x="270" y="700" width="240" height="200" fill="{B}"/><rect x="266" y="700" width="248" height="14" fill="{R}"/>'
-          + sign(300, 724, 180, 44, R, "Bakery", "script", 700, 34, 757, 1) +
+          + sign(296, 724, 188, 44, R, "Long\u2019s Donuts", "script", 700, 28, 755, 0) +
           f'<polygon points="280,790 500,790 510,822 270,822" fill="{ACCENT}"/>'
           f'<rect x="290" y="832" width="130" height="58" fill="{Wn}"/><rect x="440" y="832" width="46" height="68" fill="{R}"/>')
     s += house(540, 730, 180, 664, 562, 654, 610, 760, "135", "hanken", 300)
@@ -146,7 +150,9 @@ def town(p):
             i += 1
     s += (f'<rect x="880" y="670" width="220" height="230" fill="{W2}"/><rect x="876" y="670" width="228" height="14" fill="{R}"/>'
           f'<rect x="906" y="698" width="48" height="48" fill="{Wn}"/><rect x="1026" y="698" width="48" height="48" fill="{Wn}"/>'
-          + sign(906, 756, 168, 44, "#6B4A3A", "BOOKS", "playfair", 800, 28, 788, 4) +
+          # Two lines: a small FOREVER above a large BOOKS
+          + sign(906, 752, 168, 52, "#6B4A3A", "FOREVER", "playfair", 700, 14, 770, 5)
+          + text("BOOKS", "playfair", 800, 26, 990, 797, "#F8FAFC", 4) +
           f'<polygon points="890,808 1090,808 1098,836 882,836" fill="{p["mid"]}"/>'
           f'<rect x="900" y="846" width="110" height="48" fill="{Wn}"/>{spines}'
           f'<rect x="900" y="868" width="110" height="4" fill="{R}"/><rect x="900" y="890" width="110" height="4" fill="{R}"/>'
@@ -186,10 +192,15 @@ def town_b(p):
     s += f'<rect x="60" y="892" width="120" height="8" fill="{p["curb"]}"/>'
     # Gas station: price sign, canopy over one pump, and a small market.
     # The parked car is added by MainScene.brs so it can change each time.
-    s += (f'<rect x="483" y="746" width="8" height="154" fill="{W2}"/>'
-          f'<rect x="452" y="690" width="70" height="62" rx="4" fill="{R}"/>'
-          + text("GAS", "oswald", 700, 20, 487, 714, ACCENT, 2)
-          + text("3.19", "oswald", 500, 22, 487, 742, "#F8FAFC", 1) +
+    # Price sign: $2.05 with a small 9 at the top right for the 9/10 of a cent
+    priceW = text_width("$2.05", "oswald", 500, 22, 1)
+    nineW = text_width("9", "oswald", 500, 11)
+    priceX = 484 - (priceW + 2 + nineW) / 2
+    s += (f'<rect x="480" y="746" width="8" height="154" fill="{W2}"/>'
+          f'<rect x="448" y="690" width="72" height="62" rx="4" fill="{R}"/>'
+          + text("GAS", "oswald", 700, 20, 484, 714, ACCENT, 2)
+          + text("$2.05", "oswald", 500, 22, priceX + priceW / 2, 742, "#F8FAFC", 1)
+          + text("9", "oswald", 500, 11, priceX + priceW + 2 + nineW / 2, 731, "#F8FAFC") +
           f'<rect x="556" y="772" width="12" height="128" fill="{W2}"/><rect x="912" y="772" width="12" height="128" fill="{W2}"/>'
           f'<rect x="520" y="740" width="440" height="34" fill="{R}"/><rect x="520" y="766" width="440" height="8" fill="{ACCENT}"/>'
           + text("FUEL STOP", "oswald", 600, 22, 740, 762, "#F8FAFC", 5) +
