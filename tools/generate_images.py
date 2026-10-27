@@ -32,36 +32,20 @@ P = {
 }
 
 # Store sign fonts. Most are variable fonts (one file covers a range of weights).
-# Kaushan Script has one weight, so the weight value is ignored for it. They are
+# Kaushan Script and Alegreya Sans Medium have one weight, so the weight value is
+# ignored for them. They are
 # stored in tools/fonts under the SIL Open Font License. Text is converted to
 # outlines here, so the images look the same on every computer.
 FONT_DIR = os.path.join(ROOT, "tools", "fonts")
 FONTS = {"oswald": "Oswald-Variable.ttf", "playfair": "PlayfairDisplay-Variable.ttf",
          "cinzel": "Cinzel-Variable.ttf", "script": "DancingScript-Variable.ttf",
          "kaushan": "KaushanScript-Regular.ttf", "alegreya": "AlegreyaSans-Medium.ttf"}
-
-# Fonts whose license does not allow them in this repository. Put the file in
-# tools/fonts/local (git ignores that folder). If the file is missing, the
-# generator uses the fallback font from FONTS and prints a warning.
-LOCAL_FONT_DIR = os.path.join(FONT_DIR, "local")
-LOCAL_FONTS = {"calluna": (["CallunaSans-Regular.otf", "CallunaSans-Regular.ttf"], "alegreya")}
 _glyphs = {}
-
-def font_path(font):
-    if font in FONTS:
-        return os.path.join(FONT_DIR, FONTS[font])
-    files, fallback = LOCAL_FONTS[font]
-    for name in files:
-        path = os.path.join(LOCAL_FONT_DIR, name)
-        if os.path.exists(path):
-            return path
-    print(f"Warning: {' or '.join(files)} is not in tools/fonts/local. Using {FONTS[fallback]} instead.")
-    return os.path.join(FONT_DIR, FONTS[fallback])
 
 def glyphs(font, weight):
     key = (font, weight)
     if key not in _glyphs:
-        f = TTFont(font_path(font))
+        f = TTFont(os.path.join(FONT_DIR, FONTS[font]))
         gs = f.getGlyphSet(location={"wght": weight}) if "fvar" in f else f.getGlyphSet()
         _glyphs[key] = (f.getBestCmap(), gs, f["head"].unitsPerEm)
     return _glyphs[key]
@@ -190,7 +174,7 @@ def town_b(p):
          f'<g stroke="{A}" stroke-width="3"><line x1="104" y1="738" x2="136" y2="738"/><line x1="104" y1="750" x2="136" y2="750"/></g>'
          f'<circle cx="120" cy="790" r="13" fill="{GOLD}"/><circle cx="120" cy="790" r="6" fill="{RED}"/>'
          + arch(98, 826, 44, 74, R))
-    s += sign(196, 768, 204, 30, R, "New City", "calluna", 400, 22, 790, 2)
+    s += sign(196, 768, 204, 30, R, "New City", "alegreya", 400, 22, 790, 2)
     for wx in (196, 280, 364):
         s += (arch(wx, 806, 36, 66, BLUE) + f'<rect x="{wx+12}" y="826" width="12" height="46" fill="{RED}"/>'
               f'<circle cx="{wx+18}" cy="822" r="7" fill="{GOLD}"/>'

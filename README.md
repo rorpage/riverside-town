@@ -83,17 +83,9 @@ Store sign fonts:
 | Playfair Display | Books |
 | Oswald | Williams Hardware, gas station, Market |
 | Cinzel | Public Library |
-| Calluna Sans (see below) | New City church |
+| Alegreya Sans | New City church |
 
-These fonts are from [Google Fonts](https://fonts.google.com/). All of them except Kaushan Script are variable fonts: one file covers a range of weights, and the generator picks the weight for each sign. Kaushan Script has only one weight. They are licensed under the SIL Open Font License; the license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
-
-Calluna Sans is not stored in this repository, because its license does not allow that. To use it:
-
-1. Download Calluna Sans Regular from [exljbris](https://exljbris.com/callunasans.html). The Regular weight is free.
-2. Put the font file in `tools/fonts/local/` and name it `CallunaSans-Regular.otf` (or `.ttf`). Git ignores this folder.
-3. Run the generator again and commit the new images.
-
-If the file is missing, the generator prints a warning and draws the church sign with Alegreya Sans, a free font in a similar style.
+These fonts are from [Google Fonts](https://fonts.google.com/). All of them except Kaushan Script and Alegreya Sans are variable fonts: one file covers a range of weights, and the generator picks the weight for each sign. Kaushan Script has only one weight, and only the Medium weight of Alegreya Sans is included. They are licensed under the SIL Open Font License; the license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
 
 This writes every PNG into `images/`, including the mirrored car images used by the far lane. It also writes full-scene previews for day and night into `build/`, which git ignores. There is one preview for each town section (`_a` and `_b`). The `_b` previews include a parked car so its position can be checked.
 
