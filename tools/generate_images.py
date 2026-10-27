@@ -335,13 +335,15 @@ save(truck, "0 0 300 130", 300, 130, "car_truck.png")
 SP, SPD, CHROME = "#2C6BB3", "#16294A", "#C9D2DA"
 # The roof peak is toward the back and the windshield is long and low, so the
 # front (right side) is easy to see. The hood is lower than the rear deck.
-sports = (f'<path fill="{SP}" d="M8,72 L8,46 Q10,40 24,38 L84,36 Q108,22 142,20 Q170,20 196,30 L252,46 L284,52 Q296,55 296,64 L296,72 Q296,80 288,80 L16,80 Q8,80 8,72 Z"/>'
+# The body is moved down 10 px so it sits close to the ground.
+sports = ('<g transform="translate(0,10)">'
+          f'<path fill="{SP}" d="M8,72 L8,46 Q10,40 24,38 L84,36 Q108,22 142,20 Q170,20 196,30 L252,46 L284,52 Q296,55 296,64 L296,72 Q296,80 288,80 L16,80 Q8,80 8,72 Z"/>'
           f'<path fill="{SPD}" d="M134,21 Q170,20 196,30 L252,46 L284,52 Q296,55 296,64 L296,72 Q296,80 288,80 L160,80 Q132,80 130,60 Q128,38 134,21 Z"/>'
           f'<path fill="{GLASS}" d="M100,38 Q120,27 142,26 Q166,26 192,34 L236,47 L104,44 Z"/>'
           f'<path d="M136,22 Q128,42 130,60 Q132,76 152,78" stroke="{CHROME}" stroke-width="4" fill="none" stroke-linecap="round"/>'
           f'<path fill="{DARK}" d="M100,54 L118,51 L120,64 L102,64 Z"/>'
           f'<path d="M290,58 Q296,58 296,64 Q296,70 290,70" stroke="{CHROME}" stroke-width="3" fill="{DARK}"/>'
-          '<rect x="266" y="55" width="18" height="4" rx="2" fill="#F6C46A"/><rect x="8" y="44" width="14" height="4" fill="#C0392B"/>'
+          '<rect x="266" y="55" width="18" height="4" rx="2" fill="#F6C46A"/><rect x="8" y="44" width="14" height="4" fill="#C0392B"/></g>'
           + wells([(64, 80), (234, 80)], 26))
 save(sports, "0 0 304 104", 304, 104, "car_sports.png")
 
