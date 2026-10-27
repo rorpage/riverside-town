@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="MainScene" extends="Scene">
+  <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+  <children>
+    <!-- Sky: an 8 px wide gradient image stretched across the screen to save memory -->
+    <Poster id="sky" width="1920" height="1080" loadDisplayMode="scaleToFill" />
+    <Poster id="stars" width="1920" height="400" uri="pkg:/images/stars.png" opacity="0" />
+    <Poster id="sun" width="140" height="140" />
+
+    <!-- Parallax layers. Each strip holds two copies side by side and slides left by 1920 px, then repeats. -->
+    <Group translation="[0,90]">
+      <Group id="cloudsStrip">
+        <Poster id="clouds1" width="1920" height="255" />
+        <Poster id="clouds2" width="1920" height="255" translation="[1920,0]" />
+      </Group>
+    </Group>
+    <Group translation="[0,295]">
+      <Group id="farStrip">
+        <Poster id="far1" width="1920" height="425" />
+        <Poster id="far2" width="1920" height="425" translation="[1920,0]" />
+      </Group>
+    </Group>
+    <Group translation="[0,400]">
+      <Group id="nearStrip">
+        <Poster id="near1" width="1920" height="360" />
+        <Poster id="near2" width="1920" height="360" translation="[1920,0]" />
+      </Group>
+    </Group>
+    <Group translation="[0,600]">
+      <Group id="hillsStrip">
+        <Poster id="hills1" width="1920" height="310" />
+        <Poster id="hills2" width="1920" height="310" translation="[1920,0]" />
+      </Group>
+    </Group>
+    <Group translation="[0,660]">
+      <Group id="townStrip">
+        <Poster id="town1" width="1920" height="420" />
+        <Poster id="town2" width="1920" height="420" translation="[1920,0]" />
+      </Group>
+    </Group>
+
+    <!-- Cars. The far lane is added first so near-lane cars draw on top of it. -->
+    <Group id="farLane" />
+    <Group id="nearLane" />
+
+    <!-- Rain or snow. Two copies stacked vertically slide down by 1080 px and repeat. -->
+    <Group id="precip" visible="false">
+      <Group id="precipStrip">
+        <Poster id="precip1" width="1920" height="1080" />
+        <Poster id="precip2" width="1920" height="1080" translation="[0,-1080]" />
+      </Group>
+    </Group>
+
+    <!-- Clock and weather panel -->
+    <Group id="info" translation="[80,60]">
+      <Rectangle width="580" height="150" color="0x34495E80" />
+      <Label id="clockLabel" translation="[28,20]" width="340" height="70" vertAlign="center" color="0xF8FAFCFF">
+        <Font role="font" uri="font:BoldSystemFontFile" size="54" />
+      </Label>
+      <Label id="tempLabel" translation="[372,20]" width="180" height="70" horizAlign="right" vertAlign="center" color="0xF8FAFCFF" text="--">
+        <Font role="font" uri="font:BoldSystemFontFile" size="54" />
+      </Label>
+      <Label id="condLabel" translation="[28,94]" width="524" height="40" vertAlign="center" color="0xECEFF3FF">
+        <Font role="font" uri="font:SystemFontFile" size="30" />
+      </Label>
+    </Group>
+
+    <Animation id="cloudsAnim" repeat="true" easeFunction="linear">
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="cloudsStrip.translation" />
+    </Animation>
+    <Animation id="farAnim" repeat="true" easeFunction="linear">
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="farStrip.translation" />
+    </Animation>
+    <Animation id="nearAnim" repeat="true" easeFunction="linear">
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="nearStrip.translation" />
+    </Animation>
+    <Animation id="hillsAnim" repeat="true" easeFunction="linear">
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="hillsStrip.translation" />
+    </Animation>
+    <Animation id="townAnim" repeat="true" easeFunction="linear">
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="townStrip.translation" />
+    </Animation>
+    <Animation id="precipAnim" repeat="true" easeFunction="linear" duration="1">
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[0,1080]]" fieldToInterp="precipStrip.translation" />
+    </Animation>
+
+    <WeatherTask id="weatherTask" />
+  </children>
+</component>

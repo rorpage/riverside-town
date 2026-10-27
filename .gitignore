@@ -1,0 +1,23 @@
+# Packaged channel zips (rebuild with the command in README.md)
+*.zip
+
+# Build output from the BrightScript Language extension for VS Code
+out/
+
+# Preview images written by tools/generate_images.py
+build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Operating system files
+.DS_Store
+Thumbs.db

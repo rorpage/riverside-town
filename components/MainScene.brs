@@ -1,0 +1,386 @@
+' Riverside Town screensaver: parallax scene, cars, clock, and Open-Meteo weather.
+
+sub init()
+    ' ---------- Settings ----------
+    ' Location for ZIP code 46220 (Indianapolis). Roku does not give apps the
+    ' device's ZIP code, so it is set here. Change these to get the forecast for
+    ' a different location.
+    m.LAT = "39.8676"
+    m.LON = "-86.1137"
+
+    ' Scroll speed of each scenery layer in pixels per second. Farther = slower.
+    m.layerSpeeds = { clouds: 8, far: 5, near: 12, hills: 24, town: 55 }
+    ' The street moves with the town layer, so cars use this as the ground speed offset.
+    m.cameraSpeed = 55
+
+    ' Cars. "ground" is the speed along the road in pixels per second.
+    ' wheels = wheel centers inside the car image, r = wheel radius,
+    ' bottom = lowest pixel of the tires in the car image.
+    m.carDefs = [
+        { name: "sedan", w: 280, h: 104, wheels: [[62, 80], [218, 80]],   r: 22, bottom: 102, ground: 300 },
+        { name: "van",   w: 310, h: 130, wheels: [[66, 104], [246, 104]], r: 24, bottom: 128, ground: 220 },
+        { name: "jeep",  w: 270, h: 140, wheels: [[68, 108], [214, 108]], r: 28, bottom: 136, ground: 200 },
+        { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 140 }
+    ]
+
+    ' Open-Meteo weather codes (WMO) to text
+    m.codeText = {
+        "0": "Clear", "1": "Mostly clear", "2": "Partly cloudy", "3": "Overcast",
+        "45": "Fog", "48": "Fog",
+        "51": "Light drizzle", "53": "Drizzle", "55": "Heavy drizzle",
+        "56": "Freezing drizzle", "57": "Freezing drizzle",
+        "61": "Light rain", "63": "Rain", "65": "Heavy rain",
+        "66": "Freezing rain", "67": "Freezing rain",
+        "71": "Light snow", "73": "Snow", "75": "Heavy snow", "77": "Snow grains",
+        "80": "Rain showers", "81": "Rain showers", "82": "Heavy rain showers",
+        "85": "Snow showers", "86": "Heavy snow showers",
+        "95": "Thunderstorm", "96": "Thunderstorm with hail", "99": "Thunderstorm with hail"
+    }
+
+    ' Positions for the clock panel. It moves every few minutes to protect TVs from burn-in.
+    m.infoSpots = [[80, 60], [1260, 60], [670, 60]]
+    m.infoIndex = 0
+
+    ' ---------- Node references ----------
+    m.sky = m.top.findNode("sky")
+    m.stars = m.top.findNode("stars")
+    m.sun = m.top.findNode("sun")
+    m.farLane = m.top.findNode("farLane")
+    m.nearLane = m.top.findNode("nearLane")
+    m.precip = m.top.findNode("precip")
+    m.precip1 = m.top.findNode("precip1")
+    m.precip2 = m.top.findNode("precip2")
+    m.precipAnim = m.top.findNode("precipAnim")
+    m.info = m.top.findNode("info")
+    m.clockLabel = m.top.findNode("clockLabel")
+    m.tempLabel = m.top.findNode("tempLabel")
+    m.condLabel = m.top.findNode("condLabel")
+
+    m.top.backgroundColor = "0x16242FFF"
+
+    m.weather = invalid
+    m.period = ""
+    m.precipKind = ""
+
+    ' ---------- Start ----------
+    applyPeriod(currentPeriod())
+    startParallax()
+    buildCars()
+    updateClock()
+
+    m.weatherTask = m.top.findNode("weatherTask")
+    m.weatherTask.lat = m.LAT
+    m.weatherTask.lon = m.LON
+    m.weatherTask.observeField("result", "onWeather")
+    m.weatherTask.control = "RUN"
+
+    makeTimer(10, "onClockTick")
+    makeTimer(60, "onPeriodTick")
+    makeTimer(900, "onWeatherTick")
+    makeTimer(300, "onMoveInfo")
+end sub
+
+' ================= Scenery =================
+
+sub startParallax()
+    for each name in m.layerSpeeds
+        anim = m.top.findNode(name + "Anim")
+        anim.duration = 1920 / m.layerSpeeds[name]
+        anim.control = "start"
+    end for
+end sub
+
+' Returns "day", "dusk", or "night" using today's sunrise and sunset.
+' Dusk covers 40 minutes on each side of sunrise and sunset.
+function currentPeriod() as string
+    now = nowMinutes()
+    sunriseMin = 420
+    sunsetMin = 1140
+    if m.weather <> invalid and m.weather.sunrise <> ""
+        sunriseMin = isoMinutes(m.weather.sunrise)
+        sunsetMin = isoMinutes(m.weather.sunset)
+    end if
+    if Abs(now - sunsetMin) <= 40 or Abs(now - sunriseMin) <= 40 then return "dusk"
+    if now > sunriseMin and now < sunsetMin then return "day"
+    return "night"
+end function
+
+sub applyPeriod(period as string)
+    if period = m.period then return
+    m.period = period
+    m.sky.uri = "pkg:/images/sky_" + period + ".png"
+    for each name in ["clouds", "far", "near", "hills", "town"]
+        uri = "pkg:/images/" + name + "_" + period + ".png"
+        m.top.findNode(name + "1").uri = uri
+        m.top.findNode(name + "2").uri = uri
+    end for
+    if period = "day"
+        m.stars.opacity = 0
+        m.sun.uri = "pkg:/images/sun.png"
+        m.sun.translation = [1430, 150]
+    else if period = "dusk"
+        m.stars.opacity = 0.35
+        m.sun.uri = "pkg:/images/sun.png"
+        m.sun.translation = [1390, 400]
+    else
+        m.stars.opacity = 1
+        m.sun.uri = "pkg:/images/moon.png"
+        m.sun.translation = [310, 100]
+    end if
+end sub
+
+sub onPeriodTick()
+    applyPeriod(currentPeriod())
+end sub
+
+' ================= Weather =================
+
+sub onWeatherTick()
+    m.weatherTask.control = "RUN"
+end sub
+
+sub onWeather()
+    r = m.weatherTask.result
+    if r = invalid then return
+    if not r.ok then return
+    m.weather = r
+    m.tempLabel.text = CInt(r.temp).ToStr() + Chr(176) + "F"
+    m.condLabel.text = weatherText(r.code)
+    setPrecip(r.code)
+    applyPeriod(currentPeriod())
+end sub
+
+function weatherText(code as dynamic) as string
+    key = Int(code).ToStr()
+    if m.codeText.DoesExist(key) then return m.codeText[key]
+    return ""
+end function
+
+sub setPrecip(code as dynamic)
+    c = Int(code)
+    kind = ""
+    if (c >= 51 and c <= 67) or (c >= 80 and c <= 82) or c >= 95 then kind = "rain"
+    if (c >= 71 and c <= 77) or c = 85 or c = 86 then kind = "snow"
+    if kind = m.precipKind then return
+    m.precipKind = kind
+    m.precipAnim.control = "stop"
+    if kind = ""
+        m.precip.visible = false
+        return
+    end if
+    uri = "pkg:/images/" + kind + ".png"
+    m.precip1.uri = uri
+    m.precip2.uri = uri
+    if kind = "rain"
+        m.precipAnim.duration = 0.8
+    else
+        m.precipAnim.duration = 14
+    end if
+    m.precip.visible = true
+    m.precipAnim.control = "start"
+end sub
+
+' ================= Clock and panel =================
+
+sub onClockTick()
+    updateClock()
+end sub
+
+sub updateClock()
+    dt = CreateObject("roDateTime")
+    dt.ToLocalTime()
+    h = dt.GetHours()
+    mins = dt.GetMinutes()
+    suffix = "AM"
+    if h >= 12 then suffix = "PM"
+    h12 = h MOD 12
+    if h12 = 0 then h12 = 12
+    mm = mins.ToStr()
+    if mins < 10 then mm = "0" + mm
+    m.clockLabel.text = h12.ToStr() + ":" + mm + " " + suffix
+end sub
+
+sub onMoveInfo()
+    m.infoIndex = (m.infoIndex + 1) MOD m.infoSpots.Count()
+    m.info.translation = m.infoSpots[m.infoIndex]
+end sub
+
+' ================= Cars =================
+
+sub buildCars()
+    m.cars = {}
+    m.laneBusy = { near: "", far: "" }
+    for each def in m.carDefs
+        makeCar(def)
+    end for
+end sub
+
+sub makeCar(def as object)
+    name = def.name
+    car = m.nearLane.createChild("Group")
+    car.id = name + "_car"
+    car.visible = false
+
+    body = car.createChild("Poster")
+    body.uri = "pkg:/images/car_" + name + ".png"
+    body.width = def.w
+    body.height = def.h
+
+    ' Wheel spin: one full turn per (2 * pi * radius) pixels of road
+    spin = m.top.createChild("Animation")
+    spin.id = name + "_spin"
+    spin.repeat = true
+    spin.easeFunction = "linear"
+    spin.duration = 2 * 3.14159 * def.r / def.ground
+    wheels = []
+    interps = []
+    i = 0
+    for each w in def.wheels
+        wheel = car.createChild("Poster")
+        wheel.id = name + "_wheel" + i.ToStr()
+        wheel.uri = "pkg:/images/wheel.png"
+        wheel.width = def.r * 2
+        wheel.height = def.r * 2
+        wheel.translation = [w[0] - def.r, w[1] - def.r]
+        wheel.scaleRotateCenter = [def.r, def.r]
+        interp = spin.createChild("FloatFieldInterpolator")
+        interp.key = [0.0, 1.0]
+        interp.keyValue = [0.0, -6.28318]
+        interp.fieldToInterp = wheel.id + ".rotation"
+        wheels.Push(wheel)
+        interps.Push(interp)
+        i = i + 1
+    end for
+
+    move = m.top.createChild("Animation")
+    move.id = name + "_move"
+    move.repeat = false
+    move.easeFunction = "linear"
+    moveInterp = move.createChild("Vector2DFieldInterpolator")
+    moveInterp.key = [0.0, 1.0]
+    moveInterp.fieldToInterp = car.id + ".translation"
+    move.observeField("state", "onCarMoveState")
+
+    timer = m.top.createChild("Timer")
+    timer.id = name + "_timer"
+    timer.repeat = false
+    timer.duration = 1 + Rnd(6)
+    timer.observeField("fire", "onCarTimer")
+    timer.control = "start"
+
+    m.cars[name] = { def: def, node: car, body: body, wheels: wheels, interps: interps, move: move, moveInterp: moveInterp, spin: spin, timer: timer, lane: "" }
+end sub
+
+function carNameFromId(id as string) as string
+    return Left(id, Instr(1, id, "_") - 1)
+end function
+
+sub onCarTimer(event as object)
+    spawnCar(carNameFromId(event.getNode()))
+end sub
+
+' Sends a car across the screen. Only one car uses a lane at a time so faster
+' cars never drive through slower ones.
+' Near lane: drives left to right, full size.
+' Far lane: drives right to left, slightly smaller. It uses a mirrored copy of
+' the car image instead of a negative scale, because Roku does not draw spinning
+' children correctly inside a mirrored (negative scale) group.
+sub spawnCar(name as string)
+    c = m.cars[name]
+    free = []
+    if m.laneBusy.near = "" then free.Push("near")
+    if m.laneBusy.far = "" then free.Push("far")
+    if free.Count() = 0
+        c.timer.duration = 2
+        c.timer.control = "start"
+        return
+    end if
+
+    lane = free[Rnd(free.Count()) - 1]
+    m.laneBusy[lane] = name
+    c.lane = lane
+    d = c.def
+    car = c.node
+    car.getParent().removeChild(car)
+
+    if lane = "near"
+        s = 1.0
+        facingLeft = false
+        groundY = 1072
+        m.nearLane.appendChild(car)
+        speed = d.ground - m.cameraSpeed   ' moving with the scroll direction looks slower
+        fromX = -d.w - 40
+        toX = 1960
+    else
+        s = 0.86
+        facingLeft = true
+        groundY = 1002
+        m.farLane.appendChild(car)
+        speed = d.ground + m.cameraSpeed   ' moving against the scroll direction looks faster
+        fromX = 1960
+        toX = -d.w - 40
+    end if
+
+    car.scaleRotateCenter = [d.w / 2, d.h / 2]
+    car.scale = [s, s]
+
+    ' Make the car face its direction of travel: swap the body image, move the wheels to the
+    ' mirrored positions, and reverse the spin direction.
+    suffix = ""
+    turn = -6.28318
+    if facingLeft
+        suffix = "_left"
+        turn = 6.28318
+    end if
+    c.body.uri = "pkg:/images/car_" + d.name + suffix + ".png"
+    for i = 0 to c.wheels.Count() - 1
+        wx = d.wheels[i][0]
+        if facingLeft then wx = d.w - wx
+        c.wheels[i].translation = [wx - d.r, d.wheels[i][1] - d.r]
+        c.wheels[i].rotation = 0
+        c.interps[i].keyValue = [0.0, turn]
+    end for
+    y = groundY - d.h / 2 - (d.bottom - d.h / 2) * s
+    c.moveInterp.keyValue = [[fromX, y], [toX, y]]
+    c.move.duration = Abs(toX - fromX) / speed
+    car.translation = [fromX, y]
+    car.visible = true
+    c.spin.control = "start"
+    c.move.control = "start"
+end sub
+
+sub onCarMoveState(event as object)
+    if event.getData() <> "stopped" then return
+    name = carNameFromId(event.getNode())
+    c = m.cars[name]
+    if c = invalid then return
+    if c.lane = "" then return
+    c.node.visible = false
+    c.spin.control = "stop"
+    m.laneBusy[c.lane] = ""
+    c.lane = ""
+    c.timer.duration = 2 + Rnd(7)
+    c.timer.control = "start"
+end sub
+
+' ================= Helpers =================
+
+function makeTimer(seconds as float, callback as string) as object
+    t = m.top.createChild("Timer")
+    t.duration = seconds
+    t.repeat = true
+    t.observeField("fire", callback)
+    t.control = "start"
+    return t
+end function
+
+function nowMinutes() as integer
+    dt = CreateObject("roDateTime")
+    dt.ToLocalTime()
+    return dt.GetHours() * 60 + dt.GetMinutes()
+end function
+
+' Converts "2026-10-26T08:05" to minutes after midnight
+function isoMinutes(s as string) as integer
+    return Int(Val(Mid(s, 12, 2))) * 60 + Int(Val(Mid(s, 15, 2)))
+end function
