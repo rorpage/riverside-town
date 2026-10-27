@@ -22,7 +22,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 
 ## Features
 
-- Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street. The center far mountain has a flat top, in the shape of Table Mountain in South Africa.
+- Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street. The center far mountain has a flat top, in the shape of Table Mountain in South Africa. Like the real mountain, it sometimes has a flat cloud lying on top, called the "tablecloth." It fades in or out over 20 seconds.
 - The town has two sections. The first has three houses (numbered 5401, 135, and 5334), a donut shop called Long's Donuts, a book store called Forever Books, Williams Hardware, and a diner called Luke's. The last two are references to Gilmore Girls. The second has a church named New City, a gas station with a small market, and the Hill Valley Courthouse Mall from Back to the Future, with its clock stopped at 10:04.
 - A car is parked at the gas station. The car and the direction it faces are chosen at random each time the screensaver starts.
 - Each store sign uses its own font.
@@ -97,6 +97,7 @@ All settings are at the top of `init()` in `components/MainScene.brs`.
 | `m.layerWidths` | Width of each scenery layer before it repeats. The town is 3840 because it is two different 1920 pixel sections. |
 | `m.cameraSpeed` | Must match the `town` layer speed. Cars use it so their speed looks correct relative to the street. |
 | `m.carDefs` | Each car's image size, wheel positions, wheel radius, and `ground` speed in pixels per second. |
+| `m.tableclothChance` | The chance, in percent, that the tablecloth cloud is on the flat-topped mountain. It is checked when the screensaver starts and every 10 minutes after. The default is 40. |
 | `m.infoSpots` | The positions the clock panel moves between. They are all in the top-right corner. |
 | `m.seasonOverride` | Set to `"spring"`, `"summer"`, `"fall"`, or `"winter"` to always show that season, for example to preview it. Leave it as `""` to choose the season from the date. |
 | `m.seasonalLayers` | Which scenery layers have a different image for some seasons. It must match `SEASONAL` in `tools/generate_images.py`. |
