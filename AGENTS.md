@@ -10,7 +10,7 @@ Riverside Town is a Roku screensaver written in BrightScript with SceneGraph. It
 
 These apply to code, comments, commit messages, README.md, and this file.
 
-- Keep every file plain ASCII. Do not use em dashes or the Unicode ellipsis character. Use commas, colons, semicolons, or separate sentences instead. If a non-ASCII character must appear in an image, write it as an escape in the generator (for example, `"Caf\u00e9"`).
+- Keep every file plain ASCII. Do not use em dashes or the Unicode ellipsis character. Use commas, colons, semicolons, or separate sentences instead. If a non-ASCII character must appear in an image, write it as an escape in the generator (for example, `"Luke\u2019s"`).
 - Use plain, literal language. Do not use idioms, figures of speech, or clever phrasing.
 - Keep README.md accurate when behavior, settings, or file layout change.
 
@@ -35,7 +35,7 @@ These apply to code, comments, commit messages, README.md, and this file.
 - The top of the river must start below the top edge of the hills, or it sticks up into the mountains.
 - The sky is an 8 pixel wide gradient stretched to 1920 pixels. Keep it narrow.
 - The town crop starts at y=550 so the church cross fits. If anything in the town is drawn above y=550, it is cut off.
-- Store sign text is drawn with `text()` in the generator, which converts letters to shapes using the variable fonts in `tools/fonts`. Do not use SVG `<text>` elements, because they depend on the fonts installed on the computer that runs the generator. To add a font, put the `.ttf` file and its license in `tools/fonts` and add it to `FONTS`. Only use fonts with a license that allows this, such as the SIL Open Font License. Write non-ASCII letters as Python escapes (for example, `"Caf\u00e9"`).
+- Store sign text is drawn with `text()` in the generator, which converts letters to shapes using the variable fonts in `tools/fonts`. Do not use SVG `<text>` elements, because they depend on the fonts installed on the computer that runs the generator. To add a font, put the `.ttf` file and its license in `tools/fonts` and add it to `FONTS`. Only use fonts with a license that allows this, such as the SIL Open Font License. Write non-ASCII letters as Python escapes (for example, `"Luke\u2019s"`).
 - The car parked at the gas station is not part of the town image. `parkCar()` in `components/MainScene.brs` adds it to `townStrip` when the screensaver starts. If the gas station moves in the generator, update the position in `parkCar()` and in `park_preview()` in the generator.
 - Car images do not include the wheels. Wheels are a separate image so they can spin. If a car's size or wheel positions change in the generator, update the matching entry in `m.carDefs` in `components/MainScene.brs` (`w`, `h`, `wheels`, `r`, and `bottom`).
 

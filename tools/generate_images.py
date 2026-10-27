@@ -150,7 +150,7 @@ def town(p):
     s += house(1410, 740, 190, 672, 1432, 1534, 1485, 770)
     s += (f'<rect x="1630" y="690" width="250" height="210" fill="{W2}"/><rect x="1626" y="690" width="258" height="14" fill="{R}"/>'
           f'<rect x="1660" y="716" width="48" height="44" fill="{Wn}"/><rect x="1772" y="716" width="48" height="44" fill="{Wn}"/>'
-          + sign(1680, 772, 150, 40, R, "Caf\u00e9", "script", 600, 32, 802, 1) +
+          + sign(1680, 772, 150, 40, R, "Luke\u2019s", "script", 700, 32, 802, 1) +
           f'<polygon points="1640,820 1870,820 1878,846 1632,846" fill="{ACCENT}"/>'
           f'<rect x="1650" y="854" width="140" height="42" fill="{Wn}"/><rect x="1806" y="852" width="46" height="48" fill="{R}"/>')
     return s + street(p)

@@ -5,7 +5,7 @@ A Roku screensaver inspired by Roku City. It shows a small town beside a river w
 ## Features
 
 - Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street.
-- The town has two sections. The first has houses, a bakery, a book store, a hardware store, and a cafe. The second has a church, a gas station with a small market, and a public library.
+- The town has two sections. The first has houses, a bakery, a book store, a hardware store, and a diner called Luke's. The second has a church, a gas station with a small market, and a public library.
 - A car is parked at the gas station. The car and the direction it faces are chosen at random each time the screensaver starts.
 - Each store sign uses its own font.
 - Four cars: a sedan, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it.
@@ -78,7 +78,7 @@ Store sign fonts:
 
 | Font | Used for |
 |---|---|
-| Dancing Script | Bakery, Cafe |
+| Dancing Script | Bakery, Luke's |
 | Playfair Display | Books |
 | Oswald | Hardware, gas station, Market |
 | Cinzel | Public Library |
