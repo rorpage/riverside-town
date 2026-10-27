@@ -344,7 +344,7 @@ sports = ('<g transform="translate(0,16)">'
           f'<path fill="{DARK}" d="M100,54 L118,51 L120,64 L102,64 Z"/>'
           f'<path d="M290,58 Q296,58 296,64 Q296,70 290,70" stroke="{CHROME}" stroke-width="3" fill="{DARK}"/>'
           '<rect x="266" y="55" width="18" height="4" rx="2" fill="#F6C46A"/><rect x="8" y="44" width="14" height="4" fill="#C0392B"/></g>'
-          + wells([(64, 80), (234, 80)], 26))
+          + wells([(64, 84), (234, 84)], 22))
 save(sports, "0 0 304 104", 304, 104, "car_sports.png")
 
 # Channel icons from a composite of the day scene

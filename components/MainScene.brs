@@ -23,7 +23,7 @@ sub init()
         { name: "van",   w: 310, h: 130, wheels: [[66, 104], [246, 104]], r: 24, bottom: 128, ground: 220 },
         { name: "jeep",  w: 270, h: 140, wheels: [[68, 108], [214, 108]], r: 28, bottom: 136, ground: 200 },
         { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 140 },
-        { name: "sports", w: 304, h: 104, wheels: [[64, 80], [234, 80]], r: 22, bottom: 102, ground: 480 }
+        { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 }
     ]
 
     ' Open-Meteo weather codes (WMO) to text
