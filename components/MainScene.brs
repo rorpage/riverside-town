@@ -342,7 +342,7 @@ sub schedulePlane()
 end sub
 
 ' Sets the plane image for its direction and the time of day. The strobe on
-' the tail blinks at dusk and night.
+' the tail blinks at dusk and night, and is larger and brighter at night.
 sub updatePlaneImage()
     suffix = ""
     strobeX = 1
@@ -351,7 +351,18 @@ sub updatePlaneImage()
         strobeX = 47
     end if
     m.planeBody.uri = "pkg:/images/plane" + suffix + "_" + m.period + ".png"
-    m.planeStrobe.translation = [strobeX, -2]
+    ' At night the strobe uses a larger, brighter image with the same center
+    if m.period = "night"
+        m.planeStrobe.uri = "pkg:/images/plane_strobe_night.png"
+        m.planeStrobe.width = 16
+        m.planeStrobe.height = 16
+        m.planeStrobe.translation = [strobeX - 4, -6]
+    else
+        m.planeStrobe.uri = "pkg:/images/plane_strobe.png"
+        m.planeStrobe.width = 8
+        m.planeStrobe.height = 8
+        m.planeStrobe.translation = [strobeX, -2]
+    end if
     if m.period = "day"
         m.strobeAnim.control = "stop"
         m.planeStrobe.opacity = 0

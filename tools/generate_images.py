@@ -484,7 +484,12 @@ def cessna(pal, left):
          '<ellipse cx="108" cy="24" rx="1.5" ry="10" fill="#9DB6C9" fill-opacity="0.6"/>')
     if pal != "day":
         light = "#E74C3C" if left else "#2ECC71"
-        s += f'<circle cx="48" cy="16" r="3" fill="{light}"/><circle cx="48" cy="16" r="6" fill="{light}" fill-opacity="0.3"/>'
+        if pal == "night":
+            # Brighter at night: a wider glow and a light center
+            s += (f'<circle cx="48" cy="16" r="11" fill="{light}" fill-opacity="0.25"/><circle cx="48" cy="16" r="7" fill="{light}" fill-opacity="0.5"/>'
+                  f'<circle cx="48" cy="16" r="4" fill="{light}"/><circle cx="48" cy="16" r="1.8" fill="#FFFFFF" fill-opacity="0.8"/>')
+        else:
+            s += f'<circle cx="48" cy="16" r="3" fill="{light}"/><circle cx="48" cy="16" r="6" fill="{light}" fill-opacity="0.3"/>'
     if left:
         s = f'<g transform="translate(112,0) scale(-1,1)">{s}</g>'
     return s
@@ -492,6 +497,9 @@ for pal in P:
     save(cessna(pal, False), "0 0 112 44", 112, 44, f"plane_{pal}.png")
     save(cessna(pal, True), "0 0 112 44", 112, 44, f"plane_left_{pal}.png")
 save('<circle cx="8" cy="8" r="7" fill="#FFFFFF" fill-opacity="0.35"/><circle cx="8" cy="8" r="3" fill="#FFFFFF"/>', "0 0 16 16", 16, 16, "plane_strobe.png")
+# A larger, brighter flash for night, shown at 16x16 instead of 8x8
+save('<circle cx="16" cy="16" r="15" fill="#FFFFFF" fill-opacity="0.18"/><circle cx="16" cy="16" r="9" fill="#FFFFFF" fill-opacity="0.4"/>'
+     '<circle cx="16" cy="16" r="4.5" fill="#FFFFFF"/>', "0 0 32 32", 32, 32, "plane_strobe_night.png")
 
 # Wheel (drawn separately so it can spin)
 save('<circle cx="32" cy="32" r="32" fill="#1F2A33"/><circle cx="32" cy="32" r="18" fill="#C9D2DA"/>'

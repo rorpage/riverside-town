@@ -28,7 +28,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 - Each store sign uses its own font.
 - Five cars: a sports car in the style of a Bugatti, a sedan, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest.
 - Two lanes. The near lane drives left to right at full size. The far lane drives right to left and draws the cars slightly smaller.
-- A small Cessna airplane flies across the sky now and then, about every 1 to 3 minutes, in either direction. It flies at the distance of the far mountains, so it is small and its speed matches that distance: it takes about 17 seconds to cross the screen. At dusk and night its wingtip light is on, green when it flies right and red when it flies left, as on a real plane (green is on the right wingtip and red on the left). A white tail light blinks. It does not fly in rain, snow, fog, or thunderstorms.
+- A small Cessna airplane flies across the sky now and then, about every 1 to 3 minutes, in either direction. It flies at the distance of the far mountains, so it is small and its speed matches that distance: it takes about 17 seconds to cross the screen. At dusk and night its wingtip light is on, green when it flies right and red when it flies left, as on a real plane (green is on the right wingtip and red on the left). A white tail light blinks. At night both lights are brighter, with a wider glow. It does not fly in rain, snow, fog, or thunderstorms.
 - Weather from [Open-Meteo](https://open-meteo.com/), refreshed every 15 minutes. No API key is needed.
 - Day, dusk, and night versions of the scene, chosen from today's real sunrise and sunset times.
 - Four seasons, chosen from today's date:
