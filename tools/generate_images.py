@@ -75,7 +75,7 @@ FONTS = {"oswald": "Oswald-Variable.ttf", "playfair": "PlayfairDisplay-Variable.
          "pacifico": "Pacifico-Regular.ttf", "amatic": "AmaticSC-Bold.ttf", "fredoka": "Fredoka-Variable.ttf",
          "lora": "Lora-Italic-Variable.ttf", "montserrat": "Montserrat-Variable.ttf", "raleway": "Raleway-Variable.ttf",
          "comfortaa": "Comfortaa-Variable.ttf", "josefin": "JosefinSans-Variable.ttf", "quicksand": "Quicksand-Variable.ttf",
-         "bitter": "Bitter-Variable.ttf"}
+         "bitter": "Bitter-Variable.ttf", "sharetech": "ShareTechMono-Regular.ttf"}
 _glyphs = {}
 
 def glyphs(font, weight):
@@ -261,12 +261,21 @@ def arch(x, y, w, h, fill):
     r = w / 2
     return f'<path d="M{x},{y+h} L{x},{y+r} A{r},{r} 0 0 1 {x+w},{y+r} L{x+w},{y+h} Z" fill="{fill}"/>'
 
-# The town layer is two different 1920 pixel tiles, A then B, so the street is
-# 3840 pixels long before it repeats.
+# House wall colors, written as day colors. wall() darkens a day color for
+# dusk and night the same way the palette darkens the white house color.
+HOUSE_COLORS = {"5401": "#F3E3B8", "135": "#CFE3D4", "5334": "#D6E4F0", "312": "#F2D4D7",
+                "402": "#E8DCCB", "527": "#DCD6EC", "612": "#F8FAFC", "1120": "#CFE6E3"}
+
+def wall(day, p):
+    ratio = [n / d for n, d in zip(hex_rgb(p["houseA"]), hex_rgb(P["day"]["houseA"]))]
+    return "#" + "".join(f"{min(255, round(c * r)):02X}" for c, r in zip(hex_rgb(day), ratio))
+
+# The town layer is three different 1920 pixel tiles, A, B, then C, so the
+# street is 5760 pixels long before it repeats.
 def town(p, season):
     A, B, W2, R, Wn = p["houseA"], p["houseB"], p["wall2"], p["roof"], p["window"]
     def house(x, y, w, roofPeak, win1, win2, doorX, winY, number, font, weight=600):
-        return (f'<rect x="{x}" y="{y}" width="{w}" height="{900-y}" fill="{A}"/>'
+        return (f'<rect x="{x}" y="{y}" width="{w}" height="{900-y}" fill="{wall(HOUSE_COLORS[number], p)}"/>'
                 f'<polygon points="{x-12},{y} {x+w//2},{roofPeak} {x+w+12},{y}" fill="{R}"/>'
                 + snow_ridge(season, p, (x - 10, y - 3), (x + w // 2, roofPeak - 3), (x + w + 10, y - 3)) +
                 f'<rect x="{win1}" y="{winY}" width="44" height="40" fill="{Wn}"/><rect x="{win2}" y="{winY}" width="44" height="40" fill="{Wn}"/>'
@@ -307,18 +316,27 @@ def town(p, season):
           f'<rect x="1030" y="840" width="46" height="60" fill="{R}"/>')
     s += (f'<rect x="1120" y="710" width="260" height="190" fill="{B}"/><rect x="1116" y="710" width="268" height="14" fill="{R}"/>'
           + snow_flat(season, p, 1116, 710, 268) + snow_flat(season, p, 1132, 800, 236)
-          # Two lines: Luke's Diner in Gilmore Girls is in the old Williams Hardware building
-          + sign(1150, 730, 200, 54, "#4A82A8", "WILLIAMS", "oswald", 500, 16, 749, 5)
-          + text("HARDWARE", "oswald", 600, 26, 1250, 777, "#F8FAFC", 4) +
+          # Bits and Bytes, a computer store, with green letters like an old
+          # computer screen and a small gray computer icon in the window
+          + f'<rect x="1150" y="732" width="200" height="50" rx="4" fill="#1F2A33"/>'
+          + text("Bits and Bytes", "sharetech", 400, 24, 1250, 765, "#7CF29A") +
           f'<polygon points="1130,800 1370,800 1378,828 1122,828" fill="{R}"/>'
-          f'<rect x="1140" y="838" width="150" height="56" fill="{Wn}"/><rect x="1310" y="834" width="46" height="66" fill="{R}"/>')
+          f'<rect x="1140" y="838" width="150" height="56" fill="{Wn}"/><rect x="1310" y="834" width="46" height="66" fill="{R}"/>'
+          # Monitor with its screen cut out in the window color, a stand, and a keyboard
+          f'<rect x="1197" y="846" width="36" height="25" rx="2" fill="{ICON}"/><rect x="1201" y="850" width="28" height="17" fill="{Wn}"/>'
+          f'<rect x="1212" y="871" width="6" height="6" fill="{ICON}"/><rect x="1204" y="877" width="22" height="3" rx="1" fill="{ICON}"/>'
+          f'<rect x="1193" y="883" width="44" height="6" rx="1.5" fill="{ICON}"/>')
     s += house(1410, 740, 190, 672, 1432, 1534, 1485, 770, "5334", "cabin")
     s += (f'<rect x="1630" y="690" width="250" height="210" fill="{W2}"/><rect x="1626" y="690" width="258" height="14" fill="{R}"/>'
           + snow_flat(season, p, 1626, 690, 258) + snow_flat(season, p, 1642, 820, 226) +
           f'<rect x="1660" y="716" width="48" height="44" fill="{Wn}"/><rect x="1772" y="716" width="48" height="44" fill="{Wn}"/>'
           + sign(1680, 768, 150, 46, R, "Luke\u2019s", "kaushan", 400, 32, 802, 1) +
           f'<polygon points="1640,820 1870,820 1878,846 1632,846" fill="{ACCENT}"/>'
-          f'<rect x="1650" y="854" width="140" height="42" fill="{Wn}"/><rect x="1806" y="852" width="46" height="48" fill="{R}"/>')
+          f'<rect x="1650" y="854" width="140" height="42" fill="{Wn}"/><rect x="1806" y="852" width="46" height="48" fill="{R}"/>'
+          # Luke's Diner in Gilmore Girls is in the old Williams Hardware
+          # building, and the old lettering is still on the window
+          + text("WILLIAMS", "oswald", 500, 11, 1720, 869, ICON, 3)
+          + text("HARDWARE", "oswald", 600, 16, 1720, 887, ICON, 2))
     return s + street(p, season)
 
 def town_b(p, season):
@@ -342,7 +360,7 @@ def town_b(p, season):
               f'<circle cx="{wx+18}" cy="822" r="7" fill="{GOLD}"/>'
               f'<g stroke="{R}" stroke-width="2"><line x1="{wx}" y1="846" x2="{wx+36}" y2="846"/><line x1="{wx}" y1="860" x2="{wx+36}" y2="860"/></g>')
     s += f'<rect x="60" y="892" width="120" height="8" fill="{p["curb"]}"/>'
-    # Gas station: price sign, canopy over one pump, and a small market.
+    # Gas station: price sign, canopy over one pump, and a small Kroger store.
     # The parked car is added by MainScene.brs so it can change each time.
     # Price sign: $2.05 with a small 9 at the top right for the 9/10 of a cent
     priceW = text_width("$2.05", "oswald", 500, 22, 1)
@@ -363,7 +381,7 @@ def town_b(p, season):
           f'<path d="M628,836 Q646,840 642,870" stroke="#1F2A33" stroke-width="4" fill="none"/>'
           f'<rect x="980" y="770" width="200" height="130" fill="{B}"/><rect x="976" y="770" width="208" height="14" fill="{R}"/>'
           + snow_flat(season, p, 976, 770, 208)
-          + sign(1006, 792, 148, 36, ACCENT, "MARKET", "oswald", 600, 22, 818, 4) +
+          + sign(1006, 792, 148, 36, "#1F4E9C", "Kroger", "oswald", 600, 22, 818, 2) +
           f'<rect x="996" y="842" width="96" height="50" fill="{Wn}"/><rect x="1110" y="836" width="46" height="64" fill="{R}"/>')
     # Hill Valley Courthouse Mall from Back to the Future: stone front with
     # columns and steps, and a clock tower stopped at 10:04
@@ -414,7 +432,7 @@ def town_c(p, season):
     def small_house(x, w, y, peak, number, font, weight):
         winY = y + 18
         doorX = x + w // 2 - 20
-        return (f'<rect x="{x}" y="{y}" width="{w}" height="{900 - y}" fill="{A}"/>'
+        return (f'<rect x="{x}" y="{y}" width="{w}" height="{900 - y}" fill="{wall(HOUSE_COLORS[number], p)}"/>'
                 f'<polygon points="{x - 8},{y} {x + w // 2},{peak} {x + w + 8},{y}" fill="{R}"/>'
                 + snow_ridge(season, p, (x - 6, y - 3), (x + w // 2, peak - 3), (x + w + 6, y - 3)) +
                 f'<rect x="{x + 10}" y="{winY}" width="40" height="38" fill="{Wn}"/><rect x="{x + w - 50}" y="{winY}" width="40" height="38" fill="{Wn}"/>'
