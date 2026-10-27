@@ -635,8 +635,8 @@ def town_d(p, season):
         s += (f'<path d="M{wx},874 L{wx},816 L{wx + 13},798 L{wx + 26},816 L{wx + 26},874 Z" fill="#4A82A8"/>'
               f'<rect x="{wx + 11}" y="812" width="4" height="62" fill="#F6C46A"/><rect x="{wx}" y="842" width="26" height="3" fill="{R}"/>')
 
-    # Chick-fil-A: a red roof with the name on it, big windows, a drive-through
-    # window on the right side, and a menu board
+    # Chick-fil-A: a red roof with the name on it, big windows, and a
+    # drive-through window on the right side
     RED = "#D62E3C"
     CW = wall(STORE_COLORS["chick"], p)
     s += (f'<rect x="784" y="752" width="256" height="148" fill="{CW}"/>'
@@ -649,21 +649,13 @@ def town_d(p, season):
           f'<rect x="1006" y="806" width="28" height="40" fill="{Wn}"/><rect x="1002" y="798" width="36" height="8" fill="{RED}"/>'
           + snow_flat(season, p, 1002, 798, 36) +
           f'<rect x="1054" y="770" width="4" height="130" fill="{R}"/><polygon points="1046,766 1094,766 1094,786 1046,786" fill="{RED}"/>'
-          + text("DRIVE THRU", "oswald", 600, 9, 1070, 780, "#F8FAFC", 0.5) +
-          f'<rect x="1104" y="808" width="5" height="92" fill="{R}"/><rect x="1128" y="808" width="5" height="92" fill="{R}"/>'
-          f'<rect x="1098" y="802" width="42" height="54" rx="3" fill="{R}"/><rect x="1102" y="806" width="34" height="7" fill="{RED}"/>')
-    for i in range(4):
-        s += f'<rect x="1104" y="{818 + i * 9}" width="{30 - (i % 2) * 8}" height="4" rx="1" fill="#F6C46A"/>'
+          + text("DRIVE THRU", "oswald", 600, 9, 1070, 780, "#F8FAFC", 0.5))
 
-    # Covenant school, with a small bell tower and a flagpole
+    # Covenant school, with a small bell tower
     body, cx = school(1150, 300, wall(STORE_COLORS["covenant"], p), "COVENANT", "raleway", 800, 15, 646)
     s += (body + f'<rect x="{cx - 14}" y="620" width="28" height="30" fill="{wall(HOUSE_COLORS["612"], p)}"/>'
           f'<path d="M{cx - 8},650 L{cx - 8},634 A8,8 0 0 1 {cx + 8},634 L{cx + 8},650 Z" fill="{R}"/>'
-          f'<polygon points="{cx - 18},622 {cx},600 {cx + 18},622" fill="{R}"/>' + snow_ridge(season, p, (cx - 16, 620), (cx, 603), (cx + 16, 620)) +
-          f'<rect x="1440" y="640" width="4" height="260" fill="#9CA6B1"/>'
-          f'<rect x="1444" y="644" width="34" height="20" fill="#F8FAFC"/><rect x="1444" y="644" width="14" height="10" fill="#34495E"/>')
-    for i in range(3):
-        s += f'<rect x="1444" y="{648 + i * 6}" width="34" height="2" fill="#C0392B"/>'
+          f'<polygon points="{cx - 18},622 {cx},600 {cx + 18},622" fill="{R}"/>' + snow_ridge(season, p, (cx - 16, 620), (cx, 603), (cx + 16, 620)))
 
     # Cedarville: stone front with columns, steps, and the name in blue and
     # yellow letters in a letterman (college jersey) style
