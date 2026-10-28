@@ -65,8 +65,8 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   - Fog: a fog layer over the scene.
   - Thunderstorms: rain and lightning flashes at random times.
 
-  Falling leaves and fireflies are hidden while rain or snow is falling.
-- A clock and weather panel in the top-right corner. Every 5 minutes it moves a small amount within the corner to protect TVs from burn-in. The sun and moon are in the top-left corner, so the panel never covers them.
+  Falling leaves and fireflies are hidden while rain or snow is falling. In fall the leaves come and go: they fall for a while, fade out, stay away for a while, then fade back in, for random lengths of time.
+- A clock and weather panel in the top-right corner. Every 5 minutes it fades out, moves a small amount within the corner, and fades back in, to protect TVs from burn-in. The sun and moon are in the top-left corner, so the panel never covers them.
 
 ## Project layout
 
@@ -118,6 +118,7 @@ All settings are at the top of `init()` in `components/MainScene.brs`.
 | `m.carDefs` | Each car's image size, wheel positions, wheel radius, and `ground` speed in pixels per second. |
 | `m.planeSpeed` | The airplane's own speed at the distance of the far mountains, in pixels per second. The comment above it in `MainScene.brs` shows how it was worked out. |
 | `m.planeWaitMin`, `m.planeWaitMore` | Seconds between airplane flights: at least `m.planeWaitMin`, plus a random amount up to `m.planeWaitMore`. |
+| `m.leafOnMin`, `m.leafOnMore`, `m.leafOffMin`, `m.leafOffMore` | How long the fall leaves fall and how long they stop, in seconds: at least the `Min` value, plus a random amount up to the `More` value. The defaults are 25 to 70 seconds falling and 15 to 60 seconds stopped. |
 | `m.infoSpots` | The positions the clock panel moves between. They are all in the top-right corner. |
 | `m.seasonOverride` | Set to `"spring"`, `"summer"`, `"fall"`, or `"winter"` to always show that season, for example to preview it. Leave it as `""` to choose the season from the date. |
 | `m.seasonalLayers` | Which scenery layers have a different image for some seasons. It must match `SEASONAL` in `tools/generate_images.py`. |

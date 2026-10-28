@@ -61,6 +61,14 @@ sub init()
     m.planeWaitMin = 45
     m.planeWaitMore = 120
 
+    ' Falling leaves in fall come and go. They fall for leafOnMin seconds plus up
+    ' to leafOnMore, then stop for leafOffMin plus up to leafOffMore, and so on.
+    ' Each change fades over 3 seconds.
+    m.leafOnMin = 25
+    m.leafOnMore = 45
+    m.leafOffMin = 15
+    m.leafOffMore = 45
+
     ' Positions for the clock panel. It stays in the top-right corner and moves a
     ' small amount every few minutes to protect TVs from burn-in. The sun and
     ' moon stay in the top-left corner, so the panel never covers them.
@@ -87,6 +95,11 @@ sub init()
     m.seasonFx1 = m.top.findNode("seasonFx1")
     m.seasonFx2 = m.top.findNode("seasonFx2")
     m.seasonFxAnim = m.top.findNode("seasonFxAnim")
+    m.leafFadeAnim = m.top.findNode("leafFadeAnim")
+    m.leafFade = m.top.findNode("leafFade")
+    m.infoMoveAnim = m.top.findNode("infoMoveAnim")
+    m.infoMove = m.top.findNode("infoMove")
+    m.leavesOn = false
     m.fog = m.top.findNode("fog")
     m.flashAnim = m.top.findNode("flashAnim")
     m.plane = m.top.findNode("plane")
@@ -109,6 +122,10 @@ sub init()
     m.lightningTimer = m.top.createChild("Timer")
     m.lightningTimer.repeat = false
     m.lightningTimer.observeField("fire", "onLightning")
+
+    m.leafTimer = m.top.createChild("Timer")
+    m.leafTimer.repeat = false
+    m.leafTimer.observeField("fire", "onLeafTimer")
 
     m.planeAnim.observeField("state", "onPlaneState")
     m.planeTimer = m.top.createChild("Timer")
@@ -244,21 +261,28 @@ end sub
 
 ' Falling leaves in fall and fireflies on summer nights. They are hidden
 ' while rain or snow is falling. Nothing falls in spring or winter (unless it
-' is snowing).
+' is snowing). The leaves start out falling, and then onLeafTimer() stops and
+' starts them at random times.
 sub updateSeasonFx(season as string, period as string)
     fx = ""
     if m.precipKind = ""
         if season = "fall" then fx = "leaves"
     end if
     m.seasonFxAnim.control = "stop"
+    m.leafFadeAnim.control = "stop"
+    m.leafTimer.control = "stop"
     if fx = ""
         m.seasonFx.visible = false
+        m.leavesOn = false
     else
         m.seasonFx1.uri = "pkg:/images/" + fx + ".png"
         m.seasonFx2.uri = "pkg:/images/" + fx + ".png"
         m.seasonFxAnim.duration = 16
+        m.seasonFx.opacity = 1
         m.seasonFx.visible = true
         m.seasonFxAnim.control = "start"
+        m.leavesOn = true
+        scheduleLeaves()
     end if
 
     flies = season = "summer" and period = "night" and m.precipKind = ""
@@ -374,6 +398,30 @@ sub updatePlaneImage()
     end if
 end sub
 
+' Fades the falling leaves out if they are falling, or back in if they are
+' not, then waits a random time before the next change. The leaves keep
+' moving while they are faded out, so they come back mid-fall.
+sub onLeafTimer()
+    if not m.seasonFx.visible then return
+    if m.leavesOn
+        m.leafFade.keyValue = [m.seasonFx.opacity, 0.0]
+    else
+        m.leafFade.keyValue = [m.seasonFx.opacity, 1.0]
+    end if
+    m.leavesOn = not m.leavesOn
+    m.leafFadeAnim.control = "start"
+    scheduleLeaves()
+end sub
+
+sub scheduleLeaves()
+    if m.leavesOn
+        m.leafTimer.duration = m.leafOnMin + Rnd(m.leafOnMore)
+    else
+        m.leafTimer.duration = m.leafOffMin + Rnd(m.leafOffMore)
+    end if
+    m.leafTimer.control = "start"
+end sub
+
 sub onLightning()
     if not m.storm then return
     m.flashAnim.control = "start"
@@ -431,9 +479,14 @@ sub updateClock()
     m.clockLabel.text = h12.ToStr() + ":" + mm + " " + suffix
 end sub
 
+' Moves the clock panel to its next position. It fades out, moves while it
+' cannot be seen, and fades back in (infoMoveAnim in MainScene.xml).
 sub onMoveInfo()
+    oldSpot = m.info.translation
     m.infoIndex = (m.infoIndex + 1) MOD m.infoSpots.Count()
-    m.info.translation = m.infoSpots[m.infoIndex]
+    newSpot = m.infoSpots[m.infoIndex]
+    m.infoMove.keyValue = [oldSpot, oldSpot, newSpot, newSpot]
+    m.infoMoveAnim.control = "start"
 end sub
 
 ' ================= Cars =================
