@@ -734,16 +734,12 @@ save(rain, "0 0 960 540", 960, 540, "rain.png")
 snow = wrap(lambda x, y: f'<circle cx="{x}" cy="{y}" r="{random.choice([2,2.5,3,3.5])}" fill="#FFFFFF" fill-opacity="0.85"/>', 170)
 save(snow, "0 0 960 540", 960, 540, "snow.png")
 
-# Season effects. Leaves and petals use the same 960x540 wrapping tile as rain
+# Season effects. Falling leaves use the same 960x540 wrapping tile as rain
 # and snow. Fireflies are two 960x200 images that fade in and out in turn.
 def leaf(x, y):
     c = random.choice(["#D9822B", "#B5523F", "#E0B040", "#C8662E"])
     return f'<ellipse cx="{x}" cy="{y}" rx="7" ry="3.5" fill="{c}" transform="rotate({random.randint(0, 180)} {x} {y})"/>'
 save(wrap(leaf, 28), "0 0 960 540", 960, 540, "leaves.png")
-def petal(x, y):
-    c = random.choice(["#F2B8C6", "#F8E1E7", "#F8FAFC"])
-    return f'<ellipse cx="{x}" cy="{y}" rx="4" ry="2.2" fill="{c}" fill-opacity="0.9" transform="rotate({random.randint(0, 180)} {x} {y})"/>'
-save(wrap(petal, 40), "0 0 960 540", 960, 540, "petals.png")
 for n in ("a", "b"):
     flies = ""
     for _ in range(16):
@@ -1047,7 +1043,7 @@ def save_doc(im, name, width):
     im.resize((width, width * 9 // 16), Image.LANCZOS).save(os.path.join(DOCS, name), optimize=True)
 
 save_doc(preview("day", "summer", "10:04 AM", "84\u00b0F", "Clear", plane=(560, 262)), "preview.png", 1280)
-for season, temp, cond, fx in (("spring", "62\u00b0F", "Partly cloudy", "petals"), ("summer", "84\u00b0F", "Clear", None),
+for season, temp, cond, fx in (("spring", "62\u00b0F", "Partly cloudy", None), ("summer", "84\u00b0F", "Clear", None),
                                ("fall", "55\u00b0F", "Mostly clear", "leaves"), ("winter", "28\u00b0F", "Overcast", None)):
     save_doc(preview("day", season, "10:04 AM", temp, cond, fx), f"preview_{season}.png", 640)
 for pal, clock in (("day", "10:04 AM"), ("dusk", "7:12 PM"), ("night", "10:42 PM")):
@@ -1060,6 +1056,6 @@ save_doc(preview("day", "winter", "10:04 AM", "28\u00b0F", "Overcast", x=3840), 
 d_pets = [("cat_black", 240), ("guinea_black_orange", 560), ("cat_tabby", 1060), ("guinea_white_orange", 1400), ("cat_gray", 1760)]
 save_doc(preview("day", "summer", "10:04 AM", "84\u00b0F", "Clear", x=5760, pets=d_pets, near_car="buggy"), "preview_section_d.png", 1280)
 save_doc(preview("night", "winter", "10:42 PM", "26\u00b0F", "Clear", x=5760, pets=d_pets, near_car="buggy"), "preview_section_d_winter_night.png", 640)
-save_doc(preview("day", "spring", "10:04 AM", "62\u00b0F", "Partly cloudy", "petals", x=5760, pets=d_pets, near_car="buggy"), "preview_section_d_spring.png", 640)
+save_doc(preview("day", "spring", "10:04 AM", "62\u00b0F", "Partly cloudy", x=5760, pets=d_pets, near_car="buggy"), "preview_section_d_spring.png", 640)
 
 print("Wrote", len(os.listdir(OUT)), "images to", OUT)

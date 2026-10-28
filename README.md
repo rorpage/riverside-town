@@ -8,7 +8,7 @@ A Roku screensaver inspired by Roku City. It shows a small town beside a river w
 
 | Spring | Summer |
 |---|---|
-| ![Spring: light green hills, blossom trees, and falling petals](docs/preview_spring.png) | ![Summer: green hills and trees](docs/preview_summer.png) |
+| ![Spring: light green hills, blossom trees, and flower boxes](docs/preview_spring.png) | ![Summer: green hills and trees](docs/preview_summer.png) |
 | **Fall** | **Winter** |
 | ![Fall: gold hills, orange trees, pumpkins, and falling leaves](docs/preview_fall.png) | ![Winter: snow on the hills, roofs, and sidewalk, and bare trees](docs/preview_winter.png) |
 
@@ -32,7 +32,7 @@ A Roku screensaver inspired by Roku City. It shows a small town beside a river w
 
 | Winter night | Spring day |
 |---|---|
-| ![Section D on a winter night, with snow and lit windows](docs/preview_section_d_winter_night.png) | ![Section D on a spring day, with falling petals](docs/preview_section_d_spring.png) |
+| ![Section D on a winter night, with snow and lit windows](docs/preview_section_d_winter_night.png) | ![Section D on a spring day](docs/preview_section_d_spring.png) |
 
 These images are drawn by `tools/generate_images.py` from the same artwork the screensaver uses. The cats and guinea pigs are placed at random spots each time the screensaver starts, so they are in different places on the real screen.
 
@@ -53,7 +53,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 
   | Season | Dates | What changes |
   |---|---|---|
-  | Spring | March 20 to June 20 | Light green hills, trees with pink blossoms, flower boxes under house windows, falling petals |
+  | Spring | March 20 to June 20 | Light green hills, trees with pink blossoms, flower boxes under house windows |
   | Summer | June 21 to September 21 | Green hills and trees, fireflies at night |
   | Fall | September 22 to December 20 | Gold hills, orange and red trees, pumpkins by doors, leaves on the sidewalk, falling leaves |
   | Winter | December 21 to March 19 | Snow on the hills, mountains, roofs, sidewalk, and pine trees, bare trees, a frozen river |
@@ -65,7 +65,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   - Fog: a fog layer over the scene.
   - Thunderstorms: rain and lightning flashes at random times.
 
-  Falling leaves, petals, and fireflies are hidden while rain or snow is falling.
+  Falling leaves and fireflies are hidden while rain or snow is falling.
 - A clock and weather panel in the top-right corner. Every 5 minutes it moves a small amount within the corner to protect TVs from burn-in. The sun and moon are in the top-left corner, so the panel never covers them.
 
 ## Project layout

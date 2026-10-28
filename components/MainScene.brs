@@ -242,13 +242,13 @@ sub onPeriodTick()
     applyScene()
 end sub
 
-' Falling leaves in fall, falling petals in spring, and fireflies on summer
-' nights. They are hidden while rain or snow is falling.
+' Falling leaves in fall and fireflies on summer nights. They are hidden
+' while rain or snow is falling. Nothing falls in spring or winter (unless it
+' is snowing).
 sub updateSeasonFx(season as string, period as string)
     fx = ""
     if m.precipKind = ""
         if season = "fall" then fx = "leaves"
-        if season = "spring" then fx = "petals"
     end if
     m.seasonFxAnim.control = "stop"
     if fx = ""
@@ -256,11 +256,7 @@ sub updateSeasonFx(season as string, period as string)
     else
         m.seasonFx1.uri = "pkg:/images/" + fx + ".png"
         m.seasonFx2.uri = "pkg:/images/" + fx + ".png"
-        if fx = "leaves"
-            m.seasonFxAnim.duration = 16
-        else
-            m.seasonFxAnim.duration = 22
-        end if
+        m.seasonFxAnim.duration = 16
         m.seasonFx.visible = true
         m.seasonFxAnim.control = "start"
     end if

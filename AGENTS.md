@@ -48,7 +48,7 @@ These apply to code, comments, commit messages, README.md, and this file.
 - Season colors are in `SEASON_COLORS` in the generator. Write only the day color. `season_palette()` makes the dusk and night colors by darkening the day color the same way the summer palette darkens that key. New keys that are not in `P` must be added to `SEASON_BASE_KEY` so they darken like an existing key.
 - Every scenery layer function takes `(p, season)`. Seasonal details (snow on roofs, pumpkins, flower boxes) use helpers such as `snow_flat()`, `snow_ridge()`, `pumpkins()`, and `flower_box()`, which return an empty string in other seasons.
 - `SEASONAL` in the generator and `m.seasonalLayers` in `components/MainScene.brs` must list the same layers and seasons. Otherwise the scene asks for an image that does not exist.
-- While snow is falling, `applyScene()` uses the winter images in any season. Falling leaves, petals, and fireflies are hidden while rain or snow is falling.
+- While snow is falling, `applyScene()` uses the winter images in any season. Falling leaves and fireflies are hidden while rain or snow is falling. Nothing falls in spring, as the owner asked.
 - In winter the sidewalk is a plain snow-colored rectangle. Keep any repeating pattern on the street at a spacing that divides 1920, so it joins up at the tile edges.
 
 ## Scene behavior to keep consistent
