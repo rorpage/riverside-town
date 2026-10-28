@@ -58,7 +58,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   | Fall | September 22 to December 20 | Gold hills, orange and red trees, pumpkins by doors, leaves on the sidewalk, falling leaves |
   | Winter | December 21 to March 19 | Snow on the hills, mountains, roofs, sidewalk, and pine trees, bare trees, a frozen river |
 
-  The dates are close to the equinoxes and solstices, which move by a day or so from year to year. Pine trees stay green all year.
+  The dates are close to the equinoxes and solstices, which move by a day or so from year to year. Pine trees stay green all year. In every season but winter, three kayaks (red, yellow, and blue) sit on the grass beside the river.
 - Weather effects from the current weather:
   - Rain and drizzle: falling rain.
   - Snow: falling snow. While snow is falling, the ground shows snow in any season.

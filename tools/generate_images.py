@@ -227,6 +227,25 @@ def pine(x, b, p, season):
               f'<path d="M{x-12},{b-12} L{x-4},{b-15}" stroke="{p["snow"]}" stroke-width="3" stroke-linecap="round"/>')
     return s
 
+# Kayaks pulled up on the grass beside the river, in every season but winter.
+# Each is (center x, center y, angle in degrees, color). The colors are day
+# colors, darkened for dusk and night with wall() like the buildings.
+KAYAKS = [(676, 806, -14, "#D9452F"), (1172, 846, 22, "#F2B33D"), (1218, 806, 18, "#2E86C1")]
+def kayaks(p, season):
+    if season == "winter":
+        return ""
+    s = ""
+    for cx, cy, angle, color in KAYAKS:
+        c = wall(color, p)
+        s += (f'<g transform="translate({cx},{cy}) rotate({angle})">'
+              # Hull with pointed ends, a dark cockpit, and a paddle lying beside it
+              f'<path d="M-36,0 Q-18,-7 0,-7 Q18,-7 36,0 Q18,6 0,6 Q-18,6 -36,0 Z" fill="{c}"/>'
+              f'<ellipse cx="2" cy="-1" rx="8" ry="3" fill="#1F2A33"/>'
+              f'<line x1="-26" y1="10" x2="26" y2="10" stroke="{wall("#5B6770", p)}" stroke-width="2"/>'
+              f'<ellipse cx="-28" cy="10" rx="4" ry="2" fill="{wall("#5B6770", p)}"/><ellipse cx="28" cy="10" rx="4" ry="2" fill="{wall("#5B6770", p)}"/>'
+              '</g>')
+    return s
+
 def hills(p, season):
     t = "".join(pine(x, b, p, season) for x, b in TREES)
     return f'''<path fill="{p["hillFar"]}" d="M0,700 C300,620 600,660 960,640 C1300,620 1620,780 1920,700 L1920,910 L0,910 Z"/>
@@ -234,7 +253,7 @@ def hills(p, season):
 {t}{round_tree(420, 796, 36, 30, p, season)}{round_tree(1500, 800, 36, 30, p, season)}
 <path fill="{p["river"]}" d="M958,647 C935,668 1000,695 900,730 C760,780 640,800 560,900 L1080,900 C1100,820 1180,790 1240,750 C1320,700 1060,675 1000,662 C985,656 968,650 958,647 Z"/>
 <g stroke="{p["riverHi"]}" stroke-width="4" stroke-linecap="round" fill="none">
-<path d="M962,672 L980,672"/><path d="M930,700 L972,700"/><path d="M860,758 L930,758"/><path d="M1010,770 L1080,770"/><path d="M760,832 L850,832"/><path d="M930,850 L1030,850"/></g>'''
+<path d="M962,672 L980,672"/><path d="M930,700 L972,700"/><path d="M860,758 L930,758"/><path d="M1010,770 L1080,770"/><path d="M760,832 L850,832"/><path d="M930,850 L1030,850"/></g>''' + kayaks(p, season)
 
 def sign(x, y, w, h, fill, label, font, weight, size, ty, spacing=2):
     return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="4" fill="{fill}"/>'
