@@ -10,8 +10,9 @@ sub init()
 
     ' Scroll speed of each scenery layer in pixels per second. Farther = slower.
     m.layerSpeeds = { clouds: 8, far: 5, near: 12, hills: 24, town: 55 }
-    ' Width of each layer before it repeats. The town is three different 1920 px tiles.
-    m.layerWidths = { clouds: 1920, far: 1920, near: 1920, hills: 1920, town: 5760 }
+    ' Width of each layer before it repeats. The far and near mountains are two
+    ' different 1920 px tiles each, and the town is four.
+    m.layerWidths = { clouds: 1920, far: 3840, near: 3840, hills: 1920, town: 7680 }
     ' The street moves with the town layer, so cars use this as the ground speed offset.
     m.cameraSpeed = 55
 
@@ -23,7 +24,8 @@ sub init()
         { name: "van",   w: 310, h: 130, wheels: [[66, 104], [246, 104]], r: 24, bottom: 128, ground: 220 },
         { name: "jeep",  w: 270, h: 140, wheels: [[68, 108], [214, 108]], r: 28, bottom: 136, ground: 200 },
         { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 140 },
-        { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 }
+        { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 },
+        { name: "buggy",  w: 250, h: 112, wheels: [[52, 84], [198, 84]],  r: 26, bottom: 110, ground: 260 }
     ]
 
     ' Open-Meteo weather codes (WMO) to text
@@ -46,7 +48,7 @@ sub init()
     ' Layers that have a different image for some seasons. This must match
     ' SEASONAL in tools/generate_images.py.
     allSeasons = ["spring", "summer", "fall", "winter"]
-    m.seasonalLayers = { far: ["winter"], near: ["winter"], hills: allSeasons, town_a: allSeasons, town_b: allSeasons, town_c: allSeasons }
+    m.seasonalLayers = { far: ["winter"], far_b: ["winter"], near: ["winter"], near_b: ["winter"], hills: allSeasons, town_a: allSeasons, town_b: allSeasons, town_c: allSeasons, town_d: allSeasons }
 
     ' Airplane (a Cessna). It flies at the distance of the far mountains, so the
     ' camera adds or takes away m.layerSpeeds.far from its speed on screen, the
@@ -120,6 +122,7 @@ sub init()
     startParallax()
     buildCars()
     parkCar()
+    placeAnimals()
     updateClock()
 
     m.weatherTask = m.top.findNode("weatherTask")
@@ -206,10 +209,13 @@ sub applyScene()
         m.top.findNode(name + "1").uri = uri
         m.top.findNode(name + "2").uri = uri
     end for
+    m.top.findNode("farB").uri = layerUri("far_b", ground, period)
+    m.top.findNode("nearB").uri = layerUri("near_b", ground, period)
     m.top.findNode("townA1").uri = layerUri("town_a", ground, period)
     m.top.findNode("townA2").uri = layerUri("town_a", ground, period)
     m.top.findNode("townB").uri = layerUri("town_b", ground, period)
     m.top.findNode("townC").uri = layerUri("town_c", ground, period)
+    m.top.findNode("townD").uri = layerUri("town_d", ground, period)
     updateSeasonFx(season, period)
     updatePlaneImage()
     if period = "night"
@@ -236,13 +242,13 @@ sub onPeriodTick()
     applyScene()
 end sub
 
-' Falling leaves in fall, falling petals in spring, and fireflies on summer
-' nights. They are hidden while rain or snow is falling.
+' Falling leaves in fall and fireflies on summer nights. They are hidden
+' while rain or snow is falling. Nothing falls in spring or winter (unless it
+' is snowing).
 sub updateSeasonFx(season as string, period as string)
     fx = ""
     if m.precipKind = ""
         if season = "fall" then fx = "leaves"
-        if season = "spring" then fx = "petals"
     end if
     m.seasonFxAnim.control = "stop"
     if fx = ""
@@ -250,11 +256,7 @@ sub updateSeasonFx(season as string, period as string)
     else
         m.seasonFx1.uri = "pkg:/images/" + fx + ".png"
         m.seasonFx2.uri = "pkg:/images/" + fx + ".png"
-        if fx = "leaves"
-            m.seasonFxAnim.duration = 16
-        else
-            m.seasonFxAnim.duration = 22
-        end if
+        m.seasonFxAnim.duration = 16
         m.seasonFx.visible = true
         m.seasonFxAnim.control = "start"
     end if
@@ -624,6 +626,44 @@ sub parkCar()
         wheel.width = d.r * 2
         wheel.height = d.r * 2
         wheel.translation = [wx - d.r, w[1] - d.r]
+    end for
+end sub
+
+' Places three cats and two guinea pigs at random spots on the sidewalk when
+' the screensaver starts. They are children of townStrip, so they scroll with
+' the town. They go only in town sections B, C, and D (x from 1920 to 7680),
+' because section A is shown twice in the strip and an animal there would
+' appear in one copy but not the other. Each animal stays at least 140 px from
+' the others.
+sub placeAnimals()
+    animals = [
+        { name: "cat_black", w: 42, h: 45 },
+        { name: "cat_gray", w: 42, h: 45 },
+        { name: "cat_tabby", w: 42, h: 45 },
+        { name: "guinea_black_orange", w: 45, h: 28 },
+        { name: "guinea_white_orange", w: 45, h: 28 }
+    ]
+    ' The animals' feet are at screen y = 924, in the middle of the sidewalk.
+    ' The strip starts at screen y = 550.
+    feetY = 924 - 550
+    strip = m.top.findNode("townStrip")
+    used = []
+    for each a in animals
+        x = 0
+        for tries = 1 to 50
+            x = 1960 + Rnd(7680 - 1960 - 80)
+            clear = true
+            for each u in used
+                if Abs(u - x) < 140 then clear = false
+            end for
+            if clear then exit for
+        end for
+        used.Push(x)
+        pet = strip.createChild("Poster")
+        pet.uri = "pkg:/images/" + a.name + ".png"
+        pet.width = a.w
+        pet.height = a.h
+        pet.translation = [x, feetY - a.h]
     end for
 end sub
 
