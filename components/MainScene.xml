@@ -119,6 +119,16 @@
       <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[0,1080]]" fieldToInterp="precipStrip.translation" />
     </Animation>
 
+    <!-- Fades the falling leaves in or out. MainScene.brs sets the start and end values. -->
+    <Animation id="leafFadeAnim" repeat="false" easeFunction="inOutQuad" duration="3">
+      <FloatFieldInterpolator id="leafFade" key="[0.0, 1.0]" keyValue="[1.0, 0.0]" fieldToInterp="seasonFx.opacity" />
+    </Animation>
+    <!-- Moves the clock panel: it fades out, moves while it cannot be seen, and fades back in.
+         MainScene.brs sets the old and new positions before each move. -->
+    <Animation id="infoMoveAnim" repeat="false" easeFunction="linear" duration="1.6">
+      <FloatFieldInterpolator key="[0.0, 0.45, 0.55, 1.0]" keyValue="[1.0, 0.0, 0.0, 1.0]" fieldToInterp="info.opacity" />
+      <Vector2DFieldInterpolator id="infoMove" key="[0.0, 0.49, 0.51, 1.0]" fieldToInterp="info.translation" />
+    </Animation>
     <Animation id="seasonFxAnim" repeat="true" easeFunction="linear" duration="16">
       <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[0,1080]]" fieldToInterp="seasonFxStrip.translation" />
     </Animation>
