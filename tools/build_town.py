@@ -5,6 +5,9 @@ This is the command the Docker image runs. It copies the screensaver code
 (manifest, source, and components) to a temporary folder, generates the
 images for the town into it, and writes:
 - OUT/riverside-town.zip: the screensaver, ready to install on a Roku
+- OUT/roku/: the same files, not zipped. The GitHub workflow uploads this
+  folder as a download, and GitHub zips it, so that download can be
+  installed on a Roku as it is.
 - OUT/previews/: preview images of the town
 
 Usage:
@@ -51,20 +54,27 @@ def main():
             if f.startswith("composite_"):
                 os.remove(os.path.join(previews, f))
         os.makedirs(args.out, exist_ok=True)
+        roku = os.path.join(args.out, "roku")
+        shutil.rmtree(roku, ignore_errors=True)
+        os.makedirs(roku)
         path = os.path.join(args.out, "riverside-town.zip")
         with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
             for name in PACKAGE + ["images"]:
                 top = os.path.join(pkg, name)
                 if os.path.isfile(top):
                     z.write(top, name)
+                    shutil.copy(top, os.path.join(roku, name))
                     continue
                 for folder, _, files in os.walk(top):
                     for f in sorted(files):
                         if f == ".DS_Store":
                             continue
                         full = os.path.join(folder, f)
-                        z.write(full, os.path.relpath(full, pkg))
-    print("Wrote", path, "and the previews in", previews)
+                        rel = os.path.relpath(full, pkg)
+                        z.write(full, rel)
+                        os.makedirs(os.path.dirname(os.path.join(roku, rel)), exist_ok=True)
+                        shutil.copy(full, os.path.join(roku, rel))
+    print(f"Wrote {path}, the same files in {roku}, and the previews in {previews}")
 
 if __name__ == "__main__":
     main()
