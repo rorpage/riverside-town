@@ -81,7 +81,7 @@ components/WeatherTask.brs  Calls the Open-Meteo API
 images/                     All artwork as PNG files
 tools/generate_images.py    Draws every image in images/
 tools/fonts/                Store sign fonts and their licenses (used only by the generator)
-docs/                       Preview images for this README (not part of the Roku zip)
+docs/                       Preview images for this README, and customization-plan.md (not part of the Roku zip)
 ```
 
 ## Installing on a Roku
