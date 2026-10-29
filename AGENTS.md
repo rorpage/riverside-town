@@ -26,7 +26,7 @@ These apply to code, comments, commit messages, README.md, and this file.
 
 ## Configuration (town.json)
 
-- `town.json` at the repository root is the sample town. It is generic on purpose: no real businesses, people, or references. The owner's family town is in the private repository rorpage/riverside-town-page-family. The template for other people is rorpage/riverside-town-sample. Keep the sample `town.json` in this repository and the one in riverside-town-sample the same, except that this one uses lat and lon so it builds without a network connection.
+- `town.json` at the repository root is the sample town. It is generic on purpose: no real businesses, people, or references. The template for other people is rorpage/riverside-town-sample. Keep the sample `town.json` in this repository and the one in riverside-town-sample the same, except that this one uses lat and lon so it builds without a network connection.
 - `tools/riverside/town.schema.json` describes every field. `tools/riverside/config.py` checks `town.json` against it, fills in defaults, and raises `ConfigError` with a message that names the field. When adding a field or option, update the schema, the defaults in `config.py`, and the town.json reference in README.md.
 - Shop presets (`bakery`, `diner`, and the others) are in `PRESETS` in `config.py`. A preset is a shop with options already set; options in `town.json` replace them.
 - Building types are in `TYPES` in `tools/riverside/buildings.py`. Each has a width function and a draw function `(spec, x, p, season)`, where `x` is the left edge in its town section. Some types are drawn at the position they had in the original town and moved with `shift()`; their `ORIGIN` is the left edge of that drawing. A new type needs a width, a draw function, an entry in `TYPES`, defaults in `DEFAULTS` in `config.py`, and an entry in the schema.
@@ -91,4 +91,4 @@ These apply to code, comments, commit messages, README.md, and this file.
 
 ## Testing
 
-The owner tests every change on a Roku. Do not test on a Roku, and do not mention Roku testing in replies or commit messages. If the generator changed, run it and check the previews in `build/` before committing. Also build a town with different settings (for example, the family town, or one section with `table_mountain` on) with `tools/build_town.py`, to check that the change works for other towns.
+The owner tests every change on a Roku. Do not test on a Roku, and do not mention Roku testing in replies or commit messages. If the generator changed, run it and check the previews in `build/` before committing. Also build a town with different settings (for example, one section with `table_mountain` on and the gas station in section A) with `tools/build_town.py`, to check that the change works for other towns.
