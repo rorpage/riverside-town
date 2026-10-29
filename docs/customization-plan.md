@@ -2,7 +2,7 @@
 
 This plan describes how to let anyone make their own version of Riverside Town by editing one configuration file. It covers the file format, the code changes, and two ways to build a version without installing the tools: a Docker image and a GitHub Action.
 
-Nothing in this plan is built yet.
+This plan has been built. The decisions on the open questions are in [Decisions](#decisions) at the end. Where the build differs from the plan, README.md describes what was built.
 
 ## Goals
 
@@ -142,12 +142,12 @@ The Docker image holds everything needed to build a town:
 - the generator and the fonts in `tools/`
 - the screensaver code (`manifest`, `source`, `components`) as a starting point
 
-The image is built from a `Dockerfile` in this repository and published to the GitHub Container Registry as `ghcr.io/rorpage/riverside-town`.
+The image is built from a `Dockerfile` in this repository and published to the GitHub Container Registry as `ghcr.io/rorpage/riverside-town-roku-generator`.
 
 To build a town on any computer with Docker, run this in a folder that has a `town.json`:
 
 ```
-docker run --rm -v "$PWD:/work" ghcr.io/rorpage/riverside-town:1
+docker run --rm -v "$PWD:/work" ghcr.io/rorpage/riverside-town-roku-generator:1
 ```
 
 It writes `riverside-town.zip` and the preview images into `out/` in that folder.
@@ -157,11 +157,11 @@ It writes `riverside-town.zip` and the preview images into `out/` in that folder
 People who do not want to install Docker can use GitHub instead. The Action uses the same Docker image, so both ways build exactly the same zip.
 
 **In this repository:**
-- **Publish workflow:** `.github/workflows/publish-image.yml` builds the Docker image and pushes it to the GitHub Container Registry when a version tag such as `v1.2.0` is pushed. It also updates the `1` tag, so users get fixes within version 1. The image package must be set to public so anyone can pull it without signing in.
+- **Publish workflow:** `.github/workflows/riverside-town-roku-generator.yml` builds the Docker image and pushes it to the GitHub Container Registry when a version tag such as `v1.2.0` is pushed. It also updates the `1` tag, so users get fixes within version 1. The image package must be set to public so anyone can pull it without signing in.
 - **Action file:** `action.yml` describes a Docker container action that runs the published image. Other repositories use it with `uses: rorpage/riverside-town@v1`.
 
 **For people making their own town:**
-- **Template repository:** a small template repository, for example `rorpage/my-riverside-town`, holds an example `town.json` and a workflow file.
+- **Template repository:** a small template repository, `rorpage/riverside-town-sample`, holds an example `town.json` and a workflow file.
 - **Getting started:** they click "Use this template" on GitHub, edit `town.json` in the browser, and commit.
 - **Building:** the workflow runs on each commit that changes `town.json`. It builds the town with the Action and attaches `riverside-town.zip` and the preview images to the workflow run as downloadable files.
 - **Installing:** they download the zip and install it on their Roku with the developer web page, as described in the README. The Action cannot install it, because it cannot reach the Roku on their home network.
@@ -217,10 +217,16 @@ Each step is a separate pull request. Each one leaves the screensaver working.
 
 Steps 1 and 4 are the smallest and are useful on their own. Step 2 is the largest.
 
-## Open questions
+## Decisions
 
-1. **License:** the repository has no license file. Without one, other people are not allowed to copy or change the code, even if it is public. Choose a license, such as MIT, before inviting others to use it. The bundled fonts already have their own license (the SIL Open Font License), which allows sharing them in the Docker image.
-2. **Names:** what should the Docker image, the Action, and the template repository be called?
-3. **Brand names:** people can type any shop name, including real businesses. Should the README say that versions with real business names are for personal use?
-4. **Custom drawings:** should people be able to add a new building type of their own? That needs Python code, so it would only work for people who run the generator themselves.
-5. **Your current town:** should this repository keep its `town.json` as the example, or should the example be a simpler, generic town while your family's town lives in its own repository made from the template?
+1. **License:** The Unlicense, which puts the code and art in the public domain. The fonts keep their own SIL Open Font License.
+2. **Names:** the Docker image and the publish workflow are `riverside-town-roku-generator`. The template repository is `rorpage/riverside-town-sample`.
+3. **Brand names:** the README says that a town with real business names is for personal use.
+4. **Custom drawings:** not supported for now. New building types need Python code in the generator.
+5. **The current town:** this repository and the template use a simpler, generic sample town. The owner's family town is in the private repository `rorpage/riverside-town-page-family`, built with the Action.
+
+Other changes from the plan:
+
+- `extras.table_mountain` is off by default, because the sample town does not use it.
+- Pets and the parked car can be in any town section, including section A. Section A appears twice in the strip, so the screensaver adds a second copy of anything placed there.
+- A ZIP code is looked up with the Open-Meteo geocoding service first, and Zippopotam.us second.

@@ -1,0 +1,21 @@
+name: riverside-town-roku-generator
+description: Builds a Riverside Town Roku screensaver from a town.json file, with preview images.
+author: rorpage
+branding:
+  icon: home
+  color: blue
+inputs:
+  config:
+    description: The path to the town.json file, from the root of the repository.
+    default: town.json
+  out:
+    description: The folder for riverside-town.zip and the previews folder.
+    default: out
+runs:
+  using: docker
+  image: docker://ghcr.io/rorpage/riverside-town-roku-generator:1
+  args:
+    - --config
+    - ${{ inputs.config }}
+    - --out
+    - ${{ inputs.out }}

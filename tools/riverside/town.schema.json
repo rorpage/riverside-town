@@ -1,0 +1,868 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Riverside Town settings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "location"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "description": "The screensaver name in Settings > Theme > Screensavers"
+    },
+    "location": {
+      "description": "Where the weather comes from. Give a ZIP code, or lat and lon.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "zip": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Za-z]{2}$"
+        },
+        "lat": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lon": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "zip"
+          ]
+        },
+        {
+          "required": [
+            "lat",
+            "lon"
+          ]
+        }
+      ]
+    },
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "temperature": {
+          "enum": [
+            "F",
+            "C"
+          ]
+        },
+        "clock": {
+          "enum": [
+            "12h",
+            "24h"
+          ]
+        }
+      }
+    },
+    "hemisphere": {
+      "enum": [
+        "north",
+        "south"
+      ],
+      "description": "In the south, the seasons are moved by six months."
+    },
+    "buildings": {
+      "type": "array",
+      "description": "The buildings along the street, in order from left to right.",
+      "items": {
+        "anyOf": [
+          {
+            "type": [
+              "string",
+              "integer"
+            ],
+            "description": "A house number. The house gets a color and a font automatically."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "house"
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "font": {
+                "enum": [
+                  "alegreya",
+                  "amatic",
+                  "bitter",
+                  "cabin",
+                  "cinzel",
+                  "comfortaa",
+                  "fredoka",
+                  "graduate",
+                  "hanken",
+                  "josefin",
+                  "kaushan",
+                  "lora",
+                  "montserrat",
+                  "oswald",
+                  "pacifico",
+                  "playfair",
+                  "quicksand",
+                  "raleway",
+                  "script",
+                  "sharetech",
+                  "signika"
+                ],
+                "description": "A font from tools/fonts"
+              },
+              "weight": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 900,
+                "description": "Font weight, from 100 (thin) to 900 (black). Fonts with one weight ignore it."
+              },
+              "sign_size": {
+                "type": "number",
+                "minimum": 9,
+                "maximum": 40,
+                "description": "The largest text size on the sign. Long names are made smaller to fit."
+              },
+              "number": {
+                "type": [
+                  "string",
+                  "integer"
+                ]
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 110,
+                "maximum": 260
+              },
+              "stories": {
+                "enum": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "number"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "enum": [
+                  "shop",
+                  "bakery",
+                  "bookstore",
+                  "diner",
+                  "computer_store",
+                  "ice_cream",
+                  "art_store",
+                  "photo_store",
+                  "pet_shop",
+                  "restaurant"
+                ]
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "font": {
+                "enum": [
+                  "alegreya",
+                  "amatic",
+                  "bitter",
+                  "cabin",
+                  "cinzel",
+                  "comfortaa",
+                  "fredoka",
+                  "graduate",
+                  "hanken",
+                  "josefin",
+                  "kaushan",
+                  "lora",
+                  "montserrat",
+                  "oswald",
+                  "pacifico",
+                  "playfair",
+                  "quicksand",
+                  "raleway",
+                  "script",
+                  "sharetech",
+                  "signika"
+                ],
+                "description": "A font from tools/fonts"
+              },
+              "weight": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 900,
+                "description": "Font weight, from 100 (thin) to 900 (black). Fonts with one weight ignore it."
+              },
+              "sign_size": {
+                "type": "number",
+                "minimum": 9,
+                "maximum": 40,
+                "description": "The largest text size on the sign. Long names are made smaller to fit."
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 160,
+                "maximum": 400
+              },
+              "stories": {
+                "enum": [
+                  1,
+                  2,
+                  3
+                ]
+              },
+              "small_line": {
+                "type": "string",
+                "maxLength": 30,
+                "description": "A small line of text above the name on the sign"
+              },
+              "sign_color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "sign_text_color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "sign_icon": {
+                "enum": [
+                  "paw"
+                ]
+              },
+              "letter_spacing": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 8
+              },
+              "awning": {
+                "enum": [
+                  "plain",
+                  "striped",
+                  "none"
+                ]
+              },
+              "awning_color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "awning_colors": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^#[0-9A-Fa-f]{6}$",
+                  "description": "A color written as #RRGGBB"
+                },
+                "minItems": 2,
+                "maxItems": 4
+              },
+              "window": {
+                "enum": [
+                  "books",
+                  "computer",
+                  "camera",
+                  "palette",
+                  "ice_cream",
+                  "pets",
+                  "table",
+                  "none"
+                ]
+              },
+              "window_lettering": {
+                "type": "string",
+                "maxLength": 40,
+                "description": "Gray lettering on the shop window. Use \\n for two lines."
+              },
+              "roof_icon": {
+                "enum": [
+                  "ice_cream"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "church"
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "font": {
+                "enum": [
+                  "alegreya",
+                  "amatic",
+                  "bitter",
+                  "cabin",
+                  "cinzel",
+                  "comfortaa",
+                  "fredoka",
+                  "graduate",
+                  "hanken",
+                  "josefin",
+                  "kaushan",
+                  "lora",
+                  "montserrat",
+                  "oswald",
+                  "pacifico",
+                  "playfair",
+                  "quicksand",
+                  "raleway",
+                  "script",
+                  "sharetech",
+                  "signika"
+                ],
+                "description": "A font from tools/fonts"
+              },
+              "weight": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 900,
+                "description": "Font weight, from 100 (thin) to 900 (black). Fonts with one weight ignore it."
+              },
+              "sign_size": {
+                "type": "number",
+                "minimum": 9,
+                "maximum": 40,
+                "description": "The largest text size on the sign. Long names are made smaller to fit."
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "style": {
+                "enum": [
+                  "steeple",
+                  "tower"
+                ]
+              },
+              "cross": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "type",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "school"
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "font": {
+                "enum": [
+                  "alegreya",
+                  "amatic",
+                  "bitter",
+                  "cabin",
+                  "cinzel",
+                  "comfortaa",
+                  "fredoka",
+                  "graduate",
+                  "hanken",
+                  "josefin",
+                  "kaushan",
+                  "lora",
+                  "montserrat",
+                  "oswald",
+                  "pacifico",
+                  "playfair",
+                  "quicksand",
+                  "raleway",
+                  "script",
+                  "sharetech",
+                  "signika"
+                ],
+                "description": "A font from tools/fonts"
+              },
+              "weight": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 900,
+                "description": "Font weight, from 100 (thin) to 900 (black). Fonts with one weight ignore it."
+              },
+              "sign_size": {
+                "type": "number",
+                "minimum": 9,
+                "maximum": 40,
+                "description": "The largest text size on the sign. Long names are made smaller to fit."
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 240,
+                "maximum": 480
+              },
+              "cross": {
+                "type": "boolean"
+              },
+              "bell_tower": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "type",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "columned_hall"
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "font": {
+                "enum": [
+                  "alegreya",
+                  "amatic",
+                  "bitter",
+                  "cabin",
+                  "cinzel",
+                  "comfortaa",
+                  "fredoka",
+                  "graduate",
+                  "hanken",
+                  "josefin",
+                  "kaushan",
+                  "lora",
+                  "montserrat",
+                  "oswald",
+                  "pacifico",
+                  "playfair",
+                  "quicksand",
+                  "raleway",
+                  "script",
+                  "sharetech",
+                  "signika"
+                ],
+                "description": "A font from tools/fonts"
+              },
+              "weight": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 900,
+                "description": "Font weight, from 100 (thin) to 900 (black). Fonts with one weight ignore it."
+              },
+              "sign_size": {
+                "type": "number",
+                "minimum": 9,
+                "maximum": 40,
+                "description": "The largest text size on the sign. Long names are made smaller to fit."
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "clock": {
+                "type": "boolean"
+              },
+              "clock_time": {
+                "type": "string",
+                "pattern": "^([1-9]|1[0-2]):[0-5][0-9]$"
+              },
+              "letter_color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "letter_outline": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              }
+            },
+            "required": [
+              "type",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "gas_station"
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "font": {
+                "enum": [
+                  "alegreya",
+                  "amatic",
+                  "bitter",
+                  "cabin",
+                  "cinzel",
+                  "comfortaa",
+                  "fredoka",
+                  "graduate",
+                  "hanken",
+                  "josefin",
+                  "kaushan",
+                  "lora",
+                  "montserrat",
+                  "oswald",
+                  "pacifico",
+                  "playfair",
+                  "quicksand",
+                  "raleway",
+                  "script",
+                  "sharetech",
+                  "signika"
+                ],
+                "description": "A font from tools/fonts"
+              },
+              "weight": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 900,
+                "description": "Font weight, from 100 (thin) to 900 (black). Fonts with one weight ignore it."
+              },
+              "sign_size": {
+                "type": "number",
+                "minimum": 9,
+                "maximum": 40,
+                "description": "The largest text size on the sign. Long names are made smaller to fit."
+              },
+              "canopy_name": {
+                "type": "string",
+                "maxLength": 20
+              },
+              "store_name": {
+                "type": "string",
+                "maxLength": 20
+              },
+              "store_sign_color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "price": {
+                "type": "string",
+                "pattern": "^[0-9]{1,2}\\.[0-9]{2}$"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "drive_through"
+              },
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "font": {
+                "enum": [
+                  "alegreya",
+                  "amatic",
+                  "bitter",
+                  "cabin",
+                  "cinzel",
+                  "comfortaa",
+                  "fredoka",
+                  "graduate",
+                  "hanken",
+                  "josefin",
+                  "kaushan",
+                  "lora",
+                  "montserrat",
+                  "oswald",
+                  "pacifico",
+                  "playfair",
+                  "quicksand",
+                  "raleway",
+                  "script",
+                  "sharetech",
+                  "signika"
+                ],
+                "description": "A font from tools/fonts"
+              },
+              "weight": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 900,
+                "description": "Font weight, from 100 (thin) to 900 (black). Fonts with one weight ignore it."
+              },
+              "sign_size": {
+                "type": "number",
+                "minimum": 9,
+                "maximum": 40,
+                "description": "The largest text size on the sign. Long names are made smaller to fit."
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "roof_color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "sign_text_color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              }
+            },
+            "required": [
+              "type",
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "tree"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "section_break"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "houses": {
+      "type": "array",
+      "description": "Houses to spread out between the buildings.",
+      "items": {
+        "anyOf": [
+          {
+            "type": [
+              "string",
+              "integer"
+            ],
+            "description": "A house number. The house gets a color and a font automatically."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "color": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "description": "A color written as #RRGGBB"
+              },
+              "font": {
+                "enum": [
+                  "alegreya",
+                  "amatic",
+                  "bitter",
+                  "cabin",
+                  "cinzel",
+                  "comfortaa",
+                  "fredoka",
+                  "graduate",
+                  "hanken",
+                  "josefin",
+                  "kaushan",
+                  "lora",
+                  "montserrat",
+                  "oswald",
+                  "pacifico",
+                  "playfair",
+                  "quicksand",
+                  "raleway",
+                  "script",
+                  "sharetech",
+                  "signika"
+                ],
+                "description": "A font from tools/fonts"
+              },
+              "weight": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 900,
+                "description": "Font weight, from 100 (thin) to 900 (black). Fonts with one weight ignore it."
+              },
+              "sign_size": {
+                "type": "number",
+                "minimum": 9,
+                "maximum": 40,
+                "description": "The largest text size on the sign. Long names are made smaller to fit."
+              },
+              "number": {
+                "type": [
+                  "string",
+                  "integer"
+                ]
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 110,
+                "maximum": 260
+              },
+              "stories": {
+                "enum": [
+                  1,
+                  2
+                ]
+              },
+              "type": {
+                "const": "house"
+              }
+            },
+            "required": [
+              "number"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "pets": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "color"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "cat",
+              "guinea_pig"
+            ]
+          },
+          "color": {
+            "enum": [
+              "black",
+              "gray",
+              "tabby",
+              "black_orange",
+              "white_orange"
+            ]
+          }
+        }
+      }
+    },
+    "cars": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "sedan",
+          "van",
+          "jeep",
+          "truck",
+          "sports",
+          "buggy"
+        ]
+      }
+    },
+    "extras": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "airplane": {
+          "type": "boolean"
+        },
+        "kayaks": {
+          "type": "boolean"
+        },
+        "fireflies": {
+          "type": "boolean"
+        },
+        "falling_leaves": {
+          "type": "boolean"
+        },
+        "seasons": {
+          "type": "boolean"
+        },
+        "table_mountain": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
