@@ -304,16 +304,61 @@ Notes on the image sizes:
 - Seasonal layers are named `<layer>_<season>_<period>.png`, for example `hills_fall_night.png`. The hills and the town sections have an image for every season. The far and near mountains only have a winter image (`far_winter_day.png`); in other seasons they use the image without a season in the name (`far_day.png`). The clouds and sky do not change with the seasons.
 - The generator deletes the old images before it writes new ones, so files that are no longer used do not stay in `images/`.
 
-## Publishing the Docker image
+## Adding features and releasing
 
-`.github/workflows/riverside-town-roku-generator.yml` builds the Docker image and publishes it to the GitHub Container Registry as `ghcr.io/rorpage/riverside-town-roku-generator` when a version tag is pushed:
+New features are made in this repository. Other towns get them when a new version is published.
+
+### 1. Make the change
+
+Make the change on a branch named `feature/<short-name>`, open a pull request, and merge it into `main`. If the feature adds a `town.json` field or option, also:
+
+- add it to `tools/riverside/town.schema.json`
+- add its default to `tools/riverside/config.py`
+- add it to the [town.json reference](#townjson-reference) in this README
+- regenerate the previews with `python3 tools/generate_images.py --docs docs`
+
+### 2. Test it before publishing
+
+The GitHub Action always runs the published Docker image, not the code on a branch, so a branch cannot be tested with the "Build my town" workflow. Test it on your computer instead, with any `town.json`:
 
 ```
-git tag v1.0.0
-git push origin v1.0.0
+python3 tools/build_town.py --config path/to/town.json --out out
 ```
 
-The image gets the tags `1.0.0`, `1.0`, `1`, and `latest`, and the git tag `v1` is moved to the same commit, so repositories that use `rorpage/riverside-town@v1` get the new version. The package must be public so that anyone can download it without signing in. After the first publish, set this in the package settings on GitHub.
+This builds the same zip that the Action builds, in `out/riverside-town.zip`. Install it with the Roku developer web page (see [Installing on a Roku](#installing-on-a-roku)).
+
+### 3. Publish a new version
+
+After the pull request is merged, push a version tag from `main`:
+
+```
+git checkout main
+git pull
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+You can also create a release on GitHub instead: on the **Releases** page, click **Draft a new release**, type the new tag, choose `main` as the target, and click **Publish release**.
+
+Choose the version number from the kind of change:
+
+| Kind of change | Example | Tag |
+|---|---|---|
+| A fix that changes nothing for users | a drawing mistake | `v1.0.1` |
+| A new feature that existing `town.json` files do not need | a new building type or a new pet | `v1.1.0` |
+| A change that makes existing `town.json` files fail | a field is renamed or removed | `v2.0.0` |
+
+The tag starts `.github/workflows/riverside-town-roku-generator.yml`. It builds the Docker image and publishes it to the GitHub Container Registry as `ghcr.io/rorpage/riverside-town-roku-generator`, with the tags `1.1.0`, `1.1`, `1`, and `latest`. Then it moves the git tag `v1` to the same commit. The next "Build my town" run in any repository that uses `rorpage/riverside-town@v1` uses the new version, with no change in that repository.
+
+For a new major version, such as `v2.0.0`, first change the image in `action.yml` from `:1` to `:2` in the pull request. The workflow then creates the `v2` tag. Repositories that use `@v1` keep the old version until their workflow is changed to `@v2` and their `town.json` is updated.
+
+The image package must be public, so that anyone can download it without signing in. This is set once, in the package settings on GitHub, and stays set for new versions.
+
+### 4. Rebuild the towns
+
+- If the new feature needs settings, add them to the town's `town.json`. Committing the change starts a build.
+- If it needs no settings, open **Actions**, then **Build my town**, then **Run workflow**, to rebuild with the new version.
+- Keep the `town.json` in [riverside-town-sample](https://github.com/rorpage/riverside-town-sample) the same as the one in this repository, except that the sample repository uses a ZIP code, so the template shows the new features.
 
 ## Debugging
 
