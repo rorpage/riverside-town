@@ -2,24 +2,28 @@
 
 sub init()
     ' ---------- Settings ----------
-    ' Location for ZIP code 46220 (Indianapolis). Roku does not give apps the
-    ' device's ZIP code, so it is set here. Change these to get the forecast for
-    ' a different location.
-    m.LAT = "39.8676"
-    m.LON = "-86.1137"
+    ' The town's settings come from components/town_config.json, which
+    ' tools/generate_images.py writes from town.json. They include the weather
+    ' location (Roku does not give apps the device's ZIP code), the units, the
+    ' number of town sections, the cars, the animals, and the extras.
+    m.config = loadTownConfig()
+    m.LAT = m.config.lat
+    m.LON = m.config.lon
+    m.sections = m.config.sections
 
     ' Scroll speed of each scenery layer in pixels per second. Farther = slower.
     m.layerSpeeds = { clouds: 8, far: 5, near: 12, hills: 24, town: 55 }
     ' Width of each layer before it repeats. The far and near mountains are two
-    ' different 1920 px tiles each, and the town is four.
-    m.layerWidths = { clouds: 1920, far: 3840, near: 3840, hills: 1920, town: 7680 }
+    ' different 1920 px tiles each, and the town has one 1920 px tile for each
+    ' town section.
+    m.layerWidths = { clouds: 1920, far: 3840, near: 3840, hills: 1920, town: m.sections * 1920 }
     ' The street moves with the town layer, so cars use this as the ground speed offset.
     m.cameraSpeed = 55
 
     ' Cars. "ground" is the speed along the road in pixels per second.
     ' wheels = wheel centers inside the car image, r = wheel radius,
     ' bottom = lowest pixel of the tires in the car image.
-    m.carDefs = [
+    allCars = [
         { name: "sedan", w: 280, h: 104, wheels: [[62, 80], [218, 80]],   r: 22, bottom: 102, ground: 300 },
         { name: "van",   w: 310, h: 130, wheels: [[66, 104], [246, 104]], r: 24, bottom: 128, ground: 220 },
         { name: "jeep",  w: 270, h: 140, wheels: [[68, 108], [214, 108]], r: 28, bottom: 136, ground: 200 },
@@ -27,6 +31,13 @@ sub init()
         { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 },
         { name: "buggy",  w: 250, h: 112, wheels: [[52, 84], [198, 84]],  r: 26, bottom: 110, ground: 260 }
     ]
+    ' Only the cars listed in the settings drive by
+    m.carDefs = []
+    for each def in allCars
+        for each name in m.config.cars
+            if name = def.name then m.carDefs.Push(def)
+        end for
+    end for
 
     ' Open-Meteo weather codes (WMO) to text
     m.codeText = {
@@ -46,9 +57,16 @@ sub init()
     ' Leave it as "" to choose the season from today's date.
     m.seasonOverride = ""
     ' Layers that have a different image for some seasons. This must match
-    ' SEASONAL in tools/generate_images.py.
+    ' SEASONAL in tools/generate_images.py. Every town section has an image
+    ' for each season.
     allSeasons = ["spring", "summer", "fall", "winter"]
-    m.seasonalLayers = { far: ["winter"], far_b: ["winter"], near: ["winter"], near_b: ["winter"], hills: allSeasons, town_a: allSeasons, town_b: allSeasons, town_c: allSeasons, town_d: allSeasons }
+    m.seasonalLayers = { far: ["winter"], far_b: ["winter"], near: ["winter"], near_b: ["winter"], hills: allSeasons }
+    m.townNames = []
+    for i = 0 to m.sections - 1
+        name = "town_" + Mid("abcde", i + 1, 1)
+        m.townNames.Push(name)
+        m.seasonalLayers[name] = allSeasons
+    end for
 
     ' Airplane (a Cessna). It flies at the distance of the far mountains, so the
     ' camera adds or takes away m.layerSpeeds.far from its speed on screen, the
@@ -132,9 +150,10 @@ sub init()
     m.planeTimer.repeat = false
     m.planeTimer.observeField("fire", "onPlaneTimer")
     m.planeTimer.duration = 10 + Rnd(30)
-    m.planeTimer.control = "start"
+    if m.config.airplane then m.planeTimer.control = "start"
 
     ' ---------- Start ----------
+    buildTown()
     applyScene()
     startParallax()
     buildCars()
@@ -145,6 +164,7 @@ sub init()
     m.weatherTask = m.top.findNode("weatherTask")
     m.weatherTask.lat = m.LAT
     m.weatherTask.lon = m.LON
+    m.weatherTask.unit = m.config.temperatureUnit
     m.weatherTask.observeField("result", "onWeather")
     m.weatherTask.control = "RUN"
 
@@ -154,7 +174,48 @@ sub init()
     makeTimer(300, "onMoveInfo")
 end sub
 
+' ================= Settings =================
+
+' Reads components/town_config.json. If it is missing or cannot be read, the
+' defaults below are used, so the screensaver still starts.
+function loadTownConfig() as object
+    cfg = {
+        lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north",
+        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], pets: [], parkedCarX: -1,
+        airplane: true, fireflies: true, fallingLeaves: true, seasons: true
+    }
+    text = ReadAsciiFile("pkg:/components/town_config.json")
+    data = invalid
+    if text <> "" then data = ParseJson(text)
+    if data = invalid
+        print "MainScene: could not read town_config.json, using the defaults"
+        return cfg
+    end if
+    for each key in cfg
+        if data.DoesExist(key) and data[key] <> invalid then cfg[key] = data[key]
+    end for
+    cfg.sections = Int(cfg.sections)
+    if cfg.sections < 1 then cfg.sections = 1
+    return cfg
+end function
+
 ' ================= Scenery =================
+
+' Creates one poster for each town section, then a second copy of the first
+' section at the end of the strip, so the strip repeats without a jump.
+sub buildTown()
+    strip = m.top.findNode("townStrip")
+    m.townPosters = []
+    for i = 0 to m.sections
+        p = strip.createChild("Poster")
+        p.id = "town" + i.ToStr()
+        p.width = 1920
+        p.height = 530
+        p.translation = [i * 1920, 0]
+        m.townPosters.Push(p)
+    end for
+    m.top.findNode("townMove").keyValue = [[0, 0], [-m.sections * 1920, 0]]
+end sub
 
 sub startParallax()
     for each name in m.layerSpeeds
@@ -182,15 +243,27 @@ end function
 ' Returns "spring", "summer", "fall", or "winter" from today's date. The
 ' dates are close to the equinoxes and solstices, which move by a day or so
 ' from year to year.
+' With seasons turned off in the settings, it is always summer. In the
+' southern hemisphere the seasons are the other way around.
 function currentSeason() as string
     if m.seasonOverride <> "" then return m.seasonOverride
+    if not m.config.seasons then return "summer"
     dt = CreateObject("roDateTime")
     dt.ToLocalTime()
     md = dt.GetMonth() * 100 + dt.GetDayOfMonth()
-    if md >= 1221 or md < 320 then return "winter"
-    if md < 621 then return "spring"
-    if md < 922 then return "summer"
-    return "fall"
+    season = "fall"
+    if md >= 1221 or md < 320
+        season = "winter"
+    else if md < 621
+        season = "spring"
+    else if md < 922
+        season = "summer"
+    end if
+    if m.config.hemisphere = "south"
+        other = { winter: "summer", summer: "winter", spring: "fall", fall: "spring" }
+        season = other[season]
+    end if
+    return season
 end function
 
 ' Returns the image for a scenery layer. variant is the season to draw. A
@@ -228,11 +301,9 @@ sub applyScene()
     end for
     m.top.findNode("farB").uri = layerUri("far_b", ground, period)
     m.top.findNode("nearB").uri = layerUri("near_b", ground, period)
-    m.top.findNode("townA1").uri = layerUri("town_a", ground, period)
-    m.top.findNode("townA2").uri = layerUri("town_a", ground, period)
-    m.top.findNode("townB").uri = layerUri("town_b", ground, period)
-    m.top.findNode("townC").uri = layerUri("town_c", ground, period)
-    m.top.findNode("townD").uri = layerUri("town_d", ground, period)
+    for i = 0 to m.sections
+        m.townPosters[i].uri = layerUri(m.townNames[i MOD m.sections], ground, period)
+    end for
     updateSeasonFx(season, period)
     updatePlaneImage()
     if period = "night"
@@ -265,7 +336,7 @@ end sub
 ' starts them at random times.
 sub updateSeasonFx(season as string, period as string)
     fx = ""
-    if m.precipKind = ""
+    if m.precipKind = "" and m.config.fallingLeaves
         if season = "fall" then fx = "leaves"
     end if
     m.seasonFxAnim.control = "stop"
@@ -285,7 +356,7 @@ sub updateSeasonFx(season as string, period as string)
         scheduleLeaves()
     end if
 
-    flies = season = "summer" and period = "night" and m.precipKind = ""
+    flies = m.config.fireflies and season = "summer" and period = "night" and m.precipKind = ""
     m.fireflies.visible = flies
     if flies
         m.firefliesAnim.control = "start"
@@ -305,7 +376,9 @@ sub onWeather()
     if r = invalid then return
     if not r.ok then return
     m.weather = r
-    m.tempLabel.text = CInt(r.temp).ToStr() + Chr(176) + "F"
+    unit = "F"
+    if m.config.temperatureUnit = "celsius" then unit = "C"
+    m.tempLabel.text = CInt(r.temp).ToStr() + Chr(176) + unit
     m.condLabel.text = weatherText(r.code)
     setPrecip(r.code)
     setFog(r.code)
@@ -400,7 +473,8 @@ end sub
 
 ' Fades the falling leaves out if they are falling, or back in if they are
 ' not, then waits a random time before the next change. The leaves keep
-' moving while they are faded out, so they come back mid-fall.
+' moving while they are faded out, so when they fade back in, they are
+' already partway down the screen.
 sub onLeafTimer()
     if not m.seasonFx.visible then return
     if m.leavesOn
@@ -470,12 +544,16 @@ sub updateClock()
     dt.ToLocalTime()
     h = dt.GetHours()
     mins = dt.GetMinutes()
+    mm = mins.ToStr()
+    if mins < 10 then mm = "0" + mm
+    if m.config.clock24
+        m.clockLabel.text = h.ToStr() + ":" + mm
+        return
+    end if
     suffix = "AM"
     if h >= 12 then suffix = "PM"
     h12 = h MOD 12
     if h12 = 0 then h12 = 12
-    mm = mins.ToStr()
-    if mins < 10 then mm = "0" + mm
     m.clockLabel.text = h12.ToStr() + ":" + mm + " " + suffix
 end sub
 
@@ -647,21 +725,26 @@ sub onCarMoveState(event as object)
     c.timer.control = "start"
 end sub
 
-' Parks a randomly chosen car, facing a random direction, at the gas station in
-' town tile B. It is a child of townStrip, so it scrolls with the town. The
-' wheels do not spin.
+' Parks a randomly chosen car, facing a random direction, at the gas station.
+' parkedCarX in the settings is the center of the parking space in townStrip
+' coordinates, or -1 if the town has no gas station. The car is a child of
+' townStrip, so it scrolls with the town. The wheels do not spin.
 sub parkCar()
+    if m.config.parkedCarX < 0 or m.carDefs.Count() = 0 then return
     d = m.carDefs[Rnd(m.carDefs.Count()) - 1]
     facingLeft = Rnd(2) = 2
-    s = 0.78
-    ' Center of the parking space and the ground line, in townStrip coordinates.
-    ' Tile B starts at x = 1920. The strip starts at screen y = 550, and the
-    ' station ground is at screen y = 898.
-    centerX = 1920 + 780
-    groundY = 898 - 550
+    ' The strip starts at screen y = 550, and the station ground is at screen y = 898.
+    addParkedCar(d, facingLeft, m.config.parkedCarX, "parked_car")
+    ' Town section 0 is shown twice in the strip, so a car parked there is
+    ' added to the second copy too
+    if m.config.parkedCarX < 1920 then addParkedCar(d, facingLeft, m.config.parkedCarX + m.sections * 1920, "parked_car_copy")
+end sub
 
+sub addParkedCar(d as object, facingLeft as boolean, centerX as integer, id as string)
+    s = 0.78
+    groundY = 898 - 550
     car = m.top.findNode("townStrip").createChild("Group")
-    car.id = "parked_car"
+    car.id = id
     car.scale = [s, s]
     car.translation = [centerX - d.w * s / 2, groundY - d.bottom * s]
 
@@ -682,42 +765,40 @@ sub parkCar()
     end for
 end sub
 
-' Places three cats and two guinea pigs at random spots on the sidewalk when
+' Places the animals from the settings at random spots on the sidewalk when
 ' the screensaver starts. They are children of townStrip, so they scroll with
-' the town. They go only in town sections B, C, and D (x from 1920 to 7680),
-' because section A is shown twice in the strip and an animal there would
-' appear in one copy but not the other. Each animal stays at least 140 px from
-' the others.
+' the town. Town section 0 is shown twice in the strip, so an animal there is
+' added to the second copy too. Each animal stays at least 140 px from the
+' others, if there is room.
 sub placeAnimals()
-    animals = [
-        { name: "cat_black", w: 42, h: 45 },
-        { name: "cat_gray", w: 42, h: 45 },
-        { name: "cat_tabby", w: 42, h: 45 },
-        { name: "guinea_black_orange", w: 45, h: 28 },
-        { name: "guinea_white_orange", w: 45, h: 28 }
-    ]
     ' The animals' feet are at screen y = 924, in the middle of the sidewalk.
     ' The strip starts at screen y = 550.
     feetY = 924 - 550
+    stripW = m.sections * 1920
     strip = m.top.findNode("townStrip")
     used = []
-    for each a in animals
+    for each a in m.config.pets
         x = 0
         for tries = 1 to 50
-            x = 1960 + Rnd(7680 - 1960 - 80)
+            x = 40 + Rnd(stripW - 120)
             clear = true
             for each u in used
-                if Abs(u - x) < 140 then clear = false
+                if Abs(u - x) < 140 or stripW - Abs(u - x) < 140 then clear = false
             end for
             if clear then exit for
         end for
         used.Push(x)
-        pet = strip.createChild("Poster")
-        pet.uri = "pkg:/images/" + a.name + ".png"
-        pet.width = a.w
-        pet.height = a.h
-        pet.translation = [x, feetY - a.h]
+        addAnimal(strip, a, x, feetY)
+        if x < 1920 then addAnimal(strip, a, x + stripW, feetY)
     end for
+end sub
+
+sub addAnimal(strip as object, a as object, x as integer, feetY as integer)
+    pet = strip.createChild("Poster")
+    pet.uri = "pkg:/images/" + a.image + ".png"
+    pet.width = a.w
+    pet.height = a.h
+    pet.translation = [x, feetY - a.h]
 end sub
 
 ' ================= Helpers =================

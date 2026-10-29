@@ -1,0 +1,51 @@
+{
+  "$schema": "./tools/riverside/town.schema.json",
+  "title": "Riverside Town",
+  "location": { "lat": 39.7684, "lon": -86.1581 },
+  "units": { "temperature": "F", "clock": "12h" },
+  "hemisphere": "north",
+  "buildings": [
+    "101",
+    { "type": "bakery", "name": "Bakery" },
+    "117",
+    { "type": "bookstore", "name": "Books", "small_line": "USED" },
+    { "type": "shop", "name": "HARDWARE", "stories": 2, "window_lettering": "TOOLS AND PAINT" },
+    "125",
+    { "type": "diner", "name": "Diner" },
+    { "type": "section_break" },
+    { "type": "church", "name": "First Church", "style": "steeple" },
+    { "type": "gas_station", "canopy_name": "FUEL", "store_name": "MARKET", "price": "3.19" },
+    { "type": "columned_hall", "name": "PUBLIC LIBRARY", "clock": true, "clock_time": "3:15" },
+    { "type": "section_break" },
+    "204",
+    { "type": "ice_cream", "name": "Ice Cream" },
+    "212",
+    { "type": "art_store", "name": "ART SUPPLIES" },
+    { "type": "photo_store", "name": "PHOTO" },
+    "226",
+    { "type": "pet_shop", "name": "PET SHOP" },
+    { "type": "restaurant", "name": "Pasta House" },
+    "238",
+    { "type": "section_break" },
+    { "type": "school", "name": "RIVERSIDE SCHOOL", "bell_tower": true },
+    "301",
+    { "type": "church", "name": "Chapel", "style": "tower" },
+    { "type": "shop", "name": "Cafe", "font": "lora", "awning": "striped", "awning_colors": ["#B5523F", "#F8FAFC"] },
+    { "type": "computer_store", "name": "Computers" },
+    { "type": "columned_hall", "name": "TOWN HALL" }
+  ],
+  "pets": [
+    { "type": "cat", "color": "black" },
+    { "type": "cat", "color": "tabby" },
+    { "type": "guinea_pig", "color": "white_orange" }
+  ],
+  "cars": ["sedan", "van", "jeep", "truck", "sports", "buggy"],
+  "extras": {
+    "airplane": true,
+    "kayaks": true,
+    "fireflies": true,
+    "falling_leaves": true,
+    "seasons": true,
+    "table_mountain": false
+  }
+}

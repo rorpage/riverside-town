@@ -1,0 +1,7 @@
+*
+!manifest
+!source
+!components
+!tools
+**/__pycache__
+**/.DS_Store

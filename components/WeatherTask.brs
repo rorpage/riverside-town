@@ -10,7 +10,7 @@ sub fetchWeather()
     url = url + "?latitude=" + m.top.lat + "&longitude=" + m.top.lon
     url = url + "&current=temperature_2m,weather_code,is_day"
     url = url + "&daily=sunrise,sunset&forecast_days=1"
-    url = url + "&temperature_unit=fahrenheit&timezone=auto"
+    url = url + "&temperature_unit=" + m.top.unit + "&timezone=auto"
 
     xfer = CreateObject("roUrlTransfer")
     xfer.SetCertificatesFile("common:/certs/ca-bundle.crt")

@@ -1,0 +1,39 @@
+{
+  "title": "Riverside Town",
+  "lat": "39.7684",
+  "lon": "-86.1581",
+  "temperatureUnit": "fahrenheit",
+  "clock24": false,
+  "hemisphere": "north",
+  "sections": 4,
+  "cars": [
+    "sedan",
+    "van",
+    "jeep",
+    "truck",
+    "sports",
+    "buggy"
+  ],
+  "pets": [
+    {
+      "image": "cat_black",
+      "w": 42,
+      "h": 45
+    },
+    {
+      "image": "cat_tabby",
+      "w": 42,
+      "h": 45
+    },
+    {
+      "image": "guinea_white_orange",
+      "w": 45,
+      "h": 28
+    }
+  ],
+  "parkedCarX": 2748,
+  "airplane": true,
+  "fireflies": true,
+  "fallingLeaves": true,
+  "seasons": true
+}
