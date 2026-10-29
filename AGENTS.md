@@ -32,7 +32,7 @@ These apply to code, comments, commit messages, README.md, and this file.
 - Building types are in `TYPES` in `tools/riverside/buildings.py`. Each has a width function and a draw function `(spec, x, p, season)`, where `x` is the left edge in its town section. Some types are drawn at the position they had in the original town and moved with `shift()`; their `ORIGIN` is the left edge of that drawing. A new type needs a width, a draw function, an entry in `TYPES`, defaults in `DEFAULTS` in `config.py`, and an entry in the schema.
 - `tools/riverside/layout.py` places the buildings in 1920 pixel sections with a margin of 16 pixels at each end, so no building crosses a section edge. At most 5 sections, because each one uses about 4 MB of texture memory.
 - `tools/build_town.py` is what the Docker image runs. It copies `manifest`, `source`, and `components` to a temporary folder, generates the town into it, and writes `out/riverside-town.zip`, the same files without a zip in `out/roku`, and `out/previews`. The "Build my town" workflow in the template uploads `out/roku` as a download, not the zip: GitHub zips every download, so uploading the zip would put a zip inside a zip. GitHub's zip of `out/roku` has the manifest at the top level, so it installs on a Roku as it is. If a new top-level folder is needed on the Roku, add it to `PACKAGE` there, to `build.sh`, to the `COPY` lines in `Dockerfile`, and to `.dockerignore`.
-- The Docker image is `ghcr.io/rorpage/riverside-town-roku-generator`, published by `.github/workflows/riverside-town-roku-generator.yml` when a tag such as `v1.2.0` is pushed. `action.yml` runs the `:1` image. A change that breaks existing `town.json` files needs a new major version.
+- The Docker image is `ghcr.io/rorpage/riverside-town-roku-generator`, published by `.github/workflows/riverside-town-roku-generator.yml` when a tag such as `v1.2.0` is pushed. `action.yml` runs the `:1` image. See "Releases" below.
 
 ## Artwork rules
 
@@ -84,6 +84,20 @@ These apply to code, comments, commit messages, README.md, and this file.
 
 - The repository is under The Unlicense (public domain). The fonts in `tools/fonts` keep their own SIL Open Font License. Only add fonts, code, or art that can be shared under these terms.
 - Real business names in a town are for personal use. The README says so in "Business names".
+
+## Releases
+
+README.md has the full steps in "Adding features and releasing". The rules:
+
+- New features are made in this repository, on a `feature/` branch, and merged into `main` with a pull request. Other towns get them only when a new version tag is pushed.
+- The Action runs the published image, not the code on a branch. To test a change before it is released, build a town with `python3 tools/build_town.py --config <town.json> --out out`.
+- The owner pushes the version tags. This sandbox refuses tag pushes, so do not try to push one. In the pull request description, say which tag the change needs:
+  - a fix that changes nothing for users: a patch version, for example `v1.0.1`
+  - a new feature that existing `town.json` files do not need: a minor version, for example `v1.1.0`
+  - a change that makes existing `town.json` files fail, such as renaming or removing a field: a major version, for example `v2.0.0`
+- Avoid major versions. Prefer adding a new field with a default over renaming or removing one, so existing `town.json` files keep working.
+- For a major version, change the image in `action.yml` from `:1` to the new major version in the same pull request. The publish workflow moves the `v<major>` git tag; repositories that use the old major version keep it until their workflow is changed.
+- When a feature adds `town.json` settings, update the sample `town.json` here and in rorpage/riverside-town-sample (with a ZIP code there instead of lat and lon).
 
 ## Branches
 
