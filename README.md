@@ -69,7 +69,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 
 ## Make your own town
 
-There are three ways to build a town from your own `town.json`. All three give the same result: `riverside-town.zip`, which you install on your Roku (see [Installing on a Roku](#installing-on-a-roku)), and preview images of your town.
+There are three ways to build a town from your own `town.json`. All three give the same result: a zip file of the screensaver, which you install on your Roku (see [Installing on a Roku](#installing-on-a-roku)), and preview images of your town.
 
 ### With GitHub, in a web browser
 
@@ -78,7 +78,9 @@ This needs only a GitHub account.
 1. Go to [rorpage/riverside-town-sample](https://github.com/rorpage/riverside-town-sample) and click **Use this template**, then **Create a new repository**.
 2. In your new repository, open `town.json`, click the pencil icon to edit it, and change it to describe your town. The [town.json reference](#townjson-reference) below lists every field.
 3. Click **Commit changes**. GitHub builds your town. This takes about a minute.
-4. Open the **Actions** tab, click the latest run of **Build my town**, and download **riverside-town** at the bottom of the page. It is a zip file that holds `riverside-town.zip` and a `previews` folder.
+4. Open the **Actions** tab, click the latest run of **Build my town**, and look at the bottom of the page. There are two downloads:
+   - **riverside-town-roku**: the screensaver. It downloads as `riverside-town-roku.zip`, which you upload to the Roku as it is. Do not unzip it.
+   - **riverside-town-previews**: a zip file of preview images of your town.
 
 If something in `town.json` is wrong, the run fails, and its log names the field and says what is wrong.
 
@@ -90,9 +92,15 @@ The workflow in the template repository uses the `rorpage/riverside-town@v1` act
     config: town.json
 - uses: actions/upload-artifact@v4
   with:
-    name: riverside-town
-    path: out/
+    name: riverside-town-roku
+    path: out/roku/
+- uses: actions/upload-artifact@v4
+  with:
+    name: riverside-town-previews
+    path: out/previews/
 ```
+
+GitHub puts each download in a zip file. `out/roku/` holds the screensaver files without a zip, so the zip that GitHub makes has the manifest at the top level, which is what the Roku needs.
 
 ### With Docker
 
@@ -102,7 +110,7 @@ Run this in a folder that has a `town.json`:
 docker run --rm -v "$PWD:/work" ghcr.io/rorpage/riverside-town-roku-generator:1
 ```
 
-It writes `out/riverside-town.zip` and the preview images in `out/previews`.
+It writes `out/riverside-town.zip`, the same files without a zip in `out/roku`, and the preview images in `out/previews`.
 
 ### With Python
 
@@ -226,7 +234,7 @@ docs/                            Preview images for this README, and customizati
 
 1. Turn on developer mode on the Roku. On the remote, press Home 3 times, Up 2 times, then Right, Left, Right, Left, Right. Follow the steps on screen and set a password.
 2. Install the zip. There are two ways:
-   - **Install with the web page.** In a web browser, go to `http://<roku-ip-address>`, sign in with the username `rokudev` and your password, and upload `riverside-town.zip`.
+   - **Install with the web page.** In a web browser, go to `http://<roku-ip-address>`, sign in with the username `rokudev` and your password, and upload the zip file (`riverside-town.zip`, or `riverside-town-roku.zip` from GitHub).
    - **Install from the script.** To install the sample town in this repository, run this from the repository root, with the Roku's IP address:
      ```
      ROKU_DEV_TARGET=<roku-ip-address> ./build.sh
