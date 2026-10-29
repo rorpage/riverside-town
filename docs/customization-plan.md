@@ -7,7 +7,7 @@ This plan has been built. The decisions on the open questions are in [Decisions]
 ## Goals
 
 - A person edits one file, `town.json`, and gets a Roku zip of their own town.
-- The current town is described by the example `town.json`. Building from it gives the same screensaver as today.
+- The example `town.json` describes a generic sample town that shows every building type.
 - People do not need to install Python, Cairo, or fonts. They can use a Docker image, or a GitHub Action in their own repository.
 - Mistakes in `town.json` give clear error messages that name the field and say what is wrong.
 
@@ -38,19 +38,19 @@ Houses and buildings are placed in one street, in the order given. A house can a
 
 Each type is a reusable drawing. Every type takes `name`, and most also take `color`, `font`, `stories`, and `window`.
 
-| Type | Based on | Options |
+| Type | What it is | Options |
 |---|---|---|
-| `house` | the current houses | `number`, `color`, `font`, `stories` (1 or 2) |
-| `shop` | Long's Donuts, Forever Books, the section C shops | `sign_color`, `awning` (`"plain"`, `"striped"`, or none), `awning_colors`, `window` |
-| `diner` | Luke's | `window_lettering` (for example `"WILLIAMS HARDWARE"`) |
-| `computer_store` | E-gineering | `sign_text_color` |
-| `ice_cream` | Cabana's | `awning_colors` |
-| `restaurant` | Mama BreeBree's | `awning_colors` |
-| `church` | New City and ITS | `style` (`"steeple"` or `"tower"`), `cross` (true or false) |
-| `school` | Holy Cross and Covenant | `color`, `cross`, `bell_tower` |
-| `columned_hall` | the courthouse and Cedarville | `clock` (true or false), `clock_time`, `letter_colors` |
-| `gas_station` | Fuel Stop and Kroger | `store_name`, `price` |
-| `drive_through` | Chick-fil-A | `roof_color` |
+| `house` | a house with its number above the door | `number`, `color`, `font`, `stories` (1 or 2) |
+| `shop` | a shop with a sign, an awning, and a display window | `sign_color`, `awning` (`"plain"`, `"striped"`, or none), `awning_colors`, `window` |
+| `diner` | a tall shop with lettering on its window | `window_lettering` (for example `"TOOLS AND PAINT"`) |
+| `computer_store` | a shop with a dark sign and green letters | `sign_text_color` |
+| `ice_cream` | a shop with an ice cream cone on the roof | `awning_colors` |
+| `restaurant` | a shop with a striped awning and a table in the window | `awning_colors` |
+| `church` | a church with a steeple or a square tower | `style` (`"steeple"` or `"tower"`), `cross` (true or false) |
+| `school` | a two-story school | `color`, `cross`, `bell_tower` |
+| `columned_hall` | a stone building with columns, like a library | `clock` (true or false), `clock_time`, `letter_colors` |
+| `gas_station` | a gas station with a small store | `store_name`, `price` |
+| `drive_through` | a restaurant with a drive-through window | `roof_color` |
 
 `window` choices for shops: `"books"`, `"camera"`, `"palette"`, `"computer"`, `"ice_cream"`, `"pets"`, `"table"`, or none.
 
@@ -65,29 +65,26 @@ New animal types, such as dogs, each need a drawing in the generator.
 
 ### Example
 
-This is the start of the example file that recreates the current town. The full file would list every building.
+This is the start of the example file for the sample town. The full file would list every building.
 
 ```json
 {
   "title": "Riverside Town",
-  "location": { "zip": "46220", "country": "US" },
+  "location": { "zip": "46204", "country": "US" },
   "units": { "temperature": "F", "clock": "12h" },
   "buildings": [
-    { "type": "house", "number": "5401", "color": "#F3E3B8", "font": "signika" },
-    { "type": "shop", "name": "Long's Donuts", "font": "script", "awning": "plain", "stories": 2 },
-    { "type": "house", "number": "135", "color": "#CFE3D4", "font": "hanken", "stories": 2 },
-    { "type": "shop", "name": "Forever Books", "font": "playfair", "window": "books" },
-    { "type": "computer_store", "name": "E-gineering", "font": "sharetech" },
-    { "type": "diner", "name": "Luke's", "font": "kaushan", "window_lettering": "WILLIAMS HARDWARE" },
-    { "type": "church", "name": "New City", "style": "steeple", "cross": true },
-    { "type": "gas_station", "store_name": "Kroger", "price": "2.05" },
-    { "type": "columned_hall", "name": "HILL VALLEY COURTHOUSE MALL", "clock": true, "clock_time": "10:04" }
+    "101",
+    { "type": "bakery", "name": "Bakery" },
+    { "type": "bookstore", "name": "Books", "small_line": "USED" },
+    { "type": "shop", "name": "HARDWARE", "stories": 2, "window_lettering": "TOOLS AND PAINT" },
+    { "type": "diner", "name": "Diner" },
+    { "type": "church", "name": "First Church", "style": "steeple", "cross": true },
+    { "type": "gas_station", "store_name": "MARKET", "price": "3.19" },
+    { "type": "columned_hall", "name": "PUBLIC LIBRARY", "clock": true, "clock_time": "3:15" }
   ],
   "pets": [
     { "type": "cat", "colors": "black" },
-    { "type": "cat", "colors": "dark_gray_striped" },
     { "type": "cat", "colors": "tabby" },
-    { "type": "guinea_pig", "colors": "black_orange" },
     { "type": "guinea_pig", "colors": "white_orange" }
   ]
 }
@@ -128,9 +125,9 @@ A JSON Schema file, `town.schema.json`, describes every field. Editors such as V
 - **Section A:** the first section appears twice in the strip, so the layout puts no gas station in it. The parked car needs a station that appears only once.
 - **Pets:** they are placed only outside section A, as now.
 
-### 5. Keep the current town the same
+### 5. Check other towns
 
-The example `town.json` recreates the current town. A check compares the generated images against the current ones and reports any building that moved or changed. Small differences are expected where a one-of-a-kind building becomes a general type, and each one will be listed for approval.
+Build several towns with different settings, such as one section, every building type, and the gas station in section A, and check their preview images.
 
 ## Building without installing anything
 
@@ -206,7 +203,7 @@ Each step is a separate pull request. Each one leaves the screensaver working.
    - Add `town.json`, `town.schema.json`, `--config`, and `town_config.json`.
    - Move the location, units, title, cars, pets, and extras out of the code.
    - Add the ZIP code lookup and the 24 hour clock.
-2. **Building types.** Turn every current building into a building type, without changing how the town looks.
+2. **Building types.** Turn every current building into a reusable building type.
 3. **Automatic layout.**
    - Build the street from the `buildings` list.
    - Create the town posters in code.
@@ -223,7 +220,7 @@ Steps 1 and 4 are the smallest and are useful on their own. Step 2 is the larges
 2. **Names:** the Docker image and the publish workflow are `riverside-town-roku-generator`. The template repository is `rorpage/riverside-town-sample`.
 3. **Brand names:** the README says that a town with real business names is for personal use.
 4. **Custom drawings:** not supported for now. New building types need Python code in the generator.
-5. **The current town:** this repository and the template use a simpler, generic sample town. The owner's family town is in the private repository `rorpage/riverside-town-page-family`, built with the Action.
+5. **The example town:** this repository and the template use a simple, generic sample town.
 
 Other changes from the plan:
 
