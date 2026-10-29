@@ -92,7 +92,7 @@ fi
 
 delete_temp_file
 
-echo "Device is ready to go!"
+echo "The Roku is ready."
 
 create_zip
 

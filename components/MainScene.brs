@@ -473,7 +473,8 @@ end sub
 
 ' Fades the falling leaves out if they are falling, or back in if they are
 ' not, then waits a random time before the next change. The leaves keep
-' moving while they are faded out, so they come back mid-fall.
+' moving while they are faded out, so when they fade back in, they are
+' already partway down the screen.
 sub onLeafTimer()
     if not m.seasonFx.visible then return
     if m.leavesOn

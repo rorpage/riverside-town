@@ -44,7 +44,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 - Six cars: a sports car in the style of a Bugatti, a sedan, a VW dune buggy with a green arch over the seats, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest. `town.json` can choose which cars drive by.
 - Cats and guinea pigs on the sidewalk, chosen in `town.json`. They are placed at random spots each time the screensaver starts.
 - Two lanes. The near lane drives left to right at full size. The far lane drives right to left and draws the cars slightly smaller.
-- A small Cessna airplane flies across the sky now and then, about every 1 to 3 minutes, in either direction. It flies at the distance of the far mountains, so it is small and its speed matches that distance: it takes about 17 seconds to cross the screen. At dusk and night its wingtip light is on, green when it flies right and red when it flies left, as on a real plane (green is on the right wingtip and red on the left). A white tail light blinks. At night both lights are brighter, with a wider glow. It does not fly in rain, snow, fog, or thunderstorms.
+- A small Cessna airplane flies across the sky about every 1 to 3 minutes, in either direction. It flies at the distance of the far mountains, so it is small and its speed matches that distance: it takes about 17 seconds to cross the screen. At dusk and night its wingtip light is on, green when it flies right and red when it flies left, as on a real plane (green is on the right wingtip and red on the left). A white tail light blinks. At night both lights are brighter, with a wider glow. It does not fly in rain, snow, fog, or thunderstorms.
 - Weather from [Open-Meteo](https://open-meteo.com/), refreshed every 15 minutes, in Fahrenheit or Celsius. No API key is needed.
 - A 12 hour or 24 hour clock.
 - Day, dusk, and night versions of the scene, chosen from today's real sunrise and sunset times.
@@ -64,7 +64,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   - Fog: a fog layer over the scene.
   - Thunderstorms: rain and lightning flashes at random times.
 
-  Falling leaves and fireflies are hidden while rain or snow is falling. In fall the leaves come and go: they fall for a while, fade out, stay away for a while, then fade back in, for random lengths of time.
+  Falling leaves and fireflies are hidden while rain or snow is falling. In fall the leaves do not fall all the time: they fall, fade out, stay hidden, then fade back in. Each of these lasts a random length of time.
 - A clock and weather panel in the top-right corner. Every 5 minutes it fades out, moves a small amount within the corner, and fades back in, to protect TVs from burn-in. The sun and moon are in the top-left corner, so the panel never covers them.
 
 ## Make your own town
@@ -226,7 +226,7 @@ docs/                            Preview images for this README, and customizati
 
 1. Turn on developer mode on the Roku. On the remote, press Home 3 times, Up 2 times, then Right, Left, Right, Left, Right. Follow the steps on screen and set a password.
 2. Install the zip. There are two ways:
-   - **Install by hand.** In a web browser, go to `http://<roku-ip-address>`, sign in with the username `rokudev` and your password, and upload `riverside-town.zip`.
+   - **Install with the web page.** In a web browser, go to `http://<roku-ip-address>`, sign in with the username `rokudev` and your password, and upload `riverside-town.zip`.
    - **Install from the script.** To install the sample town in this repository, run this from the repository root, with the Roku's IP address:
      ```
      ROKU_DEV_TARGET=<roku-ip-address> ./build.sh

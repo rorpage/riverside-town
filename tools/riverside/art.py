@@ -82,19 +82,19 @@ def glyphs(font, weight):
         _glyphs[key] = (f.getBestCmap(), gs, f["head"].unitsPerEm)
     return _glyphs[key]
 
-def nice(label):
+def curly_apostrophes(label):
     """Uses a curly apostrophe in place of a straight one."""
     return label.replace("'", "\u2019")
 
 def check_text(label, font):
     """Returns the characters in label that font cannot draw."""
     cmap = glyphs(font, 400)[0]
-    return sorted({ch for ch in nice(label) if ord(ch) not in cmap})
+    return sorted({ch for ch in curly_apostrophes(label) if ord(ch) not in cmap})
 
 def text_width(label, font, weight, size, spacing=0):
     cmap, gs, upm = glyphs(font, weight)
     k = size / upm
-    label = nice(label)
+    label = curly_apostrophes(label)
     return sum(gs[cmap[ord(ch)]].width * k for ch in label) + spacing * (len(label) - 1)
 
 def fit_size(label, font, weight, size, max_width, spacing=0, smallest=9):
@@ -107,7 +107,7 @@ def text(label, font, weight, size, cx, y, fill, spacing=0, outline=None, outlin
     """Draws label as outlines, centered on cx, with its baseline at y. If
     outline is a color, each letter also gets an outline of that color and of
     outline_width pixels, drawn behind the letter."""
-    label = nice(label)
+    label = curly_apostrophes(label)
     if not label:
         return ""
     cmap, gs, upm = glyphs(font, weight)
