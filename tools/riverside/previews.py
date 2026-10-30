@@ -10,7 +10,7 @@ import io
 import os
 import random
 from PIL import Image
-from . import scenery, buildings
+from . import scenery
 from .art import ACCENT, season_palette, svg, render, text, text_width
 import cairosvg
 
@@ -49,23 +49,13 @@ def parked(town, images, im, section, name):
 def mountains(town, p, season):
     mtn = season if season == "winter" else "summer"
     return (scenery.clouds(p, season) + scenery.far(p, mtn, town["extras"]["table_mountain"]) + scenery.near(p, mtn)
-            + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["gazebo"]))
-
-def towers(town, section, p):
-    """The towers behind the radio stations in one town section, placed like
-    buildTown() in MainScene.brs places tower_<period>.png."""
-    out = ""
-    for x in town["towers"]:
-        if x // 1920 == section:
-            out += (f'<g transform="translate({x % 1920 - buildings.TOWER_W / 2},{900 - buildings.TOWER_GROUND})">'
-                    + buildings.tower_svg(p) + '</g>')
-    return out
+            + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"]))
 
 def composite(town, layers, pal, section, season):
     p = season_palette(pal, season)
     full = (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/><stop offset="0.62" stop-color="{p["horizon"]}"/></linearGradient></defs>'
             f'<rect width="1920" height="1080" fill="url(#g)"/><circle cx="220" cy="180" r="64" fill="{ACCENT}"/>'
-            + mountains(town, p, season) + towers(town, section, p) + layers[f"town_{LETTERS[section]}"](p, season))
+            + mountains(town, p, season) + layers[f"town_{LETTERS[section]}"](p, season))
     return Image.open(io.BytesIO(render(full, "0 0 1920 1080", 1920, 1080))).convert("RGBA")
 
 def panel(clock, temp, cond, px):
@@ -109,8 +99,8 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     mtn = season if season == "winter" else "summer"
     far = scenery.far(p, mtn, town["extras"]["table_mountain"]) if section % 2 == 0 else scenery.far_b(p, mtn)
     near = scenery.near(p, mtn) if section % 2 == 0 else scenery.near_b(p, mtn)
-    art_svg = (scenery.clouds(p, season) + far + near + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["gazebo"])
-               + towers(town, section, p) + layers[f"town_{LETTERS[section]}"](p, season))
+    art_svg = (scenery.clouds(p, season) + far + near + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"])
+               + layers[f"town_{LETTERS[section]}"](p, season))
     im.alpha_composite(Image.open(io.BytesIO(render(art_svg, "0 0 1920 1080", 1920, 1080))).convert("RGBA"))
     if season == "summer" and pal == "night" and town["extras"]["fireflies"]:
         im.alpha_composite(Image.open(os.path.join(images, "fireflies_a.png")).convert("RGBA").resize((1920, 400)), (0, 540))

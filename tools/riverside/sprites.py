@@ -5,7 +5,6 @@ import os
 import random
 from PIL import Image, ImageOps
 from .art import P, ACCENT, GLASS, DARK, render, bike_frame
-from .buildings import tower_svg, TOWER_W, TOWER_H
 
 def write(out):
     def save(content, vb, w, h, name):
@@ -170,11 +169,6 @@ def write(out):
              f'<circle cx="214" cy="56" r="6" fill="#F6C46A"/><rect x="8" y="62" width="6" height="8" fill="#C0392B"/>'
              + wells([(52, 84), (198, 84)], 28))
     save(buggy, "0 0 250 112", 250, 112, "car_buggy.png")
-
-    # The tall tower that stands behind a radio station, with its red light
-    # lit at dusk and night
-    for pal in P:
-        save(tower_svg(P[pal]), f"0 0 {TOWER_W} {TOWER_H}", TOWER_W, TOWER_H, f"tower_{pal}.png")
 
     # A person riding a bike, for the street. It is drawn from bike_frame() at
     # twice its size and moved down 8 pixels so the helmet fits. The wheels

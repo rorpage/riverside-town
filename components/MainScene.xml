@@ -36,10 +36,12 @@
         <Poster id="near2" width="1920" height="360" translation="[3840,0]" />
       </Group>
     </Group>
-    <Group translation="[0,600]">
+    <!-- The hills image starts at y=420, above the hills, so the tower behind the
+         radio station on the hill fits. -->
+    <Group translation="[0,420]">
       <Group id="hillsStrip">
-        <Poster id="hills1" width="1920" height="310" />
-        <Poster id="hills2" width="1920" height="310" translation="[1920,0]" />
+        <Poster id="hills1" width="1920" height="490" />
+        <Poster id="hills2" width="1920" height="490" translation="[1920,0]" />
       </Group>
     </Group>
     <!-- The town is one to five different tiles, set in components/town_config.json. MainScene.brs

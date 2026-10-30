@@ -28,7 +28,7 @@ The `town.json` in this repository describes a sample town with four sections.
 
 ![Section C: four houses, an ice cream shop, an art supply store, a photography store, a pet shop, and an Italian restaurant](docs/preview_section_c.png)
 
-![Section D: a school with a bell tower, a house, a chapel, a computer store, and the WRVR radio station with a tall red tower behind it, with the VW buggy on the street and animals on the sidewalk](docs/preview_section_d.png)
+![Section D: a school with a bell tower, a house, a chapel, a computer store, and a gazebo with a Riverside town sign, with the WRVR radio station and its tall red tower on the hill behind the town](docs/preview_section_d.png)
 
 | Section D on a winter night |
 |---|
@@ -42,7 +42,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 - A town of one to five sections, each 1920 pixels wide, built from the buildings in `town.json`. The buildings have different wall colors and heights, and each sign uses its own font. Like the rest of the scene, the colors are darker at dusk and night.
 - A car parked at the gas station, if the town has one. The car and the direction it faces are chosen at random each time the screensaver starts.
 - Six cars: a sports car in the style of a Bugatti, a sedan, a VW dune buggy with a green arch over the seats, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest. `town.json` can choose which cars drive by, and can add a person riding a bike, who is slower than every car.
-- As options: bikes parked in front of shops and in bike racks, two people riding bikes on the hills in the background, and a gazebo with a town sign on the hill beside the river.
+- As options: bikes parked in front of shops and in bike racks, two people riding bikes on the hills in the background, and a radio station with a tall red tower on the hill beside the river.
 - Cats and guinea pigs on the sidewalk, chosen in `town.json`. They are placed at random spots each time the screensaver starts.
 - Two lanes. The near lane drives left to right at full size. The far lane drives right to left and draws the cars slightly smaller.
 - A small Cessna airplane flies across the sky about every 1 to 3 minutes, in either direction. It flies at the distance of the far mountains, so it is small and its speed matches that distance: it takes about 17 seconds to cross the screen. At dusk and night its wingtip light is on, green when it flies right and red when it flies left, as on a real plane (green is on the right wingtip and red on the left). A white tail light blinks. At night both lights are brighter, with a wider glow. It does not fly in rain, snow, fog, or thunderstorms.
@@ -147,7 +147,7 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `hemisphere` | `"north"` or `"south"`. In the south, the seasons are the other way around. | `"north"` |
 | `buildings` | The buildings along the street, from left to right. See below. | none |
 | `houses` | House numbers to spread out between the buildings, for example `["12", "14", "16"]` | none |
-| `gazebo` | A gazebo on the hill beside the river, at half size, like the kayaks: `true`, or an object. It is an eight-sided gazebo on a brick base, with a shingled roof, a cupola, white posts and railings, and front steps. It has hanging flower baskets in spring and summer, leaf garlands, corn stalks, hay, and pumpkins in fall, and wreaths in winter, and string lights at dusk and night. The object can have `name` (a town sign stands beside the gazebo, with this name), `small_line` (a small line on the sign, for example `"FOUNDED \u00b7 1779"`), `sign_color`, `color` (the brick base), and `font` and `weight` for the sign. | none |
+| `radio_station` | A radio station on the hill beside the river, smaller than the town buildings, like the kayaks. It is a 1940s brick broadcast building with a rounded center, a wall of windows, a door on each side, and antennas, with a tall red lattice tower behind it that has a red light on top at dusk and night. The call letters are slanted red letters with a black outline and shadow. Like the WSQK logo, the first Q is drawn as an O with a lightning bolt for its tail. It is an object with `name` (the call letters, required), `small_line` (a line in script below them, for example `"The Squawk"`), `power` (shown as "50,000 WATTS" on each side of the call letters), `letter_color`, `color` (the brick), and `tower` (default `true`). | none |
 | `pets` | Animals on the sidewalk, for example `{ "type": "cat", "color": "tabby" }`. Cats can be `"black"`, `"gray"`, or `"tabby"`. Guinea pigs (`"guinea_pig"`) can be `"black_orange"` or `"white_orange"`. Up to 10. | none |
 | `cars` | Which cars drive by: `"sedan"`, `"van"`, `"jeep"`, `"truck"`, `"sports"`, and `"buggy"`, and `"bike"`, a person riding a bike. At least 2. The bike is never parked at the gas station. | the six cars, without the bike |
 | `extras.airplane` | The airplane | `true` |
@@ -183,7 +183,7 @@ These options work for most types:
 | `columned_hall` | A stone building with columns and steps, like a library or a courthouse, with the name across the top | `clock` (a clock tower), `clock_time` (for example `"10:04"`), `letter_color`, `letter_outline` |
 | `gas_station` | A price sign, a canopy over one pump, and a small store. A car is parked under the canopy. | `canopy_name` (default `"FUEL STOP"`), `store_name` (default `"MARKET"`), `store_sign_color`, `price` (for example `"3.19"`; a small 9 is added for the 9/10 of a cent) |
 | `drive_through` | A restaurant with its name on a colored roof and a drive-through window | `roof_color`, `sign_text_color` |
-| `radio_station` | A 1940s brick radio station with a rounded center, a wall of windows, a door on each side, and antennas, with a tall red lattice tower behind it. The tower has a red light on top at dusk and night. The call letters are slanted red letters with a black outline and shadow. Like the WSQK logo, the first Q is drawn as an O with a lightning bolt for its tail. | `name` (the call letters, required), `tower` (default `true`), `small_line` (a line in script below them, for example `"The Squawk"`), `power` (shown as "50,000 WATTS" on each side of the call letters), `letter_color` |
+| `gazebo` | An eight-sided gazebo on a brick base, with a shingled roof, a cupola, white posts and railings, and front steps. It has hanging flower baskets in spring and summer, leaf garlands, corn stalks, hay, and pumpkins in fall, and wreaths in winter, and string lights at dusk and night. | `name` (a town sign stands to its left, with this name), `small_line` (a small line on the sign, for example `"FOUNDED \u00b7 1779"`), `sign_color`, `color` (the brick base) |
 | `bike_rack` | A bike rack on the sidewalk with three bikes | none |
 | `tree` | A tree | none |
 | `section_break` | Starts a new town section | none |

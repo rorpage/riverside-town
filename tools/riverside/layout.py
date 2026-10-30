@@ -65,8 +65,5 @@ def layout(town):
     gas = [(i, x) for i, s in enumerate(placed) for b, x in s if b["type"] == "gas_station"]
     # The parked car goes at the first gas station, in strip coordinates
     town["parked_car_x"] = gas[0][0] * SECTION + buildings.gas_parking(gas[0][1]) if gas else -1
-    # The tall tower behind each radio station, at the center of the station
-    town["towers"] = [i * SECTION + x + 240 for i, s in enumerate(placed) for b, x in s
-                      if b["type"] == "radio_station" and b.get("tower", True)]
     town["sections"] = placed
     return placed

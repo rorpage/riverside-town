@@ -52,7 +52,7 @@ DEFAULTS = {
                         color="#E2E7EE", font="oswald", weight=600),
     "drive_through": dict(font="script", weight=700, color=WHITE, roof_color="#D62E3C"),
     "tree": dict(),
-    "radio_station": dict(color="#E4DCCD", font="racing", weight=400, letter_color="#D32F2F", tower=True),
+    "gazebo": dict(color="#A9553F", font="playfair", weight=700),
     "bike_rack": dict(),
     "section_break": dict(),
 }
@@ -61,7 +61,7 @@ CARS = ["sedan", "van", "jeep", "truck", "sports", "buggy"]
 PETS = {"cat": ["black", "gray", "tabby"], "guinea_pig": ["black_orange", "white_orange"]}
 EXTRAS = {"airplane": True, "kayaks": True, "fireflies": True, "falling_leaves": True, "seasons": True,
           "table_mountain": False, "bikes": False}
-GAZEBO = dict(color="#A9553F", font="playfair", weight=700)
+RADIO = dict(color="#E4DCCD", font="racing", weight=400, letter_color="#D32F2F", tower=True)
 
 # Text fields that are not drawn with the building's own font
 FIELD_FONTS = {("radio_station", "small_line"): "kaushan", ("radio_station", "power"): "oswald",
@@ -86,12 +86,6 @@ def explain(e, best_match):
     the building types gets the message for the type it names."""
     path = list(e.path)
     where = "/".join(str(x) for x in path) or "(top level)"
-    if path == ["gazebo"] and e.validator == "anyOf":
-        if isinstance(e.instance, dict):
-            detail = best_match([c for c in e.context if c.validator != "type"] or e.context)
-            sub = "/".join(str(x) for x in detail.relative_path)
-            return f"gazebo{'/' + sub if sub else ''}: {detail.message}"
-        return 'gazebo: use true, false, or an object such as { "name": "TOWN SQUARE" }.'
     if path == ["location"] and e.validator == "anyOf":
         return 'location: give a "zip", or both "lat" and "lon".'
     if e.validator == "anyOf" and isinstance(e.instance, dict) and len(path) == 2 and path[0] in ("buildings", "houses"):
@@ -164,15 +158,16 @@ def fill(data):
     town["hemisphere"] = data.get("hemisphere", "north")
     town["cars"] = data.get("cars", CARS)
     town["extras"] = dict(EXTRAS, **data.get("extras", {}))
-    # The gazebo on the hills: true, or an object with a sign name and options
-    gz = data.get("gazebo", False)
-    town["gazebo"] = None
-    if gz:
-        town["gazebo"] = dict(GAZEBO, **(gz if isinstance(gz, dict) else {}))
-        for key in ("name", "small_line"):
-            bad = check_text(town["gazebo"][key], town["gazebo"]["font"]) if town["gazebo"].get(key) else []
+    # The radio station on the hill beside the river
+    radio = data.get("radio_station")
+    town["radio_station"] = None
+    if radio:
+        town["radio_station"] = spec = dict(RADIO, **radio)
+        for key in ("name", "small_line", "power"):
+            font = FIELD_FONTS.get(("radio_station", key), spec["font"])
+            bad = check_text(str(spec[key]), font) if spec.get(key) else []
             if bad:
-                raise ConfigError(f"gazebo: the font {town['gazebo']['font']} cannot draw {' '.join(bad)} in \"{town['gazebo'][key]}\".")
+                raise ConfigError(f"radio_station: the font {font} cannot draw {' '.join(bad)} in \"{spec[key]}\".")
     town["pets"] = [f"{'cat' if p['type'] == 'cat' else 'guinea'}_{p['color']}" for p in data.get("pets", [])]
     for i, p in enumerate(data.get("pets", [])):
         if p["color"] not in PETS[p["type"]]:
@@ -212,7 +207,7 @@ def fill(data):
             counts["school"] += 1
         elif kind == "church" and spec["style"] == "tower":
             spec.setdefault("color", "#D8CFC2")
-        if kind in ("shop", "church", "school", "columned_hall", "drive_through", "radio_station") and not spec.get("name"):
+        if kind in ("shop", "church", "school", "columned_hall", "drive_through") and not spec.get("name"):
             raise ConfigError(f"{where}: a {kind} needs a \"name\".")
         for key in ("name", "number", "small_line", "store_name", "canopy_name", "power"):
             if spec.get(key):

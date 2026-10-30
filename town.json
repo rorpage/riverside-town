@@ -32,9 +32,9 @@
     "301",
     { "type": "church", "name": "Chapel", "style": "tower" },
     { "type": "computer_store", "name": "Computers" },
-    { "type": "radio_station", "name": "WRVR", "small_line": "River Radio", "power": "50,000" }
+    { "type": "gazebo", "name": "RIVERSIDE", "small_line": "FOUNDED 1890" }
   ],
-  "gazebo": { "name": "RIVERSIDE", "small_line": "FOUNDED 1890" },
+  "radio_station": { "name": "WRVR", "small_line": "River Radio", "power": "50,000" },
   "pets": [
     { "type": "cat", "color": "black" },
     { "type": "cat", "color": "tabby" },
