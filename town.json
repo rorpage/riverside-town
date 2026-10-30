@@ -40,7 +40,7 @@
     { "type": "cat", "color": "tabby" },
     { "type": "guinea_pig", "color": "white_orange" }
   ],
-  "cars": ["sedan", "van", "jeep", "truck", "sports", "buggy", "bike"],
+  "cars": ["sedan", "van", "jeep", "truck", "sports", "buggy"],
   "extras": {
     "airplane": true,
     "kayaks": true,

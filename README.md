@@ -24,7 +24,7 @@ You can make your own town. The houses, shops, and other buildings, their names,
 
 The `town.json` in this repository describes a sample town with four sections.
 
-![Section B: a church, a gas station with a parked van, and the public library with a clock tower, with a person riding a bike on the street](docs/preview_section_b.png)
+![Section B: a church, a gas station with a parked van, and the public library with a clock tower](docs/preview_section_b.png)
 
 ![Section C: four houses, an ice cream shop, an art supply store, a photography store, a pet shop, and an Italian restaurant](docs/preview_section_c.png)
 
@@ -41,8 +41,8 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 - Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street. The far and near mountains each have two different images, so the mountains repeat only about every 13 minutes (far) and 5 minutes (near). As an option, the center far mountain can have a flat top, in the shape of Table Mountain in South Africa.
 - A town of one to five sections, each 1920 pixels wide, built from the buildings in `town.json`. The buildings have different wall colors and heights, and each sign uses its own font. Like the rest of the scene, the colors are darker at dusk and night.
 - A car parked at the gas station, if the town has one. The car and the direction it faces are chosen at random each time the screensaver starts.
-- Six cars: a sports car in the style of a Bugatti, a sedan, a VW dune buggy with a green arch over the seats, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest. `town.json` can choose which cars drive by, and can add a person riding a bike, who is slower than every car.
-- As options: bikes parked in front of shops and in bike racks, two people riding bikes on the hills in the background, and a radio station with a tall red tower on the hill beside the river.
+- Six cars: a sports car in the style of a Bugatti, a sedan, a VW dune buggy with a green arch over the seats, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest. `town.json` can choose which cars drive by.
+- As options: bikes parked in front of shops and in bike racks, two bikes parked on the hills in the background, and a radio station with a tall red tower on the hill beside the river.
 - Cats and guinea pigs on the sidewalk, chosen in `town.json`. They are placed at random spots each time the screensaver starts.
 - Two lanes. The near lane drives left to right at full size. The far lane drives right to left and draws the cars slightly smaller.
 - A small Cessna airplane flies across the sky about every 1 to 3 minutes, in either direction. It flies at the distance of the far mountains, so it is small and its speed matches that distance: it takes about 17 seconds to cross the screen. At dusk and night its wingtip light is on, green when it flies right and red when it flies left, as on a real plane (green is on the right wingtip and red on the left). A white tail light blinks. At night both lights are brighter, with a wider glow. It does not fly in rain, snow, fog, or thunderstorms.
@@ -149,14 +149,14 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `houses` | House numbers to spread out between the buildings, for example `["12", "14", "16"]` | none |
 | `radio_station` | A radio station on the hill beside the river, smaller than the town buildings, like the kayaks. It is a 1940s brick broadcast building with a rounded center, a wall of windows, a door on each side, and antennas, with a tall red lattice tower behind it that has a red light on top at dusk and night. The call letters are slanted red letters with a black outline and shadow. Like the WSQK logo, the first Q is drawn as an O with a lightning bolt for its tail. It is an object with `name` (the call letters, required), `small_line` (a line in script below them, for example `"The Squawk"`), `power` (shown as "50,000 WATTS" on each side of the call letters), `letter_color`, `color` (the brick), and `tower` (default `true`). | none |
 | `pets` | Animals on the sidewalk, for example `{ "type": "cat", "color": "tabby" }`. Cats can be `"black"`, `"gray"`, or `"tabby"`. Guinea pigs (`"guinea_pig"`) can be `"black_orange"` or `"white_orange"`. Up to 10. | none |
-| `cars` | Which cars drive by: `"sedan"`, `"van"`, `"jeep"`, `"truck"`, `"sports"`, and `"buggy"`, and `"bike"`, a person riding a bike. At least 2. The bike is never parked at the gas station. | the six cars, without the bike |
+| `cars` | Which cars drive by: `"sedan"`, `"van"`, `"jeep"`, `"truck"`, `"sports"`, and `"buggy"`. At least 2. | all six |
 | `extras.airplane` | The airplane | `true` |
 | `extras.kayaks` | The kayaks beside the river | `true` |
 | `extras.fireflies` | Fireflies on summer nights | `true` |
 | `extras.falling_leaves` | Falling leaves in fall | `true` |
 | `extras.seasons` | Seasons from the date. When it is `false`, it is always summer, but snow still shows while it is snowing. | `true` |
 | `extras.table_mountain` | A flat-topped mountain in the shape of Table Mountain, in the center of the far mountains | `false` |
-| `extras.bikes` | A bike in front of every other shop, and two people riding bikes on the hills in the background (not in winter) | `false` |
+| `extras.bikes` | A bike in front of every other shop, and two bikes parked on the hills in the background (not in winter) | `false` |
 
 ### Buildings
 

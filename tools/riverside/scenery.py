@@ -116,15 +116,14 @@ def kayaks(p, season):
               '</g>')
     return s
 
-# Two people riding bikes on the top of the near hill, far away, so they are
-# small. Each is (x of the left end, color, facing left). They are not drawn
-# in winter.
-CYCLISTS = [(610, "#C0392B", False), (1610, "#2E86C1", True)]
-def cyclists(p, season):
+# Two bikes parked on the top of the near hill, far away, so they are small.
+# Each is (x of the left end, color, facing left). They are not drawn in
+# winter.
+HILL_BIKES = [(610, "#C0392B", False), (1610, "#2E86C1", True)]
+def hill_bikes(p, season):
     if season == "winter":
         return ""
-    return "".join(bicycle(x, near_hill_y(x + 12) + 3, 0.42, wall(c, p), left, (wall(c, p), wall("#E0B89A", p), wall("#34495E", p)))
-                   for x, c, left in CYCLISTS)
+    return "".join(bicycle(x, near_hill_y(x + 12) + 3, 0.42, wall(c, p), left) for x, c, left in HILL_BIKES)
 
 # The radio station stands on the near hill to the left of the river, where
 # the hill is nearly flat and high enough to show above most roofs. It is
@@ -161,7 +160,7 @@ def radio_scene(p, season, spec):
     return out + (f'<g transform="translate({RADIO_X - half:.1f},{ground - 900 * k:.1f}) scale({k})">'
                   + buildings.radio_draw(spec, 0, p, season) + '</g>')
 
-def hills(p, season, with_kayaks=True, with_cyclists=False, radio=None):
+def hills(p, season, with_kayaks=True, with_bikes=False, radio=None):
     t = "".join(pine(x, b, p, season) for x, b in TREES)
     s = f'''<path fill="{p["hillFar"]}" d="M0,700 C300,620 600,660 960,640 C1300,620 1620,780 1920,700 L1920,910 L0,910 Z"/>
 <path fill="{p["hill"]}" d="M0,780 C400,720 700,760 960,740 C1300,720 1520,840 1920,780 L1920,910 L0,910 Z"/>
@@ -170,7 +169,7 @@ def hills(p, season, with_kayaks=True, with_cyclists=False, radio=None):
 <g stroke="{p["riverHi"]}" stroke-width="4" stroke-linecap="round" fill="none">
 <path d="M962,672 L980,672"/><path d="M930,700 L972,700"/><path d="M860,758 L930,758"/><path d="M1010,770 L1080,770"/><path d="M760,832 L850,832"/><path d="M930,850 L1030,850"/></g>'''
     return (s + (kayaks(p, season) if with_kayaks else "")
-            + (cyclists(p, season) if with_cyclists else ""))
+            + (hill_bikes(p, season) if with_bikes else ""))
 
 def street(p, season, seed=11):
     """The sidewalk, curb, and road at the bottom of every town section. The

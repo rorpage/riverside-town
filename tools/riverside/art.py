@@ -217,10 +217,9 @@ def skewed(content, y, angle=-10):
 
 # ---------- Bicycles ----------
 # A bicycle is drawn in a 60x46 box: the wheels are at (12,38) and (46,38)
-# with a radius of 10. bicycle() draws the whole bike; bike_frame() draws it
-# without the wheels, for the street bike, whose wheels are a separate image
-# so they can spin.
-def bike_frame(color, rider=None, dark=DARK):
+# with a radius of 10. Bikes are always parked and empty: the art has no
+# people in it.
+def bike_frame(color, dark=DARK):
     s = (f'<g stroke="{color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none">'
          '<polyline points="12,38 26,38 22,22 12,38"/><polyline points="22,22 42,22 26,38"/>'
          '<polyline points="42,22 46,38"/></g>'
@@ -228,12 +227,6 @@ def bike_frame(color, rider=None, dark=DARK):
          '<line x1="40" y1="18" x2="45" y2="17"/><line x1="42" y1="22" x2="41" y2="17"/>'
          '<line x1="18" y1="18" x2="25" y2="18"/><line x1="22" y1="22" x2="21" y2="18"/>'
          '<line x1="23" y1="41" x2="29" y2="35"/></g>')
-    if rider:
-        shirt, skin, helmet = rider
-        s += (f'<path d="M21,17 L28,27 L26,38" stroke="#34495E" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
-              f'<path d="M21,17 L33,5" stroke="{shirt}" stroke-width="6" stroke-linecap="round"/>'
-              f'<path d="M32,7 L43,17" stroke="{shirt}" stroke-width="3" stroke-linecap="round"/>'
-              f'<circle cx="36" cy="1" r="4" fill="{skin}"/><path d="M31.5,0 A5,5 0 0 1 41,-1 Z" fill="{helmet}"/>')
     return s
 
 def bike_wheels(dark=DARK, rim="#9CA6B1"):
@@ -241,10 +234,10 @@ def bike_wheels(dark=DARK, rim="#9CA6B1"):
                    f'<circle cx="{cx}" cy="38" r="7" fill="none" stroke="{rim}" stroke-width="0.8"/>'
                    f'<circle cx="{cx}" cy="38" r="1.4" fill="{rim}"/>' for cx in (12, 46))
 
-def bicycle(x, ground, scale, color, left=False, rider=None):
+def bicycle(x, ground, scale, color, left=False):
     """A bicycle standing on the ground line at y=ground, with its left end at
     x. scale 1 is 60 pixels wide."""
-    body = bike_frame(color, rider) + bike_wheels()
+    body = bike_frame(color) + bike_wheels()
     if left:
         body = f'<g transform="translate(60,0) scale(-1,1)">{body}</g>'
     return f'<g transform="translate({x:.1f},{ground - 48 * scale:.1f}) scale({scale})">{body}</g>'
