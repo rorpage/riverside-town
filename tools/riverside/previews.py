@@ -78,7 +78,8 @@ def temp_text(town, f):
 
 def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=None, plane=None, pets=(), near_car="sports"):
     """One screen of the town, showing town section number section. plane is
-    the (x, y) of an airplane, or None. pets is a list of (image name, x)."""
+    the (x, y) of an airplane, or None. pets is a list of (animal, x), where
+    animal is an entry of town["pets"]."""
     p = season_palette(pal, season)
     sky_im = Image.new("RGBA", (1920, 1080))
     stars = Image.open(os.path.join(images, "stars.png")).convert("RGBA")
@@ -103,9 +104,10 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
         im.alpha_composite(Image.open(os.path.join(images, "fireflies_a.png")).convert("RGBA").resize((1920, 400)), (0, 540))
     if plane and town["extras"]["airplane"]:
         im.alpha_composite(Image.open(os.path.join(images, f"plane_{pal}.png")).convert("RGBA").resize((56, 22), Image.LANCZOS), plane)
-    for name, px in pets:
-        pet = Image.open(os.path.join(images, f"{name}.png")).convert("RGBA")
-        pet = pet.resize((round(pet.width * 0.7), round(pet.height * 0.7)), Image.LANCZOS)
+    for animal, px in pets:
+        pet = Image.open(os.path.join(images, f"{animal['image']}.png")).convert("RGBA")
+        k = 0.7 * (0.75 if animal["small"] else 1)   # Copies PET_SCALE and SMALL_PET in generate_images.py
+        pet = pet.resize((round(pet.width * k), round(pet.height * k)), Image.LANCZOS)
         im.alpha_composite(pet, (px, 924 - pet.height))
     parked(town, images, im, section, "van" if pal == "day" else "sedan")
     cars = town["cars"]
@@ -137,7 +139,7 @@ def write_all(town, layers, images, build, docs=None):
     # The README previews. The animals are shown in the last section.
     last = n - 1
     rnd = random.Random(3)
-    pets = [(name, 240 + k * 1500 // max(1, len(town["pets"]))) for k, name in enumerate(town["pets"])]
+    pets = [(animal, 200 + k * 1560 // max(1, len(town["pets"]))) for k, animal in enumerate(town["pets"])]
     rnd.shuffle(pets)
     shots = [("preview.png", 1280, dict(pal="day", season="summer", hour=(10, 4), temp=84, cond="Clear", section=0, plane=(560, 262)))]
     for season, temp, cond, fx in (("spring", 62, "Partly cloudy", None), ("summer", 84, "Clear", None),

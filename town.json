@@ -37,8 +37,13 @@
   "radio_station": { "name": "WRVR", "small_line": "River Radio", "power": "50,000" },
   "pets": [
     { "type": "cat", "color": "black" },
-    { "type": "cat", "color": "tabby" },
-    { "type": "guinea_pig", "color": "white_orange" }
+    { "type": "cat", "color": "tabby", "size": "small" },
+    { "type": "cat", "color": "white" },
+    { "type": "cat", "color": "gray_white" },
+    { "type": "guinea_pig", "color": "white_orange" },
+    { "type": "dog", "color": "yellow_lab" },
+    { "type": "dog", "color": "beagle" },
+    { "type": "dog", "color": "dachshund" }
   ],
   "cars": ["sedan", "van", "jeep", "truck", "sports", "buggy"],
   "extras": {

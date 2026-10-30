@@ -22,6 +22,16 @@
     },
     {
       "image": "cat_tabby",
+      "w": 31,
+      "h": 34
+    },
+    {
+      "image": "cat_white",
+      "w": 42,
+      "h": 45
+    },
+    {
+      "image": "cat_gray_white",
       "w": 42,
       "h": 45
     },
@@ -29,6 +39,21 @@
       "image": "guinea_white_orange",
       "w": 45,
       "h": 28
+    },
+    {
+      "image": "dog_yellow_lab",
+      "w": 67,
+      "h": 47
+    },
+    {
+      "image": "dog_beagle",
+      "w": 54,
+      "h": 35
+    },
+    {
+      "image": "dog_dachshund",
+      "w": 54,
+      "h": 31
     }
   ],
   "parkedCarX": 2788,
