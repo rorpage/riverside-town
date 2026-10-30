@@ -10,7 +10,7 @@ into place with shift(). Their ORIGIN value is the left edge of that drawing.
 """
 import math
 from .art import (ACCENT, ICON, WHITE, DARK, wall, text, text_width, fit_size, sign, shift, arch,
-                  snow_flat, snow_ridge, pumpkins, flower_box, round_tree)
+                  snow_flat, snow_ridge, pumpkins, flower_box, round_tree, is_dark, skewed, bicycle)
 
 def colors(p):
     return p["houseA"], p["houseB"], p["wall2"], p["roof"], p["window"]
@@ -442,8 +442,270 @@ def drive_draw(s, x, p, season):
 def tree_width(s):
     return 80
 
+TREE_SIZES = [(56, 30), (46, 25), (62, 34)]   # Trunk height and top radius
+
 def tree_draw(s, x, p, season):
-    return round_tree(x + 40, 900, 56, 30, p, season)
+    h, r = TREE_SIZES[s.get("size", 0) % len(TREE_SIZES)]
+    return round_tree(x + 40, 900, h, r, p, season)
+
+# ---------- radio station ----------
+RUST = "#9C4A3A"
+
+def lattice_tower(cx, base, top, base_w, top_w, color, p, levels=5, legs=3):
+    """A steel lattice tower, narrower at the top, with cross bracing and a red
+    light on top that is lit at dusk and night."""
+    out = f'<g stroke="{color}" stroke-linecap="round" fill="none">'
+    ys = [base + (top - base) * i / levels for i in range(levels + 1)]
+    half = [base_w / 2 + (top_w / 2 - base_w / 2) * i / levels for i in range(levels + 1)]
+    out += (f'<line x1="{cx - half[0]:.1f}" y1="{base}" x2="{cx - half[-1]:.1f}" y2="{top}" stroke-width="{legs}"/>'
+            f'<line x1="{cx + half[0]:.1f}" y1="{base}" x2="{cx + half[-1]:.1f}" y2="{top}" stroke-width="{legs}"/>')
+    for i in range(levels):
+        y0, y1, h0, h1 = ys[i], ys[i + 1], half[i], half[i + 1]
+        out += (f'<line x1="{cx - h1:.1f}" y1="{y1:.1f}" x2="{cx + h1:.1f}" y2="{y1:.1f}" stroke-width="1.6"/>'
+                f'<line x1="{cx - h0:.1f}" y1="{y0:.1f}" x2="{cx + h1:.1f}" y2="{y1:.1f}" stroke-width="1.2"/>'
+                f'<line x1="{cx + h0:.1f}" y1="{y0:.1f}" x2="{cx - h1:.1f}" y2="{y1:.1f}" stroke-width="1.2"/>')
+    out += f'</g><line x1="{cx}" y1="{top}" x2="{cx}" y2="{top - 10}" stroke="{color}" stroke-width="2"/>'
+    if is_dark(p):
+        out += (f'<circle cx="{cx}" cy="{top - 11}" r="7" fill="#E74C3C" fill-opacity="0.3"/>'
+                f'<circle cx="{cx}" cy="{top - 11}" r="2.6" fill="#E74C3C"/>')
+    else:
+        out += f'<circle cx="{cx}" cy="{top - 11}" r="2" fill="#C0392B"/>'
+    return out
+
+def antenna(x, base, height, color):
+    """A thin mast with two cross arms."""
+    top = base - height
+    return (f'<g stroke="{color}" stroke-width="1.6" stroke-linecap="round">'
+            f'<line x1="{x}" y1="{base}" x2="{x}" y2="{top}"/>'
+            f'<line x1="{x - 9}" y1="{top + 6}" x2="{x + 9}" y2="{top + 6}"/>'
+            f'<line x1="{x - 6}" y1="{top + 14}" x2="{x + 6}" y2="{top + 14}"/></g>')
+
+def radio_width(s):
+    return 480
+
+def call_letters(s, cx, base, size, p):
+    """The call letters in slanted red letters with a black outline and a drop
+    shadow. Like the WSQK logo, the first Q is drawn as an O with a lightning
+    bolt for its tail."""
+    name, font = s["name"], s["font"]
+    fill, shade = s["letter_color"], DARK
+    label = name.replace("Q", "O", 1)
+    body = (text(label, font, 400, size, cx + 3, base + 3, shade, 1)
+            + text(label, font, 400, size, cx, base, fill, 1, shade, 1.2))
+    if "Q" in name:
+        total = text_width(label, font, 400, size, 1)
+        i = name.index("Q")
+        qx = cx - total / 2 + text_width(label[:i], font, 400, size, 1) + (1 if i else 0)
+        qw = text_width("O", font, 400, size)
+        # The bolt starts inside the bottom of the O and ends in a point below
+        # the line, to the right of the letter's center
+        pts = [(0.42, -0.2), (0.8, -0.2), (0.66, 0.06), (0.88, 0.06), (0.52, 0.44), (0.6, 0.17), (0.38, 0.17)]
+        poly = " ".join(f"{qx + qw * a:.1f},{base + size * b:.1f}" for a, b in pts)
+        body = (f'<polygon points="{poly}" fill="{shade}" transform="translate(3,3)"/>' + body
+                + f'<polygon points="{poly}" fill="{fill}" stroke="{shade}" stroke-width="1.4" stroke-linejoin="round"/>')
+    return skewed(body, base)
+
+# The tall tower behind the radio station, in a TOWER_W x TOWER_H box with its
+# center at x=150 and its ground at y=TOWER_GROUND. The station covers its base.
+TOWER_W, TOWER_H, TOWER_GROUND = 300, 600, 595
+
+def tower_svg(p):
+    return lattice_tower(150, TOWER_GROUND, 40, 280, 24, wall(RUST, p), p, 10, 4)
+
+def radio_draw(s, x, p, season):
+    """A radio station like a 1940s brick broadcast building: a rounded center
+    with the call letters across the top and a wall of windows, a low wing with
+    a door on each side, and antennas, with its ground at y=900. It stands on
+    the hill beside the river; radio_scene() in scenery.py places it there, at
+    a smaller size, with tower_svg() behind it."""
+    A, B, W2, R, Wn = colors(p)
+    brick = wall(s["color"], p)
+    line = wall("#B8AC98", p)
+    out = antenna(x + 46, 770, 46, line) + antenna(x + 434, 770, 52, line)
+    # Wings, each with a recessed glass door and steps
+    for wx in (x, x + 380):
+        out += (f'<rect x="{wx}" y="770" width="100" height="130" fill="{brick}"/>'
+                f'<rect x="{wx - 2}" y="766" width="104" height="7" fill="{line}"/>'
+                + snow_flat(season, p, wx - 2, 766, 104) +
+                f'<rect x="{wx + 22}" y="800" width="56" height="92" fill="{R}"/>'
+                f'<rect x="{wx + 27}" y="806" width="21" height="86" fill="{Wn}"/><rect x="{wx + 52}" y="806" width="21" height="86" fill="{Wn}"/>'
+                f'<rect x="{wx + 16}" y="892" width="68" height="8" fill="{p["curb"]}"/>')
+    # The rounded center, shaded at both ends so it looks curved
+    out += f'<rect x="{x + 90}" y="692" width="300" height="208" fill="{brick}"/>'
+    for i, a in enumerate((0.16, 0.1, 0.05)):
+        out += (f'<rect x="{x + 90 + i * 10}" y="692" width="10" height="208" fill="#000" fill-opacity="{a}"/>'
+                f'<rect x="{x + 380 - i * 10}" y="692" width="10" height="208" fill="#000" fill-opacity="{a}"/>')
+    out += (f'<rect x="{x + 86}" y="686" width="308" height="9" rx="4" fill="{line}"/>'
+            + snow_flat(season, p, x + 86, 686, 308))
+    # Brick lines
+    out += f'<g stroke="{line}" stroke-width="1" stroke-opacity="0.45">'
+    for y in range(704, 900, 9):
+        out += f'<line x1="{x + 90}" y1="{y}" x2="{x + 390}" y2="{y}"/>'
+        if y > 776:
+            out += f'<line x1="{x}" y1="{y}" x2="{x + 22}" y2="{y}"/><line x1="{x + 78}" y1="{y}" x2="{x + 90}" y2="{y}"/>'
+            out += f'<line x1="{x + 390}" y1="{y}" x2="{x + 402}" y2="{y}"/><line x1="{x + 458}" y1="{y}" x2="{x + 480}" y2="{y}"/>'
+    out += '</g>'
+    # The wall of windows
+    out += f'<rect x="{x + 128}" y="798" width="224" height="72" fill="{R}"/>'
+    for col in range(7):
+        for row in range(3):
+            out += f'<rect x="{x + 131 + col * 31.4:.1f}" y="{801 + row * 22.6:.1f}" width="28.6" height="20" fill="{Wn}"/>'
+    out += f'<rect x="{x + 116}" y="870" width="248" height="30" fill="{wall("#CFC5B4", p)}"/>'
+    # The sign: call letters, the power on each side, and a line below
+    room = 220
+    if s.get("power"):
+        room = 170
+        out += (text(s["power"], "oswald", 600, 13, x + 128, 757, R, 1)
+                + text("WATTS", "oswald", 600, 13, x + 352, 757, R, 2))
+    size = fit_size(s["name"], s["font"], 400, s.get("sign_size", 46), room, 1)
+    out += call_letters(s, x + 240, 758, size, p)
+    if s.get("small_line"):
+        tsize = fit_size(s["small_line"], "kaushan", 400, 15, 200)
+        out += text(s["small_line"], "kaushan", 400, tsize, x + 240, 793, R)
+    return out + pumpkins(season, x + 104, 900)
+
+# ---------- gazebo ----------
+GAZEBO_SCALE = 0.8   # The gazebo is drawn smaller than its first design
+
+def gazebo_width(s):
+    return round((262 + (150 if s.get("name") else 0)) * GAZEBO_SCALE)
+
+def gazebo_building(s, x, p, season):
+    k = GAZEBO_SCALE
+    return f'<g transform="translate({x},{900 - 900 * k:.1f}) scale({k})">' + gazebo_draw(s, 0, p, season) + '</g>'
+
+def town_sign(s, x, p, season):
+    """A sign in a white frame with lattice below it, like a town welcome sign."""
+    white = wall(WHITE, p)
+    board = s.get("sign_color", "#2F5F9E")
+    out = (f'<rect x="{x + 6}" y="762" width="9" height="138" fill="{white}"/><rect x="{x + 125}" y="762" width="9" height="138" fill="{white}"/>'
+           f'<circle cx="{x + 10.5}" cy="758" r="6" fill="{white}"/><circle cx="{x + 129.5}" cy="758" r="6" fill="{white}"/>'
+           f'<rect x="{x + 2}" y="768" width="136" height="66" fill="{white}"/><rect x="{x + 7}" y="773" width="126" height="56" fill="{board}"/>'
+           + snow_flat(season, p, x + 2, 768, 136))
+    size = fit_size(s["name"], s["font"], s["weight"], 19, 114, 1)
+    out += text(s["name"], s["font"], s["weight"], size, x + 70, 800, WHITE, 1)
+    if s.get("small_line"):
+        small = fit_size(s["small_line"], s["font"], 600, 10, 110, 1.5)
+        out += (f'<line x1="{x + 20}" y1="807" x2="{x + 120}" y2="807" stroke="{WHITE}" stroke-width="0.8"/>'
+                + text(s["small_line"], s["font"], 600, small, x + 70, 821, WHITE, 1.5))
+    # Lattice under the sign
+    out += f'<g stroke="{white}" stroke-width="2"><rect x="{x + 15}" y="840" width="110" height="46" fill="none"/>'
+    for i in range(-4, 12):
+        x0 = x + 15 + i * 12
+        out += f'<line x1="{x0}" y1="886" x2="{x0 + 46}" y2="840"/><line x1="{x0}" y1="840" x2="{x0 + 46}" y2="886"/>'
+    out += '</g>'
+    return (f'<defs><clipPath id="lattice{x}"><rect x="{x + 15}" y="840" width="110" height="46"/></clipPath></defs>'
+            + out.replace('<g stroke="', f'<g clip-path="url(#lattice{x})" stroke="', 1)
+            + f'<rect x="{x + 15}" y="840" width="110" height="46" fill="none" stroke="{white}" stroke-width="2"/>'
+            + pumpkins(season, x + 50))
+
+def gazebo_draw(s, x, p, season):
+    """An eight-sided gazebo on a brick base, with a shingled roof, a small
+    cupola on top, white posts and railings, and front steps, drawn with its
+    ground at y=900. It is decorated for each season. With a name, a town sign
+    stands to its left. It is drawn full size here; gazebo_building() makes
+    it smaller."""
+    A, B, W2, R, Wn = colors(p)
+    out = ""
+    if s.get("name"):
+        out += town_sign(s, x, p, season)
+        x += 150
+    white = wall(WHITE, p)
+    roof = wall("#5E5850", p)
+    brick = wall(s["color"], p)
+    # Shadowed inside, behind the posts
+    out += f'<rect x="{x + 20}" y="760" width="222" height="98" fill="{R}" fill-opacity="0.35"/>'
+    for cx in (52, 210):
+        out += f'<rect x="{x + cx - 3}" y="764" width="6" height="92" fill="{wall("#D9E2EA", p)}"/>'
+    # Brick base and front steps
+    out += (f'<rect x="{x + 10}" y="862" width="242" height="38" fill="{brick}"/>'
+            f'<g stroke="{wall("#7E3F2F", p)}" stroke-width="1" stroke-opacity="0.6">'
+            + "".join(f'<line x1="{x + 10}" y1="{y}" x2="{x + 252}" y2="{y}"/>' for y in (871, 880, 889)) + '</g>'
+            f'<rect x="{x + 6}" y="856" width="250" height="8" fill="{white}"/>')
+    for i, (w, y) in enumerate(((64, 862), (74, 874), (84, 886))):
+        out += f'<rect x="{x + 131 - w / 2}" y="{y}" width="{w}" height="{900 - y}" fill="{W2}"/><rect x="{x + 131 - w / 2}" y="{y}" width="{w}" height="2" fill="{white}"/>'
+    out += (f'<g stroke="{white}" stroke-width="3" stroke-linecap="round">'
+            f'<line x1="{x + 97}" y1="832" x2="{x + 87}" y2="896"/><line x1="{x + 165}" y1="832" x2="{x + 175}" y2="896"/></g>')
+    # Railings on each side of the steps
+    for x0, x1 in ((x + 24, x + 97), (x + 165, x + 238)):
+        out += f'<rect x="{x0}" y="828" width="{x1 - x0}" height="4" fill="{white}"/><rect x="{x0}" y="850" width="{x1 - x0}" height="3" fill="{white}"/>'
+        out += "".join(f'<rect x="{bx}" y="832" width="2" height="18" fill="{white}"/>' for bx in range(x0 + 4, x1, 7))
+    # Front posts
+    posts = (22, 97, 165, 240)
+    for cx in posts:
+        out += f'<rect x="{x + cx - 4}" y="760" width="8" height="98" fill="{white}"/>'
+    # Eave, roof, and cupola
+    out += (f'<rect x="{x + 2}" y="748" width="258" height="14" fill="{white}"/>'
+            + "".join(f'<path d="M{x + 6 + i * 25},762 Q{x + 18.5 + i * 25},770 {x + 31 + i * 25},762" fill="none" stroke="{white}" stroke-width="2"/>' for i in range(10)) +
+            f'<polygon points="{x - 8},750 {x + 270},750 {x + 196},698 {x + 66},698" fill="{roof}"/>'
+            f'<g stroke="#000" stroke-opacity="0.12" stroke-width="1.2">'
+            + "".join(f'<line x1="{x - 8 + (750 - y) * 74 / 52:.1f}" y1="{y}" x2="{x + 270 - (750 - y) * 74 / 52:.1f}" y2="{y}"/>' for y in range(742, 700, -8)) + '</g>'
+            f'<rect x="{x + 104}" y="672" width="54" height="28" fill="{white}"/>'
+            + "".join(f'<rect x="{x + 110 + i * 15}" y="678" width="10" height="14" fill="{R}"/>' for i in range(3)) +
+            f'<polygon points="{x + 96},674 {x + 166},674 {x + 150},658 {x + 112},658" fill="{roof}"/>'
+            f'<rect x="{x + 112}" y="654" width="38" height="5" fill="{white}"/>'
+            + snow_ridge(season, p, (x - 6, 747), (x + 66, 696), (x + 196, 696), (x + 268, 747))
+            + snow_ridge(season, p, (x + 98, 671), (x + 112, 656), (x + 150, 656), (x + 164, 671)))
+    # String lights along the eave at dusk and night
+    if is_dark(p):
+        out += "".join(f'<circle cx="{x + 8 + i * 12.4:.1f}" cy="{765 + (3 if i % 2 else 0)}" r="2" fill="#F6E7B0"/>' for i in range(21))
+    # Decorations for each season
+    if season == "fall":
+        for a, b in zip(posts, posts[1:]):
+            if a == 97:
+                continue
+            out += (f'<path d="M{x + a},768 Q{x + (a + b) / 2},790 {x + b},768" fill="none" stroke="#C8662E" stroke-width="5" stroke-dasharray="4 3"/>'
+                    f'<path d="M{x + a},770 Q{x + (a + b) / 2},792 {x + b},770" fill="none" stroke="#B5523F" stroke-width="3" stroke-dasharray="3 5"/>')
+        for cx in posts:
+            out += f'<path d="M{x + cx},856 L{x + cx - 6},800 M{x + cx},856 L{x + cx + 6},804 M{x + cx},856 L{x + cx},796" stroke="#C9A55B" stroke-width="2.5"/>'
+        out += (f'<rect x="{x + 18}" y="884" width="40" height="16" rx="3" fill="#D9B45B"/><rect x="{x + 204}" y="884" width="40" height="16" rx="3" fill="#D9B45B"/>'
+                + pumpkins(season, x + 30, 884) + pumpkins(season, x + 186) + pumpkins(season, x + 222, 884))
+    elif season == "winter":
+        for cx in posts:
+            out += (f'<circle cx="{x + cx}" cy="790" r="9" fill="none" stroke="#2F5D3A" stroke-width="5"/>'
+                    f'<path d="M{x + cx - 4},799 L{x + cx},795 L{x + cx + 4},799" stroke="#C0392B" stroke-width="2.5" fill="none"/>')
+    else:
+        flowers = ["#F2B8C6", "#F6C46A", "#E8703F"] if season == "spring" else ["#E86A92", "#F8FAFC", "#B5523F"]
+        for cx in (60, 131, 202):
+            out += (f'<line x1="{x + cx}" y1="762" x2="{x + cx}" y2="774" stroke="{R}" stroke-width="1"/>'
+                    f'<path d="M{x + cx - 8},774 Q{x + cx},786 {x + cx + 8},774 Z" fill="#6B4A3A"/>'
+                    f'<circle cx="{x + cx}" cy="776" r="7" fill="#5E8B6B"/>'
+                    + "".join(f'<circle cx="{x + cx + dx}" cy="{774 + dy}" r="2.4" fill="{c}"/>' for (dx, dy), c in zip(((-4, 0), (3, -2), (0, 4), (5, 3)), flowers * 2)))
+    return out
+
+# ---------- bike rack ----------
+BIKE_COLORS = ["#C0392B", "#2E86C1", "#F2B33D", "#27AE60", "#8E44AD"]
+
+def rack_width(s):
+    return 140
+
+def rack_draw(s, x, p, season):
+    """A bike rack on the sidewalk with three bikes. The bikes stand in front of
+    the street drawing, so this draws only the rack; layer_bikes() adds the
+    bikes."""
+    return ""
+
+def rack_bikes(x, p, season, start=0):
+    metal = wall("#9CA6B1", p)
+    out = "".join(f'<path d="M{x + 18 + i * 38},922 L{x + 18 + i * 38},898 A11,11 0 0 1 {x + 40 + i * 38},898 L{x + 40 + i * 38},922" fill="none" stroke="{metal}" stroke-width="3"/>' for i in range(3))
+    out += "".join(bicycle(x + i * 38, 924, 1.0, BIKE_COLORS[(start + i) % len(BIKE_COLORS)], left=i % 2 == 1) for i in range(3))
+    if season == "winter":
+        out += f'<rect x="{x + 14}" y="883" width="106" height="5" rx="2" fill="{p["snow"]}"/>'
+    return out
+
+def sidewalk_bikes(section, p, season, extras):
+    """Bikes drawn after the street: the bikes in each bike rack, and, with the
+    bikes extra on, a bike in front of every other shop."""
+    out, n = "", 0
+    for b, x in section:
+        if b["type"] == "bike_rack":
+            out += rack_bikes(x, p, season, n)
+            n += 3
+        elif extras.get("bikes") and b["type"] == "shop":
+            if n % 2 == 0:
+                out += bicycle(x + 6, 922, 1.0, BIKE_COLORS[n // 2 % len(BIKE_COLORS)])
+            n += 1
+    return out
 
 TYPES = {
     "house": (house_width, house_draw),
@@ -454,6 +716,8 @@ TYPES = {
     "gas_station": (gas_width, gas_draw),
     "drive_through": (drive_width, drive_draw),
     "tree": (tree_width, tree_draw),
+    "gazebo": (gazebo_width, gazebo_building),
+    "bike_rack": (rack_width, rack_draw),
 }
 
 def width(spec):

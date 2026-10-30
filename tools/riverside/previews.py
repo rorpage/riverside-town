@@ -46,7 +46,7 @@ def parked(town, images, im, section, name):
 def mountains(town, p, season):
     mtn = season if season == "winter" else "summer"
     return (scenery.clouds(p, season) + scenery.far(p, mtn, town["extras"]["table_mountain"]) + scenery.near(p, mtn)
-            + scenery.hills(p, season, town["extras"]["kayaks"]))
+            + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"]))
 
 def composite(town, layers, pal, section, season):
     p = season_palette(pal, season)
@@ -96,7 +96,7 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     mtn = season if season == "winter" else "summer"
     far = scenery.far(p, mtn, town["extras"]["table_mountain"]) if section % 2 == 0 else scenery.far_b(p, mtn)
     near = scenery.near(p, mtn) if section % 2 == 0 else scenery.near_b(p, mtn)
-    art_svg = (scenery.clouds(p, season) + far + near + scenery.hills(p, season, town["extras"]["kayaks"])
+    art_svg = (scenery.clouds(p, season) + far + near + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"])
                + layers[f"town_{LETTERS[section]}"](p, season))
     im.alpha_composite(Image.open(io.BytesIO(render(art_svg, "0 0 1920 1080", 1920, 1080))).convert("RGBA"))
     if season == "summer" and pal == "night" and town["extras"]["fireflies"]:

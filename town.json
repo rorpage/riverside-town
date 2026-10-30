@@ -9,6 +9,7 @@
     { "type": "bakery", "name": "Bakery" },
     "117",
     { "type": "bookstore", "name": "Books", "small_line": "USED" },
+    { "type": "bike_rack" },
     { "type": "shop", "name": "HARDWARE", "stories": 2, "window_lettering": "TOOLS AND PAINT" },
     "125",
     { "type": "diner", "name": "Diner" },
@@ -30,10 +31,10 @@
     { "type": "school", "name": "RIVERSIDE SCHOOL", "bell_tower": true },
     "301",
     { "type": "church", "name": "Chapel", "style": "tower" },
-    { "type": "shop", "name": "Cafe", "font": "lora", "awning": "striped", "awning_colors": ["#B5523F", "#F8FAFC"] },
     { "type": "computer_store", "name": "Computers" },
-    { "type": "columned_hall", "name": "TOWN HALL" }
+    { "type": "gazebo", "name": "RIVERSIDE", "small_line": "FOUNDED 1890" }
   ],
+  "radio_station": { "name": "WRVR", "small_line": "River Radio", "power": "50,000" },
   "pets": [
     { "type": "cat", "color": "black" },
     { "type": "cat", "color": "tabby" },
@@ -46,6 +47,7 @@
     "fireflies": true,
     "falling_leaves": true,
     "seasons": true,
-    "table_mountain": false
+    "table_mountain": false,
+    "bikes": true
   }
 }

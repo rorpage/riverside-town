@@ -169,6 +169,7 @@ def write(out):
              + wells([(52, 84), (198, 84)], 28))
     save(buggy, "0 0 250 112", 250, 112, "car_buggy.png")
 
+
     # Animals that sit on the sidewalk. MainScene.brs places them at random spots
     # when the screensaver starts. They are drawn larger than they are shown
     # (42x45 for cats and 45x28 for guinea pigs) so their edges stay smooth. They

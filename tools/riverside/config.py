@@ -52,13 +52,20 @@ DEFAULTS = {
                         color="#E2E7EE", font="oswald", weight=600),
     "drive_through": dict(font="script", weight=700, color=WHITE, roof_color="#D62E3C"),
     "tree": dict(),
+    "gazebo": dict(color="#A9553F", font="playfair", weight=700),
+    "bike_rack": dict(),
     "section_break": dict(),
 }
 
 CARS = ["sedan", "van", "jeep", "truck", "sports", "buggy"]
 PETS = {"cat": ["black", "gray", "tabby"], "guinea_pig": ["black_orange", "white_orange"]}
 EXTRAS = {"airplane": True, "kayaks": True, "fireflies": True, "falling_leaves": True, "seasons": True,
-          "table_mountain": False}
+          "table_mountain": False, "bikes": False}
+RADIO = dict(color="#E4DCCD", font="racing", weight=400, letter_color="#D32F2F", tower=True)
+
+# Text fields that are not drawn with the building's own font
+FIELD_FONTS = {("radio_station", "small_line"): "kaushan", ("radio_station", "power"): "oswald",
+               ("gas_station", "canopy_name"): "oswald"}
 
 def validate(data):
     try:
@@ -151,6 +158,16 @@ def fill(data):
     town["hemisphere"] = data.get("hemisphere", "north")
     town["cars"] = data.get("cars", CARS)
     town["extras"] = dict(EXTRAS, **data.get("extras", {}))
+    # The radio station on the hill beside the river
+    radio = data.get("radio_station")
+    town["radio_station"] = None
+    if radio:
+        town["radio_station"] = spec = dict(RADIO, **radio)
+        for key in ("name", "small_line", "power"):
+            font = FIELD_FONTS.get(("radio_station", key), spec["font"])
+            bad = check_text(str(spec[key]), font) if spec.get(key) else []
+            if bad:
+                raise ConfigError(f"radio_station: the font {font} cannot draw {' '.join(bad)} in \"{spec[key]}\".")
     town["pets"] = [f"{'cat' if p['type'] == 'cat' else 'guinea'}_{p['color']}" for p in data.get("pets", [])]
     for i, p in enumerate(data.get("pets", [])):
         if p["color"] not in PETS[p["type"]]:
@@ -192,9 +209,9 @@ def fill(data):
             spec.setdefault("color", "#D8CFC2")
         if kind in ("shop", "church", "school", "columned_hall", "drive_through") and not spec.get("name"):
             raise ConfigError(f"{where}: a {kind} needs a \"name\".")
-        for key in ("name", "number", "small_line", "store_name", "canopy_name"):
+        for key in ("name", "number", "small_line", "store_name", "canopy_name", "power"):
             if spec.get(key):
-                font = spec["font"] if key not in ("canopy_name",) else "oswald"
+                font = FIELD_FONTS.get((kind, key), spec.get("font"))
                 if font not in FONTS:
                     raise ConfigError(f"{where}: there is no font called {font}. The fonts are: {', '.join(sorted(FONTS))}.")
                 bad = check_text(str(spec[key]), font)

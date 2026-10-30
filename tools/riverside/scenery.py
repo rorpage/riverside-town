@@ -1,7 +1,8 @@
 """The scenery layers behind the town: sky, clouds, mountains, hills with the
 river, and the street."""
 import random
-from .art import wall, round_tree, pine
+from .art import wall, round_tree, pine, bicycle
+from . import buildings
 
 def sky(p):
     return (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/>'
@@ -115,15 +116,60 @@ def kayaks(p, season):
               '</g>')
     return s
 
-def hills(p, season, with_kayaks=True):
+# Two bikes parked on the top of the near hill, far away, so they are small.
+# Each is (x of the left end, color, facing left). They are not drawn in
+# winter.
+HILL_BIKES = [(610, "#C0392B", False), (1610, "#2E86C1", True)]
+def hill_bikes(p, season):
+    if season == "winter":
+        return ""
+    return "".join(bicycle(x, near_hill_y(x + 12) + 3, 0.42, wall(c, p), left) for x, c, left in HILL_BIKES)
+
+# The radio station stands on the near hill to the left of the river, where
+# the hill is nearly flat and high enough to show above most roofs. It is
+# drawn at RADIO_SCALE, because the hills are farther away than the street,
+# with its tall tower behind it. RADIO_X is the center of the station.
+RADIO_X, RADIO_SCALE = 400, 0.55
+
+def near_hill_y(x):
+    """The y of the top of the near hill at x. The hill is two curves:
+    (0,780) C(400,720) (700,760) (960,740), and (960,740) C(1300,720)
+    (1520,840) (1920,780)."""
+    if x < 960:
+        p0, p1, p2, p3 = (0, 780), (400, 720), (700, 760), (960, 740)
+    else:
+        p0, p1, p2, p3 = (960, 740), (1300, 720), (1520, 840), (1920, 780)
+    lo, hi = 0.0, 1.0
+    for _ in range(40):
+        t = (lo + hi) / 2
+        bx = (1 - t) ** 3 * p0[0] + 3 * (1 - t) ** 2 * t * p1[0] + 3 * (1 - t) * t ** 2 * p2[0] + t ** 3 * p3[0]
+        lo, hi = (t, hi) if bx < x else (lo, t)
+    return (1 - t) ** 3 * p0[1] + 3 * (1 - t) ** 2 * t * p1[1] + 3 * (1 - t) * t ** 2 * p2[1] + t ** 3 * p3[1]
+
+def radio_scene(p, season, spec):
+    """The radio station and its tower on the hill. The ground line is the
+    lowest point of the hill under the base, so no part of the base is above
+    the ground."""
+    k = RADIO_SCALE
+    half = buildings.radio_width(spec) / 2 * k
+    ground = max(near_hill_y(RADIO_X + half * i / 10) for i in range(-10, 11)) + 1
+    out = ""
+    if spec.get("tower", True):
+        out += (f'<g transform="translate({RADIO_X - buildings.TOWER_W / 2 * k:.1f},{ground - buildings.TOWER_GROUND * k:.1f}) scale({k})">'
+                + buildings.tower_svg(p) + '</g>')
+    return out + (f'<g transform="translate({RADIO_X - half:.1f},{ground - 900 * k:.1f}) scale({k})">'
+                  + buildings.radio_draw(spec, 0, p, season) + '</g>')
+
+def hills(p, season, with_kayaks=True, with_bikes=False, radio=None):
     t = "".join(pine(x, b, p, season) for x, b in TREES)
     s = f'''<path fill="{p["hillFar"]}" d="M0,700 C300,620 600,660 960,640 C1300,620 1620,780 1920,700 L1920,910 L0,910 Z"/>
 <path fill="{p["hill"]}" d="M0,780 C400,720 700,760 960,740 C1300,720 1520,840 1920,780 L1920,910 L0,910 Z"/>
-{t}{round_tree(420, 796, 36, 30, p, season)}{round_tree(1500, 800, 36, 30, p, season)}
+{t}{radio_scene(p, season, radio) if radio else ""}{round_tree(130 if radio else 420, 796, 36, 30, p, season)}{round_tree(1500, 800, 36, 30, p, season)}
 <path fill="{p["river"]}" d="M958,647 C935,668 1000,695 900,730 C760,780 640,800 560,900 L1080,900 C1100,820 1180,790 1240,750 C1320,700 1060,675 1000,662 C985,656 968,650 958,647 Z"/>
 <g stroke="{p["riverHi"]}" stroke-width="4" stroke-linecap="round" fill="none">
 <path d="M962,672 L980,672"/><path d="M930,700 L972,700"/><path d="M860,758 L930,758"/><path d="M1010,770 L1080,770"/><path d="M760,832 L850,832"/><path d="M930,850 L1030,850"/></g>'''
-    return s + (kayaks(p, season) if with_kayaks else "")
+    return (s + (kayaks(p, season) if with_kayaks else "")
+            + (hill_bikes(p, season) if with_bikes else ""))
 
 def street(p, season, seed=11):
     """The sidewalk, curb, and road at the bottom of every town section. The

@@ -36,14 +36,16 @@ SEASONAL = {"far": ["winter"], "far_b": ["winter"], "near": ["winter"], "near_b"
 # Each layer is cropped to the band it uses: name -> (y, height). These must
 # match the strips in components/MainScene.xml.
 CROPS = {"clouds": (90, 255), "far": (295, 425), "far_b": (295, 425), "near": (400, 360), "near_b": (400, 360),
-         "hills": (600, 310), "town": (550, 530)}
+         "hills": (420, 490), "town": (550, 530)}
 
 # Animal image sizes on screen. They are drawn at a larger size so their
 # edges stay smooth.
 PET_SIZES = {"cat": (42, 45), "guinea": (45, 28)}
 
 def town_section(town, i, p, season):
-    return "".join(buildings.draw(b, x, p, season) for b, x in town["sections"][i]) + scenery.street(p, season, 11 + i)
+    section = town["sections"][i]
+    return ("".join(buildings.draw(b, x, p, season) for b, x in section) + scenery.street(p, season, 11 + i)
+            + buildings.sidewalk_bikes(section, p, season, town["extras"]))
 
 def layers(town):
     """Returns name -> drawing function(p, season) for every scenery layer."""
@@ -51,7 +53,7 @@ def layers(town):
     out = {"clouds": scenery.clouds,
            "far": lambda p, s: scenery.far(p, s, ex["table_mountain"]), "far_b": scenery.far_b,
            "near": scenery.near, "near_b": scenery.near_b,
-           "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"])}
+           "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], town["radio_station"])}
     for i in range(len(town["sections"])):
         out[f"town_{LETTERS[i]}"] = lambda p, s, i=i: town_section(town, i, p, s)
     return out

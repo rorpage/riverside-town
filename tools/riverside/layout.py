@@ -5,7 +5,8 @@ from .config import ConfigError
 SECTION = 1920
 MARGIN = 16        # Space at each end of a section, so no building crosses a section edge
 GAP = 12           # Smallest space between two buildings
-MAX_SPREAD = 40    # Most extra space added to each gap when a section is not full
+MAX_SPREAD = 60    # Most extra space added to each gap when a section is not full
+MAX_TREES = 3      # Most trees added at the end of a section
 TREE = 80          # Width of a tree (buildings.tree_width)
 MAX_SECTIONS = 5   # Each section uses about 4 MB of texture memory on the Roku
 
@@ -35,7 +36,8 @@ def split(items):
 
 def place(section):
     """Returns (spec, x) for each building in one section. Extra space is
-    spread between the buildings, and trees fill large spaces at the end."""
+    spread between the buildings, and up to MAX_TREES trees, in different
+    sizes, stand in the space left at the end."""
     widths = [buildings.width(b) for b in section]
     room = SECTION - 2 * MARGIN - sum(widths) - GAP * (len(section) - 1)
     spread = min(MAX_SPREAD, room // (len(section) + 1))
@@ -47,10 +49,10 @@ def place(section):
     # Trees in the space that is left at the end
     end = SECTION - MARGIN
     x -= spread
-    n = max(0, (end - x) // (TREE + GAP))
+    n = min(MAX_TREES, max(0, (end - x) // (TREE + GAP)))
     space = (end - x - n * TREE) / (n + 1)
     for k in range(n):
-        out.append(({"type": "tree"}, round(x + space * (k + 1) + TREE * k)))
+        out.append(({"type": "tree", "size": k}, round(x + space * (k + 1) + TREE * k)))
     return out
 
 def layout(town):
