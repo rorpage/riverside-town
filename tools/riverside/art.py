@@ -71,7 +71,8 @@ FONTS = {"oswald": "Oswald-Variable.ttf", "playfair": "PlayfairDisplay-Variable.
          "pacifico": "Pacifico-Regular.ttf", "amatic": "AmaticSC-Bold.ttf", "fredoka": "Fredoka-Variable.ttf",
          "lora": "Lora-Italic-Variable.ttf", "montserrat": "Montserrat-Variable.ttf", "raleway": "Raleway-Variable.ttf",
          "comfortaa": "Comfortaa-Variable.ttf", "josefin": "JosefinSans-Variable.ttf", "quicksand": "Quicksand-Variable.ttf",
-         "bitter": "Bitter-Variable.ttf", "sharetech": "ShareTechMono-Regular.ttf", "graduate": "Graduate-Regular.ttf"}
+         "bitter": "Bitter-Variable.ttf", "sharetech": "ShareTechMono-Regular.ttf", "graduate": "Graduate-Regular.ttf",
+         "racing": "RacingSansOne-Regular.ttf"}
 _glyphs = {}
 
 def glyphs(font, weight):
@@ -203,3 +204,47 @@ def pine(x, b, p, season):
         s += (f'<polygon points="{x},{b-52} {x-7},{b-36} {x},{b-39} {x+7},{b-36}" fill="{p["snow"]}"/>'
               f'<path d="M{x-12},{b-12} L{x-4},{b-15}" stroke="{p["snow"]}" stroke-width="3" stroke-linecap="round"/>')
     return s
+
+def is_dark(p):
+    """True for the dusk and night palettes, when lights are on."""
+    return p["window"] != P["day"]["window"]
+
+def skewed(content, y, angle=-10):
+    """Slants content like italic letters, keeping the line at y in place."""
+    import math
+    k = math.tan(math.radians(-angle))
+    return f'<g transform="translate({k * y:.2f},0) skewX({angle})">{content}</g>'
+
+# ---------- Bicycles ----------
+# A bicycle is drawn in a 60x46 box: the wheels are at (12,38) and (46,38)
+# with a radius of 10. bicycle() draws the whole bike; bike_frame() draws it
+# without the wheels, for the street bike, whose wheels are a separate image
+# so they can spin.
+def bike_frame(color, rider=None, dark=DARK):
+    s = (f'<g stroke="{color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none">'
+         '<polyline points="12,38 26,38 22,22 12,38"/><polyline points="22,22 42,22 26,38"/>'
+         '<polyline points="42,22 46,38"/></g>'
+         f'<g stroke="{dark}" stroke-width="2.2" stroke-linecap="round" fill="none">'
+         '<line x1="40" y1="18" x2="45" y2="17"/><line x1="42" y1="22" x2="41" y2="17"/>'
+         '<line x1="18" y1="18" x2="25" y2="18"/><line x1="22" y1="22" x2="21" y2="18"/>'
+         '<line x1="23" y1="41" x2="29" y2="35"/></g>')
+    if rider:
+        shirt, skin, helmet = rider
+        s += (f'<path d="M21,17 L28,27 L26,38" stroke="#34495E" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+              f'<path d="M21,17 L33,5" stroke="{shirt}" stroke-width="6" stroke-linecap="round"/>'
+              f'<path d="M32,7 L43,17" stroke="{shirt}" stroke-width="3" stroke-linecap="round"/>'
+              f'<circle cx="36" cy="1" r="4" fill="{skin}"/><path d="M31.5,0 A5,5 0 0 1 41,-1 Z" fill="{helmet}"/>')
+    return s
+
+def bike_wheels(dark=DARK, rim="#9CA6B1"):
+    return "".join(f'<circle cx="{cx}" cy="38" r="9" fill="none" stroke="{dark}" stroke-width="2.4"/>'
+                   f'<circle cx="{cx}" cy="38" r="7" fill="none" stroke="{rim}" stroke-width="0.8"/>'
+                   f'<circle cx="{cx}" cy="38" r="1.4" fill="{rim}"/>' for cx in (12, 46))
+
+def bicycle(x, ground, scale, color, left=False, rider=None):
+    """A bicycle standing on the ground line at y=ground, with its left end at
+    x. scale 1 is 60 pixels wide."""
+    body = bike_frame(color, rider) + bike_wheels()
+    if left:
+        body = f'<g transform="translate(60,0) scale(-1,1)">{body}</g>'
+    return f'<g transform="translate({x:.1f},{ground - 48 * scale:.1f}) scale({scale})">{body}</g>'

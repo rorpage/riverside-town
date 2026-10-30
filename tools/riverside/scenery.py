@@ -1,7 +1,7 @@
 """The scenery layers behind the town: sky, clouds, mountains, hills with the
 river, and the street."""
 import random
-from .art import wall, round_tree, pine
+from .art import wall, round_tree, pine, is_dark, bicycle
 
 def sky(p):
     return (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/>'
@@ -86,11 +86,39 @@ def far_b(p, season):
 
 NEAR_B_PTS = [(0,560),(160,480),(330,530),(520,430),(700,540),(860,470),(1000,580),(1140,500),(1320,420),
               (1500,530),(1660,450),(1800,510),(1920,560)]
-def near_b(p, season):
+def radio_tower(x, base, p):
+    """A tall radio tower on a far ridge, with red and white bands and a red
+    light on top that is lit at dusk and night. It is drawn at the distance of
+    the near mountains, so it is thin."""
+    top = base - 168
+    red, white = wall("#C0392B", p), wall("#F8FAFC", p)
+    s = ""
+    bands = 8
+    for i in range(bands):
+        y0 = base - (base - top) * i / bands
+        y1 = base - (base - top) * (i + 1) / bands
+        w0 = 13 - 10 * i / bands
+        w1 = 13 - 10 * (i + 1) / bands
+        c = red if i % 2 == 0 else white
+        s += f'<polygon points="{x - w0:.1f},{y0:.1f} {x + w0:.1f},{y0:.1f} {x + w1:.1f},{y1:.1f} {x - w1:.1f},{y1:.1f}" fill="none" stroke="{c}" stroke-width="1.6"/>'
+        s += f'<line x1="{x - w0:.1f}" y1="{y0:.1f}" x2="{x + w1:.1f}" y2="{y1:.1f}" stroke="{c}" stroke-width="1"/>'
+    s += f'<line x1="{x}" y1="{top}" x2="{x}" y2="{top - 8}" stroke="{red}" stroke-width="1.6"/>'
+    if is_dark(p):
+        s += (f'<circle cx="{x}" cy="{top - 9}" r="6" fill="#E74C3C" fill-opacity="0.3"/>'
+              f'<circle cx="{x}" cy="{top - 9}" r="2.2" fill="#E74C3C"/>')
+    return s
+
+# The radio tower stands in the valley at x=1000 of the second near tile,
+# where the mountain is at y=580, so its top (y=412) is inside the near
+# layer's crop, which starts at y=400.
+RADIO_TOWER = (1000, 584)
+
+def near_b(p, season, tower=False):
     pts = " ".join(f"{x},{y}" for x, y in NEAR_B_PTS)
     s = f'<polygon fill="{p["mid"]}" points="0,760 {pts} 1920,760"/>'
     # Small snow caps on the highest peaks in other seasons, like the first tile
-    return s + snow_caps(NEAR_B_PTS, 0.5 if season == "winter" else 0.22, p["snow"])
+    s += snow_caps(NEAR_B_PTS, 0.5 if season == "winter" else 0.22, p["snow"])
+    return s + (radio_tower(*RADIO_TOWER, p) if tower else "")
 
 TREES = [(60,692),(110,686),(170,680),(240,672),(300,668),(620,662),(680,664),(740,658),
          (1300,668),(1360,682),(1420,692),(1700,724),(1780,724),(1860,714)]
@@ -115,7 +143,17 @@ def kayaks(p, season):
               '</g>')
     return s
 
-def hills(p, season, with_kayaks=True):
+# Two people riding bikes on the hills, far away, so they are small. Each is
+# (x of the left end, ground y, color, facing left). They are not drawn in
+# winter.
+CYCLISTS = [(250, 734, "#C0392B", False), (1610, 762, "#2E86C1", True)]
+def cyclists(p, season):
+    if season == "winter":
+        return ""
+    return "".join(bicycle(x, y, 0.42, wall(c, p), left, (wall(c, p), wall("#E0B89A", p), wall("#34495E", p)))
+                   for x, y, c, left in CYCLISTS)
+
+def hills(p, season, with_kayaks=True, with_cyclists=False):
     t = "".join(pine(x, b, p, season) for x, b in TREES)
     s = f'''<path fill="{p["hillFar"]}" d="M0,700 C300,620 600,660 960,640 C1300,620 1620,780 1920,700 L1920,910 L0,910 Z"/>
 <path fill="{p["hill"]}" d="M0,780 C400,720 700,760 960,740 C1300,720 1520,840 1920,780 L1920,910 L0,910 Z"/>
@@ -123,7 +161,7 @@ def hills(p, season, with_kayaks=True):
 <path fill="{p["river"]}" d="M958,647 C935,668 1000,695 900,730 C760,780 640,800 560,900 L1080,900 C1100,820 1180,790 1240,750 C1320,700 1060,675 1000,662 C985,656 968,650 958,647 Z"/>
 <g stroke="{p["riverHi"]}" stroke-width="4" stroke-linecap="round" fill="none">
 <path d="M962,672 L980,672"/><path d="M930,700 L972,700"/><path d="M860,758 L930,758"/><path d="M1010,770 L1080,770"/><path d="M760,832 L850,832"/><path d="M930,850 L1030,850"/></g>'''
-    return s + (kayaks(p, season) if with_kayaks else "")
+    return s + (kayaks(p, season) if with_kayaks else "") + (cyclists(p, season) if with_cyclists else "")
 
 def street(p, season, seed=11):
     """The sidewalk, curb, and road at the bottom of every town section. The

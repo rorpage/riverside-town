@@ -19,14 +19,17 @@ LETTERS = "abcde"
 # Car sizes and wheel positions. These copy m.carDefs in components/MainScene.brs.
 CARS = {"sedan": (280, 104, [(62, 80), (218, 80)], 22, 102), "van": (310, 130, [(66, 104), (246, 104)], 24, 128),
         "jeep": (270, 140, [(68, 108), (214, 108)], 28, 136), "truck": (300, 130, [(70, 104), (238, 104)], 24, 128),
-        "sports": (304, 104, [(64, 84), (234, 84)], 18, 102), "buggy": (250, 112, [(52, 84), (198, 84)], 26, 110)}
+        "sports": (304, 104, [(64, 84), (234, 84)], 18, 102), "buggy": (250, 112, [(52, 84), (198, 84)], 26, 110),
+        "bike": (120, 114, [(24, 92), (92, 92)], 20, 112)}
+# Cars that use a different wheel image. This copies the wheel field in allCars.
+WHEELS = {"bike": "bike_wheel.png"}
 PARK_SCALE = 0.78  # Copies parkCar() in MainScene.brs
 
 def car_sprite(images, name, left):
     w, h, wheels, r, bottom = CARS[name]
     car = Image.new("RGBA", (w, h))
     car.alpha_composite(Image.open(os.path.join(images, f"car_{name}{'_left' if left else ''}.png")).convert("RGBA"))
-    wheel = Image.open(os.path.join(images, "wheel.png")).convert("RGBA").resize((r * 2, r * 2), Image.LANCZOS)
+    wheel = Image.open(os.path.join(images, WHEELS.get(name, "wheel.png"))).convert("RGBA").resize((r * 2, r * 2), Image.LANCZOS)
     for wx, wy in wheels:
         car.alpha_composite(wheel, ((w - wx if left else wx) - r, wy - r))
     return car, bottom
@@ -46,7 +49,7 @@ def parked(town, images, im, section, name):
 def mountains(town, p, season):
     mtn = season if season == "winter" else "summer"
     return (scenery.clouds(p, season) + scenery.far(p, mtn, town["extras"]["table_mountain"]) + scenery.near(p, mtn)
-            + scenery.hills(p, season, town["extras"]["kayaks"]))
+            + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"]))
 
 def composite(town, layers, pal, section, season):
     p = season_palette(pal, season)
@@ -95,8 +98,8 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     # the previews show the B tiles for odd sections, like the real strip
     mtn = season if season == "winter" else "summer"
     far = scenery.far(p, mtn, town["extras"]["table_mountain"]) if section % 2 == 0 else scenery.far_b(p, mtn)
-    near = scenery.near(p, mtn) if section % 2 == 0 else scenery.near_b(p, mtn)
-    art_svg = (scenery.clouds(p, season) + far + near + scenery.hills(p, season, town["extras"]["kayaks"])
+    near = scenery.near(p, mtn) if section % 2 == 0 else scenery.near_b(p, mtn, town["extras"]["radio_tower"])
+    art_svg = (scenery.clouds(p, season) + far + near + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"])
                + layers[f"town_{LETTERS[section]}"](p, season))
     im.alpha_composite(Image.open(io.BytesIO(render(art_svg, "0 0 1920 1080", 1920, 1080))).convert("RGBA"))
     if season == "summer" and pal == "night" and town["extras"]["fireflies"]:
@@ -148,7 +151,7 @@ def write_all(town, layers, images, build, docs=None):
     for i in range(n):
         shots.append((f"preview_section_{LETTERS[i]}.png", 1280,
                       dict(pal="day", season="summer", hour=(10, 4), temp=84, cond="Clear", section=i,
-                           pets=pets if i == last else (), near_car="buggy" if i == last else "sports")))
+                           pets=pets if i == last else (), near_car="buggy" if i == last else "bike" if i == 1 else "sports")))
     shots.append((f"preview_section_{LETTERS[last]}_winter_night.png", 640,
                   dict(pal="night", season="winter", hour=(22, 42), temp=26, cond="Clear", section=last, pets=pets, near_car="buggy")))
     for name, width, opts in shots:

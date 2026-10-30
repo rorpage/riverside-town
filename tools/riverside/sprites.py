@@ -1,9 +1,10 @@
 """Small images that are not scenery: the sun, moon, and stars, the weather
 effects, the airplane, the cars, and the animals. MainScene.brs places them."""
+import math
 import os
 import random
 from PIL import Image, ImageOps
-from .art import P, ACCENT, GLASS, DARK, render
+from .art import P, ACCENT, GLASS, DARK, render, bike_frame
 
 def write(out):
     def save(content, vb, w, h, name):
@@ -169,6 +170,18 @@ def write(out):
              + wells([(52, 84), (198, 84)], 28))
     save(buggy, "0 0 250 112", 250, 112, "car_buggy.png")
 
+    # A person riding a bike, for the street. It is drawn from bike_frame() at
+    # twice its size and moved down 8 pixels so the helmet fits. The wheels
+    # are a separate image (bike_wheel.png) so they can spin.
+    save(f'<g transform="scale(2) translate(0,8)">{bike_frame("#C0392B", ("#2E86C1", "#E0B89A", "#F2B33D"))}</g>',
+         "0 0 120 114", 120, 114, "car_bike.png")
+    save('<circle cx="32" cy="32" r="29" fill="none" stroke="#1F2A33" stroke-width="5"/>'
+         '<circle cx="32" cy="32" r="25" fill="none" stroke="#9CA6B1" stroke-width="1.5"/>'
+         '<g stroke="#9CA6B1" stroke-width="1.2">' + "".join(
+             f'<line x1="32" y1="32" x2="{32 + 25 * math.cos(math.radians(a)):.1f}" y2="{32 + 25 * math.sin(math.radians(a)):.1f}"/>'
+             for a in range(0, 360, 30)) + '</g><circle cx="32" cy="32" r="4" fill="#5B6770"/>',
+         "0 0 64 64", 64, 64, "bike_wheel.png")
+
     # Animals that sit on the sidewalk. MainScene.brs places them at random spots
     # when the screensaver starts. They are drawn larger than they are shown
     # (42x45 for cats and 45x28 for guinea pigs) so their edges stay smooth. They
@@ -203,5 +216,5 @@ def write(out):
 
 
     # Mirrored car bodies for the far lane, where cars drive right to left
-    for n in ["sedan", "van", "jeep", "truck", "sports", "buggy"]:
+    for n in ["sedan", "van", "jeep", "truck", "sports", "buggy", "bike"]:
         ImageOps.mirror(Image.open(os.path.join(out, f"car_{n}.png"))).save(os.path.join(out, f"car_{n}_left.png"))

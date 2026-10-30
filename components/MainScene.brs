@@ -22,14 +22,17 @@ sub init()
 
     ' Cars. "ground" is the speed along the road in pixels per second.
     ' wheels = wheel centers inside the car image, r = wheel radius,
-    ' bottom = lowest pixel of the tires in the car image.
+    ' bottom = lowest pixel of the tires in the car image. wheel = the wheel
+    ' image, if it is not wheel.png. The bike is a person riding a bicycle; it
+    ' is slower than every car, and it is never parked at the gas station.
     allCars = [
         { name: "sedan", w: 280, h: 104, wheels: [[62, 80], [218, 80]],   r: 22, bottom: 102, ground: 300 },
         { name: "van",   w: 310, h: 130, wheels: [[66, 104], [246, 104]], r: 24, bottom: 128, ground: 220 },
         { name: "jeep",  w: 270, h: 140, wheels: [[68, 108], [214, 108]], r: 28, bottom: 136, ground: 200 },
         { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 140 },
         { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 },
-        { name: "buggy",  w: 250, h: 112, wheels: [[52, 84], [198, 84]],  r: 26, bottom: 110, ground: 260 }
+        { name: "buggy",  w: 250, h: 112, wheels: [[52, 84], [198, 84]],  r: 26, bottom: 110, ground: 260 },
+        { name: "bike",   w: 120, h: 114, wheels: [[24, 92], [92, 92]],   r: 20, bottom: 112, ground: 100, wheel: "bike_wheel" }
     ]
     ' Only the cars listed in the settings drive by
     m.carDefs = []
@@ -600,7 +603,7 @@ sub makeCar(def as object)
     for each w in def.wheels
         wheel = car.createChild("Poster")
         wheel.id = name + "_wheel" + i.ToStr()
-        wheel.uri = "pkg:/images/wheel.png"
+        wheel.uri = wheelUri(def)
         wheel.width = def.r * 2
         wheel.height = def.r * 2
         wheel.translation = [w[0] - def.r, w[1] - def.r]
@@ -730,8 +733,13 @@ end sub
 ' coordinates, or -1 if the town has no gas station. The car is a child of
 ' townStrip, so it scrolls with the town. The wheels do not spin.
 sub parkCar()
-    if m.config.parkedCarX < 0 or m.carDefs.Count() = 0 then return
-    d = m.carDefs[Rnd(m.carDefs.Count()) - 1]
+    if m.config.parkedCarX < 0 then return
+    parkable = []
+    for each def in m.carDefs
+        if def.name <> "bike" then parkable.Push(def)
+    end for
+    if parkable.Count() = 0 then return
+    d = parkable[Rnd(parkable.Count()) - 1]
     facingLeft = Rnd(2) = 2
     ' The strip starts at screen y = 550, and the station ground is at screen y = 898.
     addParkedCar(d, facingLeft, m.config.parkedCarX, "parked_car")
@@ -758,7 +766,7 @@ sub addParkedCar(d as object, facingLeft as boolean, centerX as integer, id as s
         wx = w[0]
         if facingLeft then wx = d.w - wx
         wheel = car.createChild("Poster")
-        wheel.uri = "pkg:/images/wheel.png"
+        wheel.uri = wheelUri(d)
         wheel.width = d.r * 2
         wheel.height = d.r * 2
         wheel.translation = [wx - d.r, w[1] - d.r]
@@ -802,6 +810,13 @@ sub addAnimal(strip as object, a as object, x as integer, feetY as integer)
 end sub
 
 ' ================= Helpers =================
+
+' Returns the wheel image for a car: its own wheel image if it has one,
+' otherwise wheel.png.
+function wheelUri(def as object) as string
+    if def.wheel <> invalid then return "pkg:/images/" + def.wheel + ".png"
+    return "pkg:/images/wheel.png"
+end function
 
 function makeTimer(seconds as float, callback as string) as object
     t = m.top.createChild("Timer")

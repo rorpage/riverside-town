@@ -43,15 +43,17 @@ CROPS = {"clouds": (90, 255), "far": (295, 425), "far_b": (295, 425), "near": (4
 PET_SIZES = {"cat": (42, 45), "guinea": (45, 28)}
 
 def town_section(town, i, p, season):
-    return "".join(buildings.draw(b, x, p, season) for b, x in town["sections"][i]) + scenery.street(p, season, 11 + i)
+    section = town["sections"][i]
+    return ("".join(buildings.draw(b, x, p, season) for b, x in section) + scenery.street(p, season, 11 + i)
+            + buildings.sidewalk_bikes(section, p, season, town["extras"]))
 
 def layers(town):
     """Returns name -> drawing function(p, season) for every scenery layer."""
     ex = town["extras"]
     out = {"clouds": scenery.clouds,
            "far": lambda p, s: scenery.far(p, s, ex["table_mountain"]), "far_b": scenery.far_b,
-           "near": scenery.near, "near_b": scenery.near_b,
-           "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"])}
+           "near": scenery.near, "near_b": lambda p, s: scenery.near_b(p, s, ex["radio_tower"]),
+           "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"])}
     for i in range(len(town["sections"])):
         out[f"town_{LETTERS[i]}"] = lambda p, s, i=i: town_section(town, i, p, s)
     return out
