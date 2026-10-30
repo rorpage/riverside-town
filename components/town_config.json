@@ -33,6 +33,9 @@
     }
   ],
   "parkedCarX": 2788,
+  "towers": [
+    7322
+  ],
   "airplane": true,
   "fireflies": true,
   "fallingLeaves": true,

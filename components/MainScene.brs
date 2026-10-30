@@ -184,7 +184,7 @@ end sub
 function loadTownConfig() as object
     cfg = {
         lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north",
-        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], pets: [], parkedCarX: -1,
+        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], pets: [], parkedCarX: -1, towers: [],
         airplane: true, fireflies: true, fallingLeaves: true, seasons: true
     }
     text = ReadAsciiFile("pkg:/components/town_config.json")
@@ -208,6 +208,17 @@ end function
 ' section at the end of the strip, so the strip repeats without a jump.
 sub buildTown()
     strip = m.top.findNode("townStrip")
+    ' The tall towers behind the radio stations. They are created first so the
+    ' town images draw over them and the stations hide their bases. towers in
+    ' the settings holds the center x of each tower in townStrip coordinates.
+    ' The tower image is 300x600 with its ground at y=595, and the ground is at
+    ' strip y = 900 - 550. A tower in town section 0 is added to the second
+    ' copy of section 0 too.
+    m.towerPosters = []
+    for each x in m.config.towers
+        addTower(strip, x)
+        if x < 1920 then addTower(strip, x + m.sections * 1920)
+    end for
     m.townPosters = []
     for i = 0 to m.sections
         p = strip.createChild("Poster")
@@ -218,6 +229,14 @@ sub buildTown()
         m.townPosters.Push(p)
     end for
     m.top.findNode("townMove").keyValue = [[0, 0], [-m.sections * 1920, 0]]
+end sub
+
+sub addTower(strip as object, x as integer)
+    t = strip.createChild("Poster")
+    t.width = 300
+    t.height = 600
+    t.translation = [x - 150, 900 - 550 - 595]
+    m.towerPosters.Push(t)
 end sub
 
 sub startParallax()
@@ -306,6 +325,9 @@ sub applyScene()
     m.top.findNode("nearB").uri = layerUri("near_b", ground, period)
     for i = 0 to m.sections
         m.townPosters[i].uri = layerUri(m.townNames[i MOD m.sections], ground, period)
+    end for
+    for each t in m.towerPosters
+        t.uri = "pkg:/images/tower_" + period + ".png"
     end for
     updateSeasonFx(season, period)
     updatePlaneImage()

@@ -52,8 +52,8 @@ def layers(town):
     ex = town["extras"]
     out = {"clouds": scenery.clouds,
            "far": lambda p, s: scenery.far(p, s, ex["table_mountain"]), "far_b": scenery.far_b,
-           "near": scenery.near, "near_b": lambda p, s: scenery.near_b(p, s, ex["radio_tower"]),
-           "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"])}
+           "near": scenery.near, "near_b": scenery.near_b,
+           "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], town["gazebo"])}
     for i in range(len(town["sections"])):
         out[f"town_{LETTERS[i]}"] = lambda p, s, i=i: town_section(town, i, p, s)
     return out
@@ -93,7 +93,7 @@ def runtime_config(town):
         "temperatureUnit": "celsius" if town["temperature"] == "C" else "fahrenheit",
         "clock24": town["clock"] == "24h", "hemisphere": town["hemisphere"],
         "sections": len(town["sections"]), "cars": town["cars"], "pets": pets,
-        "parkedCarX": town["parked_car_x"],
+        "parkedCarX": town["parked_car_x"], "towers": town["towers"],
         "airplane": ex["airplane"], "fireflies": ex["fireflies"], "fallingLeaves": ex["falling_leaves"],
         "seasons": ex["seasons"],
     }

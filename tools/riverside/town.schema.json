@@ -759,83 +759,15 @@
               },
               "type": {
                 "const": "radio_station"
+              },
+              "tower": {
+                "type": "boolean",
+                "description": "A tall red lattice tower behind the station. Default true."
               }
             },
             "required": [
               "type",
               "name"
-            ],
-            "additionalProperties": false
-          },
-          {
-            "type": "object",
-            "properties": {
-              "color": {
-                "type": "string",
-                "pattern": "^#[0-9A-Fa-f]{6}$",
-                "description": "A color written as #RRGGBB"
-              },
-              "font": {
-                "enum": [
-                  "alegreya",
-                  "amatic",
-                  "bitter",
-                  "cabin",
-                  "cinzel",
-                  "comfortaa",
-                  "fredoka",
-                  "graduate",
-                  "hanken",
-                  "josefin",
-                  "kaushan",
-                  "lora",
-                  "montserrat",
-                  "oswald",
-                  "pacifico",
-                  "playfair",
-                  "quicksand",
-                  "racing",
-                  "raleway",
-                  "script",
-                  "sharetech",
-                  "signika"
-                ],
-                "description": "A font from tools/fonts"
-              },
-              "weight": {
-                "type": "integer",
-                "minimum": 100,
-                "maximum": 900,
-                "description": "Font weight, from 100 (thin) to 900 (black). Fonts with one weight ignore it."
-              },
-              "sign_size": {
-                "type": "number",
-                "minimum": 9,
-                "maximum": 40,
-                "description": "The largest text size on the sign. Long names are made smaller to fit."
-              },
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 40,
-                "description": "With a name, a town sign stands to the left of the gazebo."
-              },
-              "small_line": {
-                "type": "string",
-                "maxLength": 30,
-                "description": "A small line on the town sign, for example \"FOUNDED 1779\""
-              },
-              "sign_color": {
-                "type": "string",
-                "pattern": "^#[0-9A-Fa-f]{6}$",
-                "description": "A color written as #RRGGBB"
-              },
-              "type": {
-                "const": "gazebo"
-              }
-            },
-            "required": [
-              "type"
             ],
             "additionalProperties": false
           },
@@ -966,6 +898,74 @@
         ]
       }
     },
+    "gazebo": {
+      "description": "A gazebo on the hill beside the river. true, or an object; with a name, a town sign stands beside it.",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "description": "A color written as #RRGGBB"
+            },
+            "font": {
+              "enum": [
+                "alegreya",
+                "amatic",
+                "bitter",
+                "cabin",
+                "cinzel",
+                "comfortaa",
+                "fredoka",
+                "graduate",
+                "hanken",
+                "josefin",
+                "kaushan",
+                "lora",
+                "montserrat",
+                "oswald",
+                "pacifico",
+                "playfair",
+                "quicksand",
+                "racing",
+                "raleway",
+                "script",
+                "sharetech",
+                "signika"
+              ],
+              "description": "A font from tools/fonts"
+            },
+            "weight": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 900,
+              "description": "Font weight, from 100 (thin) to 900 (black). Fonts with one weight ignore it."
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "With a name, a town sign stands to the left of the gazebo."
+            },
+            "small_line": {
+              "type": "string",
+              "maxLength": 30,
+              "description": "A small line on the town sign, for example \"FOUNDED 1779\""
+            },
+            "sign_color": {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "description": "A color written as #RRGGBB"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
     "pets": {
       "type": "array",
       "maxItems": 10,
@@ -1031,9 +1031,6 @@
           "type": "boolean"
         },
         "table_mountain": {
-          "type": "boolean"
-        },
-        "radio_tower": {
           "type": "boolean"
         },
         "bikes": {
