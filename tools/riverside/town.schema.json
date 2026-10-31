@@ -81,6 +81,13 @@
       ],
       "description": "In the south, the seasons are moved by six months."
     },
+    "drive_on": {
+      "enum": [
+        "right",
+        "left"
+      ],
+      "description": "Which side of the road cars drive on. With right, the near lane drives left to right. With left, the near lane drives right to left. Default right."
+    },
     "buildings": {
       "type": "array",
       "description": "The buildings along the street, in order from left to right.",
@@ -1021,6 +1028,17 @@
           "truck",
           "sports",
           "buggy"
+        ]
+      }
+    },
+    "special_cars": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Cars from movies that drive by less often than the other cars and never park at the gas station. Default none.",
+      "items": {
+        "enum": [
+          "delorean",
+          "herbie"
         ]
       }
     },
