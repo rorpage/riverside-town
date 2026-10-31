@@ -50,7 +50,7 @@
     <!-- The town is one to five different tiles, set in components/town_config.json. MainScene.brs
          creates a poster for each one, then a second copy of the first tile at the end, so the strip
          slides left by the width of all the tiles and repeats. It also adds the parked car and the
-         animals to townStrip. -->
+         animals to townStrip, and then the street lamps, so the animals are behind them. -->
     <Group translation="[0,550]">
       <Group id="townStrip" />
     </Group>

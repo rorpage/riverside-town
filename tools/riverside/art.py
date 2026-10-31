@@ -212,6 +212,22 @@ def is_dark(p):
     """True for the dusk and night palettes, when lights are on."""
     return p["window"] != P["day"]["window"]
 
+# ---------- Shadows ----------
+# Shadows are black shapes drawn with a low opacity, so they darken whatever is
+# under them. The sun is in the top-left corner of the screen, so shadows fall
+# down and to the right. They are lighter at dusk and night.
+SHADOW_OPACITY = {"day": 0.2, "dusk": 0.15, "night": 0.12}
+
+def shadow_opacity(p):
+    if not is_dark(p):
+        return SHADOW_OPACITY["day"]
+    return SHADOW_OPACITY["night"] if p["sky"] == P["night"]["sky"] else SHADOW_OPACITY["dusk"]
+
+def shadow(points, p, scale=1.0):
+    """A shadow polygon through points, a list of (x, y)."""
+    pts = " ".join(f"{x:.1f},{y:.1f}" for x, y in points)
+    return f'<polygon points="{pts}" fill="#000000" fill-opacity="{shadow_opacity(p) * scale:.3f}"/>'
+
 def skewed(content, y, angle=-10):
     """Slants content like italic letters, keeping the line at y in place."""
     import math

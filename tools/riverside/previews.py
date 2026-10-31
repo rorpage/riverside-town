@@ -10,7 +10,7 @@ import io
 import os
 import random
 from PIL import Image
-from . import scenery
+from . import scenery, buildings
 from .art import ACCENT, season_palette, svg, render, text, text_width
 import cairosvg
 
@@ -49,17 +49,32 @@ def parked(town, images, im, section, name):
         w = CARS[name][0]
         paste_car(im, images, name, x % 1920 - w * PARK_SCALE / 2, 898, PARK_SCALE)
 
+def lamps(town, section, p, season):
+    """The street lamps in one town section, drawn last, in front of the
+    animals and the parked car, like MainScene.brs adds them."""
+    xs = [x - section * 1920 for x in town["lamps"] if x // 1920 == section]
+    return buildings.street_lamps(xs, p, "winter" if season == "winter" else "summer")
+
+def lamps_image(town, section, p, season):
+    return Image.open(io.BytesIO(render(lamps(town, section, p, season), "0 0 1920 1080", 1920, 1080))).convert("RGBA")
+
 def mountains(town, p, season):
     mtn = season if season == "winter" else "summer"
     return (scenery.clouds(p, season) + scenery.far(p, mtn, town["extras"]["table_mountain"]) + scenery.near(p, mtn)
             + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"]))
 
-def composite(town, layers, pal, section, season):
+def composite(town, layers, pal, section, season, images=None, car=None):
+    """One town section with the scenery behind it. car is the name of a car to
+    park at the gas station, or None; images is the folder with the car images."""
     p = season_palette(pal, season)
     full = (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/><stop offset="0.62" stop-color="{p["horizon"]}"/></linearGradient></defs>'
             f'<rect width="1920" height="1080" fill="url(#g)"/><circle cx="220" cy="180" r="64" fill="{ACCENT}"/>'
             + mountains(town, p, season) + layers[f"town_{LETTERS[section]}"](p, season))
-    return Image.open(io.BytesIO(render(full, "0 0 1920 1080", 1920, 1080))).convert("RGBA")
+    im = Image.open(io.BytesIO(render(full, "0 0 1920 1080", 1920, 1080))).convert("RGBA")
+    if car:
+        parked(town, images, im, section, car)
+    im.alpha_composite(lamps_image(town, section, p, season))
+    return im
 
 def panel(clock, temp, cond, px):
     """The clock and weather panel, drawn like the info group in MainScene.xml.
@@ -132,6 +147,7 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
         pet = Image.open(os.path.join(images, f"{name}.png")).convert("RGBA")
         im.alpha_composite(pet, (px, 924 - pet.height))
     parked(town, images, im, section, "van" if pal == "day" else "sedan")
+    im.alpha_composite(lamps_image(town, section, p, season))
     cars = town["cars"]
     far_car = "truck" if "truck" in cars else cars[-1]
     near_car = near_car if near_car in cars else cars[0]
@@ -156,9 +172,7 @@ def write_all(town, layers, images, build, docs=None):
     for season in ("spring", "summer", "fall", "winter"):
         for pal in ("day", "night"):
             for i in range(n):
-                im = composite(town, layers, pal, i, season)
-                if season == "summer":
-                    parked(town, images, im, i, "van" if pal == "day" else "sedan")
+                im = composite(town, layers, pal, i, season, images, ("van" if pal == "day" else "sedan") if season == "summer" else None)
                 im.save(os.path.join(build, f"composite_{season}_{pal}_{LETTERS[i]}.png"))
     # The README previews. The animals are shown in the last section.
     last = n - 1
