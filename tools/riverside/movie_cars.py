@@ -80,7 +80,10 @@ def herbie(left):
     # in a circle on the door. The racing stripes run over the middle of the
     # top, so they do not show from the side.
     BODY, LINE = "#E6E4D8", "#B9B7AA"
-    s = (f'<path fill="{BODY}" stroke="{LINE}" stroke-width="3" d="M70,178 Q66,140 82,108 Q104,66 150,36 '
+    shape = ("M70,178 Q66,140 82,108 Q104,66 150,36 Q196,8 262,4 L330,4 Q382,8 410,34 L446,70 "
+             "L440,64 C548,62 612,84 622,132 L620,170 L612,180 L80,182 Z")
+    s = (f'<clipPath id="herbie_body"><path d="{shape}"/></clipPath>'
+         f'<path fill="{BODY}" stroke="{LINE}" stroke-width="3" d="M70,178 Q66,140 82,108 Q104,66 150,36 '
          f'Q196,8 262,4 L330,4 Q382,8 410,34 L440,64 C548,62 612,84 622,132 L620,170 L612,180 L80,182 Z"/>'
          # Fenders, with a line where they meet the body
          f'<path fill="{BODY}" stroke="{LINE}" stroke-width="3" d="M86,184 Q86,112 166,104 Q238,104 254,184 Z"/>'
@@ -88,7 +91,8 @@ def herbie(left):
          + wells("herbie", 6) +
          # Running board between the fenders
          f'<rect x="246" y="172" width="226" height="12" rx="4" fill="#2B2F33"/>'
-         f'<path fill="{WINDOW}" d="M132,62 Q150,40 176,28 L184,40 Q160,52 146,70 Z"/>'
+         # Rear window: it is cut to the body shape, so it reaches the rear outline
+         f'<path fill="{WINDOW}" clip-path="url(#herbie_body)" d="M96,60 L150,0 L190,0 L188,26 Q160,40 132,70 Z"/>'
          f'<path fill="{WINDOW}" d="M200,72 Q200,26 246,22 L292,20 L292,72 Z"/>'
          f'<path fill="{WINDOW}" d="M306,20 L380,22 Q398,24 408,40 L432,70 L306,72 Z"/>'
          f'<path d="M298,18 L298,172 M442,72 L446,172" stroke="{LINE}" stroke-width="3" fill="none"/>'
@@ -190,14 +194,14 @@ def delorean():
     # slope. The time machine parts sit low on the rear deck: a vent box at the
     # back with slats that face backward, the ribbed reactor in front of it, a
     # pipe with copper coils behind the roof, and a small unit on the roof.
-    ST, LOW, LINE, PART, PART_D = "#C3C9CE", "#9EA6AC", "#7F878D", "#8A9399", "#4E565C"
+    ST, LOW, LINE, PART, PART_D = "#C3C9CE", "#9EA6AC", "#7F878D", "#5E676D", "#33393D"
     s = (  # Roof unit, drawn behind the body
          f'<rect x="244" y="78" width="40" height="12" rx="5" fill="#AEB6BC" stroke="{LINE}" stroke-width="2"/>'
          f'<rect x="258" y="88" width="10" height="10" fill="{LINE}"/>'
          # Body: the roof runs back into a sloped rear deck, then a short rear face
-         f'<path fill="{ST}" stroke="{LINE}" stroke-width="3" d="M54,184 L54,150 L66,124 Q70,120 80,119 L250,98 '
-         f'L398,96 Q410,96 420,102 L500,136 Q600,150 660,160 Q706,170 712,192 L714,214 Q710,226 694,228 L92,230 Z"/>'
-         f'<path fill="{LOW}" d="M54,170 L712,180 L714,214 Q710,226 694,228 L92,230 L54,184 Z"/>'
+         f'<path fill="{ST}" stroke="{LINE}" stroke-width="3" d="M56,166 L52,146 L66,124 Q70,120 80,119 L250,98 '
+         f'L398,96 Q410,96 420,102 L500,136 Q600,150 660,160 Q706,170 712,192 L714,214 Q710,226 694,228 L108,230 Z"/>'
+         f'<path fill="{LOW}" d="M54,170 L712,180 L714,214 Q710,226 694,228 L108,230 L56,166 Z"/>'
          + wells("delorean", 6)
          # Louvers on the rear slope, on a black panel
          + f'<path fill="#2E3438" d="M120,114 L250,98 L254,108 L124,125 Z"/>'
@@ -219,9 +223,11 @@ def delorean():
          f'<rect x="646" y="164" width="34" height="20" rx="3" fill="#E9E2C8" stroke="{LINE}" stroke-width="2"/>'
          # Rear face: a black panel with the tail lights, and a black bumper
          # that runs up at an angle from the bottom of the car
-         f'<path fill="#2E3438" d="M54,150 L66,124 Q70,120 80,119 L80,184 L54,184 Z"/>'
-         f'<rect x="56" y="140" width="20" height="16" fill="{RED_LIGHT}"/>'
-         f'<path fill="#2E3438" d="M54,180 L82,180 L112,229 L92,230 Z"/>'
+         f'<path fill="#2E3438" d="M52,146 L66,124 Q70,120 80,119 L86,170 L56,166 Z"/>'
+         f'<path fill="{RED_LIGHT}" d="M56,138 L80,136 L82,152 L54,152 Z"/>'
+         f'<path fill="#2E3438" d="M56,162 L88,166 L128,229 L108,230 Z"/>'
+         # Dark lower edge along the side
+         f'<path fill="#3E4449" d="M112,218 L712,210 L714,214 Q710,226 694,228 L120,230 Z"/>'
          f'<rect x="696" y="202" width="20" height="12" rx="3" fill="#3E4449"/>')
     return ref("delorean", s), ref("delorean", s, True)
 
