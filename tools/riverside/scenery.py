@@ -25,10 +25,6 @@ def puff(cx, cy, s, fill):
             f'<circle cx="{cx + 60 * s:.0f}" cy="{cy:.0f}" r="{40 * s:.0f}"/>'
             f'<rect x="{cx - 98 * s:.0f}" y="{cy:.0f}" width="{196 * s:.0f}" height="{38 * s:.0f}" rx="{19 * s:.0f}"/></g>')
 
-def shaded_puff(cx, cy, s, p):
-    """A cloud with a gray underside, for the broken and overcast levels."""
-    return puff(cx, cy + 8 * s, s, p["cloudGray"]) + puff(cx, cy, s, p["cloud"])
-
 def wrap(svg):
     """Draws svg three times: moved 1920 pixels left, in place, and moved 1920
     pixels right. Anything that crosses x=0 or x=1920 then shows on the other
@@ -37,7 +33,7 @@ def wrap(svg):
 
 def deck(p):
     """A gray cloud layer across the whole top of the clouds band, with a bumpy
-    lower edge and a darker underside. The bumps are about 80 pixels apart."""
+    lower edge. The bumps are about 80 pixels apart."""
     rnd = random.Random(41)
     bumps = [(i * 80 + rnd.randint(-20, 20), rnd.randint(30, 52), rnd.randint(-8, 10)) for i in range(24)]
     def row(y, fill):
@@ -45,8 +41,7 @@ def deck(p):
     # The top of the layer starts at the color of the overcast sky at y=90
     # (see sky()), so there is no line where the clouds image starts.
     sky_top = mix(p["skyGray"], p["horizonGray"], 90 / (1080 * 0.62))
-    return (row(222, p["cloudDark"])
-            + f'<linearGradient id="deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{sky_top}"/>'
+    return (f'<linearGradient id="deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{sky_top}"/>'
             + f'<stop offset="0.5" stop-color="{p["cloudGray"]}"/></linearGradient>'
             + '<rect x="-40" y="90" width="2000" height="120" fill="url(#deck)"/>'
             + row(206, p["cloudGray"]))
@@ -70,13 +65,14 @@ def clouds(p, season, level="few"):
         return wrap(few + "".join(puff(x, y, s, c) for x, y, s in
                                   ((150, 290, 0.8), (760, 250, 1.0), (1380, 190, 0.9), (1880, 170, 0.75))))
     if level == "broken":
-        # Larger clouds with gray undersides, close enough to touch in places
+        # Larger clouds, close enough to touch in places. Clouds have no darker
+        # underside, because it looks like a shadow.
         spots = ((80, 200, 1.2), (330, 290, 0.9), (560, 190, 1.35), (820, 260, 1.1), (1050, 170, 1.2),
                  (1280, 280, 1.0), (1500, 190, 1.3), (1730, 270, 1.05), (1900, 175, 0.8))
-        return wrap("".join(shaded_puff(x, y, s, p) for x, y, s in spots))
+        return wrap("".join(puff(x, y, s, c) for x, y, s in spots))
     # Overcast: the gray layer, with some lower gray clouds under it
     lower = ((200, 290, 0.9), (700, 296, 1.0), (1180, 285, 0.85), (1650, 296, 1.0))
-    return wrap(deck(p) + "".join(puff(x, y + 8 * s, s, p["cloudDark"]) + puff(x, y, s, p["cloudGray"]) for x, y, s in lower))
+    return wrap(deck(p) + "".join(puff(x, y, s, p["cloudGray"]) for x, y, s in lower))
 
 def snow_caps(points, t, fill, min_rise=30):
     """Snow on every peak of a mountain outline. t is how far down each slope the

@@ -224,8 +224,17 @@ function loadTownConfig() as object
         print "MainScene: could not read town_config.json, using the defaults"
         return cfg
     end if
+    ' A for each loop over an associative array literal gives its keys in lower
+    ' case (for example, "specialcars"), but the keys from ParseJson keep their
+    ' case ("specialCars"). Compare the keys in lower case, or every setting
+    ' with a capital letter in its name keeps its default.
+    found = {}
+    for each key in data
+        found[LCase(key)] = data[key]
+    end for
     for each key in cfg
-        if data.DoesExist(key) and data[key] <> invalid then cfg[key] = data[key]
+        k = LCase(key)
+        if found.DoesExist(k) and found[k] <> invalid then cfg[k] = found[k]
     end for
     cfg.sections = Int(cfg.sections)
     if cfg.sections < 1 then cfg.sections = 1
