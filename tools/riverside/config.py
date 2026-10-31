@@ -58,7 +58,9 @@ DEFAULTS = {
 }
 
 CARS = ["sedan", "van", "jeep", "truck", "sports", "buggy"]
-PETS = {"cat": ["black", "gray", "tabby"], "guinea_pig": ["black_orange", "white_orange"]}
+PETS = {"cat": ["black", "gray", "tabby", "white", "gray_white"], "guinea_pig": ["black_orange", "white_orange"],
+        "dog": ["yellow_lab", "black_lab", "chocolate_lab", "beagle", "corgi", "dalmatian", "dachshund", "husky"]}
+PET_IMAGE = {"cat": "cat", "guinea_pig": "guinea", "dog": "dog"}   # The first part of each image name
 EXTRAS = {"airplane": True, "kayaks": True, "fireflies": True, "falling_leaves": True, "seasons": True,
           "table_mountain": False, "bikes": False}
 RADIO = dict(color="#E4DCCD", font="racing", weight=400, letter_color="#D32F2F", tower=True)
@@ -168,7 +170,7 @@ def fill(data):
             bad = check_text(str(spec[key]), font) if spec.get(key) else []
             if bad:
                 raise ConfigError(f"radio_station: the font {font} cannot draw {' '.join(bad)} in \"{spec[key]}\".")
-    town["pets"] = [f"{'cat' if p['type'] == 'cat' else 'guinea'}_{p['color']}" for p in data.get("pets", [])]
+    town["pets"] = [dict(image=f"{PET_IMAGE[p['type']]}_{p['color']}", small=p.get("size") == "small") for p in data.get("pets", [])]
     for i, p in enumerate(data.get("pets", [])):
         if p["color"] not in PETS[p["type"]]:
             raise ConfigError(f"pets/{i}: a {p['type']} can be {', '.join(PETS[p['type']])}, not {p['color']}.")

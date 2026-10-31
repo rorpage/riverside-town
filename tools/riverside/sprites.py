@@ -5,6 +5,74 @@ import random
 from PIL import Image, ImageOps
 from .art import P, ACCENT, GLASS, DARK, render
 
+DARK_EYE = "#1F2A33"
+
+# Dog breeds: body and dark colors, ears ("floppy" or "pointy"), leg length,
+# body length, tail ("up", "curl", or "short"), size, and markings
+DOGS = {
+    "yellow_lab": dict(body="#D9B26A", dark="#B98F45"),
+    "black_lab": dict(body="#2A2D31", dark="#1B1D20"),
+    "chocolate_lab": dict(body="#6B4430", dark="#4E2F20"),
+    "beagle": dict(body="#F2EDE4", dark="#B7773D", size=0.8, leg=7, saddle="#2B2118", head="#B7773D"),
+    "corgi": dict(body="#D9893A", dark="#B86E28", size=0.8, leg=4, ears="pointy", tail="short", belly="#F4F1EA"),
+    "dalmatian": dict(body="#F4F1EA", dark="#22272B", leg=10, spots="#22272B", outline="#B9B2A6", far="#D9D4CA"),
+    "dachshund": dict(body="#8B4A26", dark="#6A3519", size=0.8, leg=3.5, length=1.25),
+    "husky": dict(body="#7D8790", dark="#5B646C", ears="pointy", tail="curl", belly="#F4F1EA"),
+}
+
+def dog(body, dark, ears="floppy", leg=9, length=1.0, tail="up", size=1.0, spots=None, saddle=None, head=None,
+        belly=None, outline=None, far=None):
+    """Returns the SVG for one dog, and its image width and height. The dog is
+    drawn in units, with its feet on the line y = 19 + leg, and moved down 5
+    units so pointed ears fit."""
+    head = head or body
+    rx = 12 * length
+    cx = 30 - rx
+    s = ""
+    # Tail
+    tx = cx - rx + 2
+    if tail == "up":
+        s += f'<path d="M{tx},14 Q{tx - 5},10 {tx - 4},3" stroke="{body}" stroke-width="2.6" fill="none" stroke-linecap="round"/>'
+    elif tail == "curl":
+        s += f'<path d="M{tx},13 Q{tx - 7},10 {tx - 4},4 Q{tx},2 {tx + 2},7" stroke="{body}" stroke-width="3.2" fill="none" stroke-linecap="round"/>'
+    else:
+        s += f'<path d="M{tx},14 L{tx - 3},12" stroke="{body}" stroke-width="3" stroke-linecap="round"/>'
+    # Legs: two at the back and two at the front, the far ones darker
+    y0 = 19
+    far = far or dark
+    for lx, c in ((cx - rx + 4, far), (cx - rx + 7.5, body), (cx + rx - 7, far), (cx + rx - 3.5, body)):
+        s += f'<rect x="{lx:.1f}" y="{y0 - 2}" width="3" height="{leg + 2}" rx="1.2" fill="{belly if belly and c == body else c}"/>'
+    # Body, markings, neck, and head
+    s += f'<ellipse cx="{cx:.1f}" cy="15" rx="{rx:.1f}" ry="6.5" fill="{body}"/>'
+    if belly:
+        s += f'<ellipse cx="{cx + 2:.1f}" cy="18.5" rx="{rx * 0.8:.1f}" ry="3" fill="{belly}"/>'
+    if saddle:
+        s += f'<ellipse cx="{cx - 1:.1f}" cy="11.5" rx="{rx * 0.7:.1f}" ry="3.5" fill="{saddle}"/>'
+    if spots:
+        for sx, sy, r in ((-6, 12, 1.4), (-2, 16, 1.1), (3, 11, 1.3), (6, 15.5, 1.0), (-9, 15, 1.0), (1, 14, 0.9)):
+            s += f'<circle cx="{cx + sx * length:.1f}" cy="{sy}" r="{r}" fill="{spots}"/>'
+    hx = cx + rx + 2
+    s += (f'<path d="M{cx + rx - 5:.1f},12 L{hx - 1:.1f},6 L{hx + 3:.1f},9 L{cx + rx:.1f},17 Z" fill="{head}"/>'
+          f'<circle cx="{hx:.1f}" cy="7" r="5.2" fill="{head}"/>'
+          f'<ellipse cx="{hx + 5:.1f}" cy="9" rx="3.6" ry="2.6" fill="{belly or head}"/>'
+          f'<circle cx="{hx + 8:.1f}" cy="8.2" r="1.2" fill="{DARK_EYE}"/>'
+          f'<circle cx="{hx + 1.5:.1f}" cy="5.8" r="0.9" fill="{DARK_EYE}"/>')
+    if spots:
+        s += f'<circle cx="{hx - 1:.1f}" cy="4" r="0.9" fill="{spots}"/>'
+    if belly:
+        s += f'<path d="M{hx - 0.5:.1f},6 Q{hx + 2:.1f},11 {hx + 4:.1f},11.5 L{hx + 1:.1f},12 Z" fill="{belly}"/>'
+    if ears == "floppy":
+        ear = spots or dark
+        s += f'<ellipse cx="{hx - 2.5:.1f}" cy="8" rx="2" ry="4" fill="{ear}" transform="rotate(12 {hx - 2.5:.1f} 8)"/>'
+    else:
+        s += (f'<polygon points="{hx - 4:.1f},4 {hx - 3.5:.1f},-3 {hx:.1f},2.5" fill="{head}"/>'
+              f'<polygon points="{hx - 1:.1f},2 {hx + 1:.1f},-4 {hx + 3:.1f},2.5" fill="{head}"/>')
+    if outline:
+        s = f'<g stroke="{outline}" stroke-width="0.6">{s}</g>'
+    k = 2 * size
+    w, h = round(48 * k), round((19 + leg + 5.5) * k)
+    return f'<g transform="scale({k}) translate(0,5)">{s}</g>', w, h
+
 def write(out):
     def save(content, vb, w, h, name):
         render(content, vb, w, h, os.path.join(out, name))
@@ -170,12 +238,14 @@ def write(out):
     save(buggy, "0 0 250 112", 250, 112, "car_buggy.png")
 
 
-    # Animals that sit on the sidewalk. MainScene.brs places them at random spots
-    # when the screensaver starts. They are drawn larger than they are shown
-    # (42x45 for cats and 45x28 for guinea pigs) so their edges stay smooth. They
-    # are shown a little larger than their real size next to the cars, so they
-    # are easy to see.
-    def cat(body, dark, eyes, stripes=False):
+    # Animals that sit or stand on the sidewalk. MainScene.brs places them at
+    # random spots when the screensaver starts. They are drawn larger than they
+    # are shown (0.7 times the image size, and 0.75 times that for a small
+    # animal) so their edges stay smooth. They are shown a little larger than
+    # their real size next to the cars, so they are easy to see.
+    def cat(body, dark, eyes, stripes=False, white=None, outline=None):
+        """white is a color for the chest, muzzle, and paws. outline draws a thin
+        line around a light cat so it shows against the sidewalk."""
         s = (f'<path d="M7,30 Q-1,28 2,18" stroke="{body}" stroke-width="3" fill="none" stroke-linecap="round"/>'
              f'<ellipse cx="13" cy="23" rx="9" ry="8" fill="{body}"/>'
              f'<circle cx="20" cy="12" r="6.5" fill="{body}"/>'
@@ -185,10 +255,25 @@ def write(out):
         if stripes:
             s += "".join(f'<path d="M{x},16 Q{x + 2},23 {x},29" stroke="{dark}" stroke-width="2" fill="none"/>' for x in (8, 12, 16))
             s += "".join(f'<line x1="{x}" y1="6.5" x2="{x}" y2="9" stroke="{dark}" stroke-width="1"/>' for x in (18.5, 20.5, 22.5))
+        if white:
+            s += (f'<ellipse cx="18" cy="23" rx="4.5" ry="6" fill="{white}"/><ellipse cx="21" cy="14.5" rx="3.2" ry="2.4" fill="{white}"/>'
+                  f'<rect x="15" y="29.5" width="3.5" height="2.5" rx="1.2" fill="{white}"/><rect x="20" y="29.5" width="3.5" height="2.5" rx="1.2" fill="{white}"/>'
+                  f'<circle cx="18" cy="11" r="1.3" fill="{eyes}"/><circle cx="23" cy="11" r="1.3" fill="{eyes}"/>')
+        if outline:
+            s = f'<g stroke="{outline}" stroke-width="0.7">{s}</g>'
         return f'<g transform="scale(2)">{s}</g>'
     save(cat("#22272B", "#22272B", "#F6C46A"), "0 0 60 64", 60, 64, "cat_black.png")
     save(cat("#5F676E", "#3E444A", "#15181B", True), "0 0 60 64", 60, 64, "cat_gray.png")
     save(cat("#9A6B42", "#2B2118", "#F6C46A", True), "0 0 60 64", 60, 64, "cat_tabby.png")
+    save(cat("#F4F1EA", "#F4F1EA", "#F2B33D", outline="#B9B2A6"), "0 0 60 64", 60, 64, "cat_white.png")
+    save(cat("#6E767D", "#6E767D", "#F2B33D", white="#F4F1EA"), "0 0 60 64", 60, 64, "cat_gray_white.png")
+
+    # Dogs, standing and facing right. Each breed is the same drawing with its
+    # own body length, legs, ears, tail, colors, and markings. size is how big
+    # the breed is, compared with a lab.
+    for name, d in DOGS.items():
+        body, w, h = dog(**d)
+        save(body, f"0 0 {w} {h}", w, h, f"dog_{name}.png")
 
     def guinea_pig(body, spots):
         s = (f'<ellipse cx="15" cy="12" rx="13" ry="7.5" fill="{body}"/>'

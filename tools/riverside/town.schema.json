@@ -975,7 +975,8 @@
           "type": {
             "enum": [
               "cat",
-              "guinea_pig"
+              "guinea_pig",
+              "dog"
             ]
           },
           "color": {
@@ -983,9 +984,27 @@
               "black",
               "gray",
               "tabby",
+              "white",
+              "gray_white",
               "black_orange",
-              "white_orange"
-            ]
+              "white_orange",
+              "yellow_lab",
+              "black_lab",
+              "chocolate_lab",
+              "beagle",
+              "corgi",
+              "dalmatian",
+              "dachshund",
+              "husky"
+            ],
+            "description": "cat: black, gray, tabby, white, gray_white. guinea_pig: black_orange, white_orange. dog: yellow_lab, black_lab, chocolate_lab, beagle, corgi, dalmatian, dachshund, husky."
+          },
+          "size": {
+            "enum": [
+              "regular",
+              "small"
+            ],
+            "description": "A small animal is shown at 0.75 times the regular size. Default regular."
           }
         }
       }

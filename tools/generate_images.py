@@ -38,9 +38,16 @@ SEASONAL = {"far": ["winter"], "far_b": ["winter"], "near": ["winter"], "near_b"
 CROPS = {"clouds": (90, 255), "far": (295, 425), "far_b": (295, 425), "near": (400, 360), "near_b": (400, 360),
          "hills": (420, 490), "town": (550, 530)}
 
-# Animal image sizes on screen. They are drawn at a larger size so their
-# edges stay smooth.
-PET_SIZES = {"cat": (42, 45), "guinea": (45, 28)}
+# Animals are shown at 0.7 times their image size, and small animals at 0.75
+# times that. previews.py uses the same numbers.
+PET_SCALE, SMALL_PET = 0.7, 0.75
+
+def pet_size(images, pet):
+    """The size of an animal on screen, from the size of its image."""
+    with Image.open(os.path.join(images, pet["image"] + ".png")) as im:
+        w, h = im.size
+    k = PET_SCALE * (SMALL_PET if pet["small"] else 1)
+    return round(w * k), round(h * k)
 
 def town_section(town, i, p, season):
     section = town["sections"][i]
@@ -81,13 +88,13 @@ def write_icons(town, out, build_dir):
     crop.resize((290, 218), Image.LANCZOS).save(os.path.join(out, "icon_hd.png"))
     crop.resize((540, 405), Image.LANCZOS).save(os.path.join(out, "icon_fhd.png"))
 
-def runtime_config(town):
+def runtime_config(town, images):
     """The settings MainScene.brs reads from components/town_config.json."""
     ex = town["extras"]
     pets = []
-    for name in town["pets"]:
-        w, h = PET_SIZES[name.split("_")[0]]
-        pets.append({"image": name, "w": w, "h": h})
+    for pet in town["pets"]:
+        w, h = pet_size(images, pet)
+        pets.append({"image": pet["image"], "w": w, "h": h})
     return {
         "title": town["title"], "lat": str(town["lat"]), "lon": str(town["lon"]),
         "temperatureUnit": "celsius" if town["temperature"] == "C" else "fahrenheit",
@@ -116,7 +123,7 @@ def build(config, package, build_dir, docs=None):
     write_images(town, images)
     write_icons(town, images, build_dir)
     with open(os.path.join(package, "components", "town_config.json"), "w") as f:
-        json.dump(runtime_config(town), f, indent=2)
+        json.dump(runtime_config(town, images), f, indent=2)
         f.write("\n")
     write_manifest(os.path.join(package, "manifest"), town["title"])
     previews.write_all(town, layers(town), images, build_dir, docs)
