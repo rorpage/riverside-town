@@ -105,6 +105,11 @@ README.md has the full steps in "Adding features and releasing". The rules:
 - Avoid major versions. Prefer adding a new field with a default over renaming or removing one, so existing `town.json` files keep working.
 - For a major version, change the image in `action.yml` from `:1` to the new major version in the same pull request. The publish workflow moves the `v<major>` git tag; repositories that use the old major version keep it until their workflow is changed.
 - When a feature adds `town.json` settings, update the sample `town.json` here and in rorpage/riverside-town-sample (with a ZIP code there instead of lat and lon).
+- The owner's family town is in rorpage/riverside-town-page-family. Both town repositories build with the published Action, so a `town.json` change that uses a new feature fails until that feature is released. Commit those changes in the town repositories, but do not push them yet. After the owner pushes the tag:
+  1. Wait for the `riverside-town-roku-generator` publish run for the tag to pass, and check that the `v1` git tag moved to the same commit.
+  2. Push the waiting commits to `main` in the town repositories. Each push starts their "Build my town" workflow.
+  3. Check that each "Build my town" run passed and has both downloads, `riverside-town-roku` and `riverside-town-previews`. If a run fails, read its log and fix the cause.
+- Do not put the family town's details (names, numbers, places) in this repository. They belong only in its own private repository.
 
 ## Branches
 

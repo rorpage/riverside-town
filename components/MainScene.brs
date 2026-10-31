@@ -782,7 +782,6 @@ sub parkCar()
     facingLeft = Rnd(2) = 2
     ' The strip starts at screen y = 550, and the station ground is at screen y = 898.
     addParkedCar(d, facingLeft, m.config.parkedCarX, "parked_car")
-    print "MainScene: parked the "; d.name; " at x = "; m.config.parkedCarX
     ' Town section 0 is shown twice in the strip, so a car parked there is
     ' added to the second copy too
     if m.config.parkedCarX < 1920 then addParkedCar(d, facingLeft, m.config.parkedCarX + m.sections * 1920, "parked_car_copy")
