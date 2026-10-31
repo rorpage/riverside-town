@@ -102,6 +102,8 @@ The workflow in the template repository uses the `rorpage/riverside-town@v1` act
     path: out/previews/
 ```
 
+After the two uploads, the workflow deletes the downloads from earlier runs, so only the newest ones count against the storage space of your GitHub account. This step needs `actions: write` in the workflow's `permissions`. If a build fails, the downloads from the last build that passed are kept.
+
 GitHub puts each download in a zip file. `out/roku/` holds the screensaver files without a zip, so the zip that GitHub makes has the manifest at the top level, which is what the Roku needs.
 
 ### With Docker
