@@ -13,10 +13,10 @@ sub init()
 
     ' Scroll speed of each scenery layer in pixels per second. Farther = slower.
     m.layerSpeeds = { clouds: 8, far: 5, near: 12, hills: 24, town: 55 }
-    ' Width of each layer before it repeats. The far and near mountains and the
-    ' hills are two different 1920 px tiles each, and the town has one 1920 px
-    ' tile for each town section.
-    m.layerWidths = { clouds: 1920, far: 3840, near: 3840, hills: 3840, town: m.sections * 1920 }
+    ' Width of each layer before it repeats. The far and near mountains are two
+    ' different 1920 px tiles each, the hills are three, and the town has one
+    ' 1920 px tile for each town section.
+    m.layerWidths = { clouds: 1920, far: 3840, near: 3840, hills: 5760, town: m.sections * 1920 }
     ' The street moves with the town layer, so cars use this as the ground speed offset.
     m.cameraSpeed = 55
 
@@ -27,7 +27,7 @@ sub init()
         { name: "sedan", w: 280, h: 104, wheels: [[62, 80], [218, 80]],   r: 22, bottom: 102, ground: 300 },
         { name: "van",   w: 310, h: 130, wheels: [[66, 104], [246, 104]], r: 24, bottom: 128, ground: 220 },
         { name: "jeep",  w: 270, h: 140, wheels: [[68, 108], [214, 108]], r: 28, bottom: 136, ground: 200 },
-        { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 140 },
+        { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 165 },
         { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 },
         { name: "buggy",  w: 250, h: 112, wheels: [[52, 84], [198, 84]],  r: 26, bottom: 110, ground: 260 },
         { name: "delorean", w: 300, h: 106, wheels: [[66, 84], [232, 84]], r: 20, bottom: 104, ground: 360, special: true },
@@ -47,10 +47,17 @@ sub init()
     ' specialFirstMin, plus up to specialFirstMore. Seconds between trips: at
     ' least specialWaitMin, plus up to specialWaitMore. Regular cars wait 2 to 9
     ' seconds between trips.
-    m.specialFirstMin = 30
-    m.specialFirstMore = 90
-    m.specialWaitMin = 180
-    m.specialWaitMore = 300
+    m.specialFirstMin = 15
+    m.specialFirstMore = 45
+    m.specialWaitMin = 60
+    m.specialWaitMore = 120
+    ' After a car leaves a lane, the lane stays empty for a random time between
+    ' laneGapMin and laneGapMax milliseconds (1 to 10 seconds) before the next
+    ' car can use it.
+    m.laneGapMin = 1000
+    ' The animal posters that have a darker image for night (see addAnimal)
+    m.nightAnimals = []
+    m.laneGapMax = 10000
 
     ' Open-Meteo weather codes (WMO) to text
     m.codeText = {
@@ -73,7 +80,7 @@ sub init()
     ' SEASONAL in tools/generate_images.py. Every town section has an image
     ' for each season.
     allSeasons = ["spring", "summer", "fall", "winter"]
-    m.seasonalLayers = { far: ["winter"], far_b: ["winter"], near: ["winter"], near_b: ["winter"], hills: allSeasons, hills_b: allSeasons }
+    m.seasonalLayers = { far: ["winter"], far_b: ["winter"], near: ["winter"], near_b: ["winter"], hills: allSeasons, hills_b: allSeasons, hills_c: allSeasons }
     m.townNames = []
     for i = 0 to m.sections - 1
         name = "town_" + Mid("abcde", i + 1, 1)
@@ -233,7 +240,7 @@ end sub
 
 ' The blinking red light on top of the radio tower on the hills. radioLight in
 ' the settings is the center of the light in hills strip coordinates, or empty
-' if there is no tower. Hills tile A is at x = 0 and again at x = 3840, so
+' if there is no tower. Hills tile A is at x = 0 and again at x = 5760, so
 ' there is a light in both copies. It blinks at dusk and night, like the
 ' airplane's tail light.
 sub buildTowerLight()
@@ -252,7 +259,7 @@ sub buildTowerLight()
         light.uri = "pkg:/images/tower_light.png"
         light.width = 24
         light.height = 24
-        light.translation = [m.config.radioLight[0] + i * 3840 - 12, m.config.radioLight[1] - 12]
+        light.translation = [m.config.radioLight[0] + i * m.layerWidths.hills - 12, m.config.radioLight[1] - 12]
         light.opacity = 0
         interp = anim.createChild("FloatFieldInterpolator")
         interp.key = [0.0, 0.12, 0.22, 1.0]
@@ -360,7 +367,9 @@ sub applyScene()
     m.top.findNode("farB").uri = layerUri("far_b", ground, period)
     m.top.findNode("nearB").uri = layerUri("near_b", ground, period)
     m.top.findNode("hillsB").uri = layerUri("hills_b", ground, period)
+    m.top.findNode("hillsC").uri = layerUri("hills_c", ground, period)
     updateTowerLight(period)
+    updateAnimals(period)
     for i = 0 to m.sections
         m.townPosters[i].uri = layerUri(m.townNames[i MOD m.sections], ground, period)
     end for
@@ -632,6 +641,9 @@ end sub
 sub buildCars()
     m.cars = {}
     m.laneBusy = { near: "", far: "" }
+    ' The time, in milliseconds on m.clock, when each lane can take a car again
+    m.laneReadyAt = { near: 0, far: 0 }
+    m.clock = CreateObject("roTimespan")
     for each def in m.carDefs
         makeCar(def)
     end for
@@ -708,7 +720,9 @@ sub onCarTimer(event as object)
 end sub
 
 ' Sends a car across the screen. Only one car uses a lane at a time so faster
-' cars never drive through slower ones.
+' cars never drive through slower ones, and a lane stays empty for 1 to 10
+' seconds after a car leaves it. If no lane is free, the car tries again in
+' half a second.
 ' Near lane: full size. Far lane: slightly smaller.
 ' With driveOn "right" in the settings, the near lane drives left to right and
 ' the far lane right to left. With "left", the directions are the other way
@@ -718,10 +732,12 @@ end sub
 sub spawnCar(name as string)
     c = m.cars[name]
     free = []
-    if m.laneBusy.near = "" then free.Push("near")
-    if m.laneBusy.far = "" then free.Push("far")
+    now = m.clock.TotalMilliseconds()
+    for each name in ["near", "far"]
+        if m.laneBusy[name] = "" and now >= m.laneReadyAt[name] then free.Push(name)
+    end for
     if free.Count() = 0
-        c.timer.duration = 2
+        c.timer.duration = 0.5
         c.timer.control = "start"
         return
     end if
@@ -791,6 +807,7 @@ sub onCarMoveState(event as object)
     c.node.visible = false
     c.spin.control = "stop"
     m.laneBusy[c.lane] = ""
+    m.laneReadyAt[c.lane] = m.clock.TotalMilliseconds() + m.laneGapMin + Rnd(m.laneGapMax - m.laneGapMin + 1) - 1
     c.lane = ""
     c.timer.duration = 2 + Rnd(7)
     if isSpecial(c.def) then c.timer.duration = m.specialWaitMin + Rnd(m.specialWaitMore)
@@ -870,12 +887,29 @@ sub placeAnimals()
     end for
 end sub
 
+' An animal with night: true in the settings also has an image ending in
+' _night, which is shown at night. applyScene() calls updateAnimals() when the
+' time of day changes.
 sub addAnimal(strip as object, a as object, x as integer, feetY as integer)
     pet = strip.createChild("Poster")
     pet.uri = "pkg:/images/" + a.image + ".png"
     pet.width = a.w
     pet.height = a.h
     pet.translation = [x, feetY - a.h]
+    if a.DoesExist("night")
+        if a.night = true
+            m.nightAnimals.Push({ poster: pet, image: a.image })
+            updateAnimals(m.period)
+        end if
+    end if
+end sub
+
+sub updateAnimals(period as string)
+    suffix = ""
+    if period = "night" then suffix = "_night"
+    for each a in m.nightAnimals
+        a.poster.uri = "pkg:/images/" + a.image + suffix + ".png"
+    end for
 end sub
 
 ' ================= Helpers =================

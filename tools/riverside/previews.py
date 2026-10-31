@@ -99,9 +99,10 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     mtn = season if season == "winter" else "summer"
     far = scenery.far(p, mtn, town["extras"]["table_mountain"]) if section % 2 == 0 else scenery.far_b(p, mtn)
     near = scenery.near(p, mtn) if section % 2 == 0 else scenery.near_b(p, mtn)
-    # The hills change tiles too; only the first has the radio station
-    hills = scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"], "a" if section % 2 == 0 else "b")
-    light = scenery.radio_light(town["radio_station"]) if section % 2 == 0 and pal != "day" else None
+    # The hills change tiles too, A, B, then C; only the first has the radio station
+    tile = "abc"[section % 3]
+    hills = scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"], tile)
+    light = scenery.radio_light(town["radio_station"]) if tile == "a" and pal != "day" else None
     if light:
         hills += f'<circle cx="{light[0]}" cy="{light[1]}" r="7" fill="#E74C3C" fill-opacity="0.35"/><circle cx="{light[0]}" cy="{light[1]}" r="3" fill="#FF6B5B"/>'
     art_svg = (scenery.clouds(p, season) + far + near + hills
@@ -112,8 +113,12 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     if plane and town["extras"]["airplane"]:
         im.alpha_composite(Image.open(os.path.join(images, f"plane_{pal}.png")).convert("RGBA").resize((56, 22), Image.LANCZOS), plane)
     for animal, px in pets:
-        # Animal images are saved at the size they are shown
-        pet = Image.open(os.path.join(images, f"{animal['image']}.png")).convert("RGBA")
+        # Animal images are saved at the size they are shown. Some animals have
+        # a darker image for night, like in MainScene.brs.
+        name = animal["image"]
+        if pal == "night" and os.path.exists(os.path.join(images, f"{name}_night.png")):
+            name += "_night"
+        pet = Image.open(os.path.join(images, f"{name}.png")).convert("RGBA")
         im.alpha_composite(pet, (px, 924 - pet.height))
     parked(town, images, im, section, "van" if pal == "day" else "sedan")
     cars = town["cars"]

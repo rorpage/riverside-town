@@ -120,37 +120,56 @@ def kayaks(p, season, places=KAYAKS):
 # Each is (x of the left end, color, facing left). They are not drawn in
 # winter.
 HILL_BIKES = [(610, "#C0392B", False), (1610, "#2E86C1", True)]
-def hill_bikes(p, season, places=HILL_BIKES):
+def hill_bikes(p, season, places=HILL_BIKES, curves=None):
     if season == "winter":
         return ""
     # 0.7 is BIKE_SCALE in buildings.py times about RADIO_SCALE, the size of
     # things at the distance of the hills
-    return "".join(bicycle(x, near_hill_y(x + 21) + 3, 0.7, wall(c, p), left) for x, c, left in places)
+    return "".join(bicycle(x, near_hill_y(x + 21, curves or NEAR_HILL) + 3, 0.7, wall(c, p), left) for x, c, left in places)
 
 # The radio station stands on the near hill to the left of the river, where
 # the hill is nearly flat and high enough to show above most roofs. It is
 # drawn at RADIO_SCALE, because the hills are farther away than the street,
 # with its tall tower behind it. RADIO_X is the center of the station.
 RADIO_X, RADIO_SCALE = 400, 0.55
-# The tower stands behind the station and to its right, TOWER_DX pixels from
-# the station's center. It is drawn before the near hill, so the hill covers
-# the bottom of its legs and it stands behind the top of the hill.
-TOWER_DX = 120
+# The tower stands behind the right half of the station, TOWER_DX pixels to the
+# right of the station's center. Both of its legs reach the ground behind the
+# building, so the whole building is in front of the tower. It is drawn before
+# the near hill, so the hill covers the bottom of its legs.
+TOWER_DX = 70
 
-def near_hill_y(x):
-    """The y of the top of the near hill at x. The hill is two curves:
-    (0,780) C(400,720) (700,760) (960,740), and (960,740) C(1300,720)
-    (1520,840) (1920,780)."""
-    if x < 960:
-        p0, p1, p2, p3 = (0, 780), (400, 720), (700, 760), (960, 740)
-    else:
-        p0, p1, p2, p3 = (960, 740), (1300, 720), (1520, 840), (1920, 780)
+# Hill outlines, as lists of cubic curves: (start, control 1, control 2, end).
+# Every outline starts at the same height and slope and ends at the same height
+# and slope, so the tiles join without a seam in any order: the far hill starts
+# at (0,700) toward (300,620) and ends at (1920,700) from (1620,780); the near
+# hill starts at (0,780) toward (400,720) and ends at (1920,780) from (1520,840).
+FAR_HILL = [((0, 700), (300, 620), (600, 660), (960, 640)), ((960, 640), (1300, 620), (1620, 780), (1920, 700))]
+NEAR_HILL = [((0, 780), (400, 720), (700, 760), (960, 740)), ((960, 740), (1300, 720), (1520, 840), (1920, 780))]
+# Tile C has its own outlines, with more and rounder hills, and no river
+FAR_HILL_C = [((0, 700), (300, 620), (420, 600), (640, 630)), ((640, 630), (860, 660), (980, 590), (1240, 610)),
+              ((1240, 610), (1440, 625), (1620, 780), (1920, 700))]
+NEAR_HILL_C = [((0, 780), (200, 750), (300, 700), (480, 705)), ((480, 705), (660, 710), (720, 780), (900, 785)),
+               ((900, 785), (1080, 790), (1150, 700), (1350, 705)), ((1350, 705), (1450, 708), (1520, 840), (1920, 780))]
+
+def hill_path(curves, fill):
+    """A filled hill shape: the outline, then down to y=910 and back."""
+    d = f"M{curves[0][0][0]},{curves[0][0][1]}" + "".join(
+        f" C{a[0]},{a[1]} {b[0]},{b[1]} {c[0]},{c[1]}" for _, a, b, c in curves)
+    return f'<path fill="{fill}" d="{d} L1920,910 L0,910 Z"/>'
+
+def curve_y(curves, x):
+    """The y of a hill outline at x."""
+    p0, p1, p2, p3 = next((c for c in curves if x <= c[3][0]), curves[-1])
     lo, hi = 0.0, 1.0
     for _ in range(40):
         t = (lo + hi) / 2
         bx = (1 - t) ** 3 * p0[0] + 3 * (1 - t) ** 2 * t * p1[0] + 3 * (1 - t) * t ** 2 * p2[0] + t ** 3 * p3[0]
         lo, hi = (t, hi) if bx < x else (lo, t)
     return (1 - t) ** 3 * p0[1] + 3 * (1 - t) ** 2 * t * p1[1] + 3 * (1 - t) * t ** 2 * p2[1] + t ** 3 * p3[1]
+
+def near_hill_y(x, curves=NEAR_HILL):
+    """The y of the top of the near hill at x."""
+    return curve_y(curves, x)
 
 def lowest_ground(center, half):
     """The lowest point of the near hill between center - half and center + half."""
@@ -191,14 +210,37 @@ def radio_scene(p, season, spec):
 # The second hills tile. It has the same hills and river, so the tiles join,
 # with trees, kayaks, and a bike in other places, and no radio station.
 TREES_B = [(40,694),(150,682),(210,676),(330,666),(560,662),(650,662),(780,656),
-           (1250,664),(1330,676),(1480,700),(1560,712),(1650,722),(1830,718)]
-ROUND_TREES_B = [(280, 794), (690, 790), (1700, 806)]
+           (1250,664),(1330,676),(1480,700),(1560,712),(1650,722),(1830,718),
+           (95,700),(270,680),(440,670),(1400,700),(1610,728),(1760,734)]
+ROUND_TREES_B = [(280, 794), (690, 790), (1530, 818), (1700, 806)]
 KAYAKS_B = [(1250, 790, 12, "#27AE60"), (1330, 812, -8, "#D9452F")]
 HILL_BIKES_B = [(470, "#F2B33D", True)]
 
+# The third hills tile has its own hill shapes and no river. Its pines stand in
+# groups on the far hill, and its round trees on the near hill. The y of each
+# tree is worked out from the hill outlines, so every tree stands on the ground.
+PINES_C = [(x, round(curve_y(FAR_HILL_C, x)) + dy) for x, dy in
+           ((50, 12), (110, 20), (165, 10), (380, 8), (430, 18), (480, 10), (535, 22),
+            (760, 14), (815, 8), (1020, 10), (1075, 20), (1130, 12), (1185, 24), (1300, 12),
+            (1560, 16), (1620, 26), (1690, 18), (1850, 14))]
+ROUND_TREES_C = [(x, round(curve_y(NEAR_HILL_C, x)) + dy) for x, dy in
+                 ((250, 40), (640, 30), (980, 36), (1400, 34), (1760, 30))]
+HILL_BIKES_C = [(820, "#27AE60", False)]
+
+def hills_c(p, season, with_bikes=False):
+    """The third hills tile (hills_c): its own hill shapes, more trees, and no
+    river."""
+    return (hill_path(FAR_HILL_C, p["hillFar"]) + hill_path(NEAR_HILL_C, p["hill"])
+            + "".join(pine(x, y, p, season) for x, y in PINES_C)
+            + "".join(round_tree(x, y, 36, 30, p, season) for x, y in ROUND_TREES_C)
+            + (hill_bikes(p, season, HILL_BIKES_C, NEAR_HILL_C) if with_bikes else ""))
+
 def hills(p, season, with_kayaks=True, with_bikes=False, radio=None, tile="a"):
     """One hills tile. tile "a" has the radio station, if there is one; tile
-    "b" (hills_b) has other trees and kayaks."""
+    "b" (hills_b) has other trees and kayaks; tile "c" (hills_c) has its own
+    hill shapes."""
+    if tile == "c":
+        return hills_c(p, season, with_bikes)
     b = tile == "b"
     if b:
         radio = None
