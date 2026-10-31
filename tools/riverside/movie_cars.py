@@ -88,6 +88,7 @@ def herbie(left):
          + wells("herbie", 6) +
          # Running board between the fenders
          f'<rect x="246" y="172" width="226" height="12" rx="4" fill="#2B2F33"/>'
+         f'<path fill="{WINDOW}" d="M132,62 Q150,40 176,28 L184,40 Q160,52 146,70 Z"/>'
          f'<path fill="{WINDOW}" d="M200,72 Q200,26 246,22 L292,20 L292,72 Z"/>'
          f'<path fill="{WINDOW}" d="M306,20 L380,22 Q398,24 408,40 L432,70 L306,72 Z"/>'
          f'<path d="M298,18 L298,172 M442,72 L446,172" stroke="{LINE}" stroke-width="3" fill="none"/>'
@@ -194,11 +195,12 @@ def delorean():
          f'<rect x="244" y="78" width="40" height="12" rx="5" fill="#AEB6BC" stroke="{LINE}" stroke-width="2"/>'
          f'<rect x="258" y="88" width="10" height="10" fill="{LINE}"/>'
          # Body: the roof runs back into a sloped rear deck, then a short rear face
-         f'<path fill="{ST}" stroke="{LINE}" stroke-width="3" d="M54,212 L54,150 L66,124 Q70,120 80,119 L250,98 '
-         f'L398,96 Q410,96 420,102 L500,136 Q600,150 660,160 Q706,170 712,192 L714,214 Q710,226 694,228 L68,230 Q54,228 54,212 Z"/>'
-         f'<path fill="{LOW}" d="M54,170 L712,180 L714,214 Q710,226 694,228 L68,230 Q54,228 54,212 Z"/>'
+         f'<path fill="{ST}" stroke="{LINE}" stroke-width="3" d="M54,184 L54,150 L66,124 Q70,120 80,119 L250,98 '
+         f'L398,96 Q410,96 420,102 L500,136 Q600,150 660,160 Q706,170 712,192 L714,214 Q710,226 694,228 L92,230 Z"/>'
+         f'<path fill="{LOW}" d="M54,170 L712,180 L714,214 Q710,226 694,228 L92,230 L54,184 Z"/>'
          + wells("delorean", 6)
-         # Louvers on the rear slope
+         # Louvers on the rear slope, on a black panel
+         + f'<path fill="#2E3438" d="M120,114 L250,98 L254,108 L124,125 Z"/>'
          + "".join(f'<line x1="{170 + i * 14}" y1="{108 - i * 1.7:.1f}" x2="{176 + i * 14}" y2="{115 - i * 1.7:.1f}" stroke="#3E4449" stroke-width="3"/>' for i in range(5)) +
          # Pipe with copper coils along the rear deck
          f'<rect x="96" y="120" width="150" height="7" rx="3.5" fill="{PART_D}" transform="rotate(-7 96 120)"/>'
@@ -215,9 +217,11 @@ def delorean():
          f'<rect x="316" y="182" width="16" height="6" rx="3" fill="{LINE}"/>'
          f'<path d="M300,228 L520,228" stroke="#E3E7EA" stroke-width="5"/>'
          f'<rect x="646" y="164" width="34" height="20" rx="3" fill="#E9E2C8" stroke="{LINE}" stroke-width="2"/>'
-         # Rear face: black panel with the tail lights
-         f'<rect x="54" y="150" width="12" height="52" fill="#3E4449"/>'
-         f'<rect x="54" y="156" width="12" height="16" fill="{RED_LIGHT}"/>'
+         # Rear face: a black panel with the tail lights, and a black bumper
+         # that runs up at an angle from the bottom of the car
+         f'<path fill="#2E3438" d="M54,150 L66,124 Q70,120 80,119 L80,184 L54,184 Z"/>'
+         f'<rect x="56" y="140" width="20" height="16" fill="{RED_LIGHT}"/>'
+         f'<path fill="#2E3438" d="M54,180 L82,180 L112,229 L92,230 Z"/>'
          f'<rect x="696" y="202" width="20" height="12" rx="3" fill="#3E4449"/>')
     return ref("delorean", s), ref("delorean", s, True)
 
