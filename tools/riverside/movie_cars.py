@@ -81,7 +81,7 @@ def herbie(left):
     # top, so they do not show from the side.
     BODY, LINE = "#E6E4D8", "#B9B7AA"
     s = (f'<path fill="{BODY}" stroke="{LINE}" stroke-width="3" d="M70,178 Q66,140 82,108 Q104,66 150,36 '
-         f'Q196,8 262,4 L330,4 Q382,8 410,34 L446,70 Q470,76 500,82 Q560,96 596,128 Q616,146 618,170 L612,180 L80,182 Z"/>'
+         f'Q196,8 262,4 L330,4 Q382,8 410,34 L440,64 C548,62 612,84 622,132 L620,170 L612,180 L80,182 Z"/>'
          # Fenders, with a line where they meet the body
          f'<path fill="{BODY}" stroke="{LINE}" stroke-width="3" d="M86,184 Q86,112 166,104 Q238,104 254,184 Z"/>'
          f'<path fill="{BODY}" stroke="{LINE}" stroke-width="3" d="M466,184 Q470,106 540,102 Q606,104 622,172 L620,184 Z"/>'
@@ -185,31 +185,39 @@ def ecto1(left):
 
 def delorean():
     # The DeLorean time machine from the first Back to the Future movie: a
-    # stainless steel wedge with gull-wing doors. The time machine parts are the
-    # vents and fins at the back, the reactor on the rear deck, coils and pipes
-    # behind the roof, and a small unit on the roof.
-    ST, LOW, LINE = "#C3C9CE", "#9EA6AC", "#7F878D"
-    s = (  # Vents and fins at the back, drawn behind the body
-         f'<path fill="#4A5157" d="M58,128 L62,62 L104,58 L150,118 Z"/>'
-         + "".join(f'<rect x="28" y="{y}" width="36" height="7" rx="3" fill="#6E777F"/>' for y in (76, 90, 104, 118)) +
-         f'<rect x="124" y="36" width="28" height="64" rx="4" fill="#9EA6AC"/><rect x="118" y="30" width="40" height="10" rx="4" fill="#C3C9CE"/>'
-         f'<rect x="240" y="64" width="50" height="16" rx="6" fill="#AEB6BC"/><rect x="254" y="80" width="10" height="16" fill="#7F878D"/>'
-         # Body
-         f'<path fill="{ST}" stroke="{LINE}" stroke-width="3" d="M52,212 L50,140 Q56,124 80,118 L160,100 L250,98 '
-         f'L398,96 Q410,96 420,102 L500,136 Q600,150 660,160 Q706,170 712,192 L714,214 Q710,226 694,228 L66,230 Q52,228 52,212 Z"/>'
-         f'<path fill="{LOW}" d="M51,170 L712,180 L714,214 Q710,226 694,228 L66,230 Q52,228 51,212 Z"/>'
-         + wells("delorean", 6) +
-         # Coils and pipes on the rear deck
-         f'<path d="M170,104 Q180,92 196,96 L248,100" stroke="#5B646C" stroke-width="8" fill="none"/>'
-         + "".join(f'<circle cx="{x}" cy="112" r="9" fill="none" stroke="#5B646C" stroke-width="4"/>' for x in (200, 222, 244)) +
-         f'<path d="M66,140 L140,124" stroke="#5B646C" stroke-width="5"/>'
+    # stainless steel wedge with gull-wing doors and black louvers on the rear
+    # slope. The time machine parts sit low on the rear deck: a vent box at the
+    # back with slats that face backward, the ribbed reactor in front of it, a
+    # pipe with copper coils behind the roof, and a small unit on the roof.
+    ST, LOW, LINE, PART, PART_D = "#C3C9CE", "#9EA6AC", "#7F878D", "#8A9399", "#4E565C"
+    s = (  # Roof unit, drawn behind the body
+         f'<rect x="244" y="78" width="40" height="12" rx="5" fill="#AEB6BC" stroke="{LINE}" stroke-width="2"/>'
+         f'<rect x="258" y="88" width="10" height="10" fill="{LINE}"/>'
+         # Body: the roof runs back into a sloped rear deck, then a short rear face
+         f'<path fill="{ST}" stroke="{LINE}" stroke-width="3" d="M54,212 L54,150 L66,124 Q70,120 80,119 L250,98 '
+         f'L398,96 Q410,96 420,102 L500,136 Q600,150 660,160 Q706,170 712,192 L714,214 Q710,226 694,228 L68,230 Q54,228 54,212 Z"/>'
+         f'<path fill="{LOW}" d="M54,170 L712,180 L714,214 Q710,226 694,228 L68,230 Q54,228 54,212 Z"/>'
+         + wells("delorean", 6)
+         # Louvers on the rear slope
+         + "".join(f'<line x1="{170 + i * 14}" y1="{108 - i * 1.7:.1f}" x2="{176 + i * 14}" y2="{115 - i * 1.7:.1f}" stroke="#3E4449" stroke-width="3"/>' for i in range(5)) +
+         # Pipe with copper coils along the rear deck
+         f'<rect x="96" y="120" width="150" height="7" rx="3.5" fill="{PART_D}" transform="rotate(-7 96 120)"/>'
+         + "".join(f'<line x1="{x}" y1="{126 - (x - 96) * 0.123:.1f}" x2="{x}" y2="{112 - (x - 96) * 0.123:.1f}" stroke="#B87333" stroke-width="3"/>' for x in (206, 214, 222)) +
+         # Vent box at the back, with slats facing backward
+         f'<path fill="{PART}" stroke="{PART_D}" stroke-width="2" d="M62,124 L70,92 Q72,86 78,86 L112,86 Q118,86 118,92 L118,120 Z"/>'
+         + "".join(f'<line x1="{70 - (y - 92) * 0.25:.1f}" y1="{y}" x2="108" y2="{y}" stroke="{PART_D}" stroke-width="3"/>' for y in (96, 104, 112)) +
+         # Ribbed reactor in front of the vent box
+         f'<rect x="126" y="80" width="26" height="34" rx="3" fill="#B3BBC1" stroke="{PART_D}" stroke-width="2"/>'
+         f'<rect x="122" y="74" width="34" height="9" rx="4" fill="#D3D8DC" stroke="{PART_D}" stroke-width="2"/>'
+         + "".join(f'<line x1="127" y1="{y}" x2="151" y2="{y}" stroke="{PART_D}" stroke-width="2"/>' for y in (92, 101)) +
          f'<path fill="{WINDOW}" d="M296,106 L398,104 L462,142 L296,142 Z"/>'
          f'<path d="M262,100 L268,226 M498,138 L506,226" stroke="{LINE}" stroke-width="3" fill="none"/>'
          f'<rect x="316" y="182" width="16" height="6" rx="3" fill="{LINE}"/>'
          f'<path d="M300,228 L520,228" stroke="#E3E7EA" stroke-width="5"/>'
          f'<rect x="646" y="164" width="34" height="20" rx="3" fill="#E9E2C8" stroke="{LINE}" stroke-width="2"/>'
-         f'<rect x="52" y="182" width="22" height="16" rx="2" fill="{RED_LIGHT}"/>'
-         f'<rect x="52" y="198" width="22" height="10" fill="#3E4449"/>'
+         # Rear face: black panel with the tail lights
+         f'<rect x="54" y="150" width="12" height="52" fill="#3E4449"/>'
+         f'<rect x="54" y="156" width="12" height="16" fill="{RED_LIGHT}"/>'
          f'<rect x="696" y="202" width="20" height="12" rx="3" fill="#3E4449"/>')
     return ref("delorean", s), ref("delorean", s, True)
 
