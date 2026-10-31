@@ -1027,7 +1027,16 @@
           "jeep",
           "truck",
           "sports",
-          "buggy",
+          "buggy"
+        ]
+      }
+    },
+    "special_cars": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Cars from movies that drive by less often than the other cars and never park at the gas station. Default none.",
+      "items": {
+        "enum": [
           "delorean",
           "herbie"
         ]

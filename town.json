@@ -47,6 +47,7 @@
     { "type": "dog", "color": "dachshund" }
   ],
   "cars": ["sedan", "van", "jeep", "truck", "sports", "buggy"],
+  "special_cars": [],
   "extras": {
     "airplane": true,
     "kayaks": true,

@@ -57,9 +57,10 @@ DEFAULTS = {
     "section_break": dict(),
 }
 
-# The cars that drive by when town.json has no "cars" list. "delorean" and
-# "herbie" are also valid cars, but a town must list them to turn them on.
+# The cars that drive by when town.json has no "cars" list
 CARS = ["sedan", "van", "jeep", "truck", "sports", "buggy"]
+# Special cars from movies. They are off unless a town lists them in "special_cars".
+SPECIAL_CARS = ["delorean", "herbie"]
 PETS = {"cat": ["black", "gray", "tabby", "white", "gray_white"], "guinea_pig": ["black_orange", "white_orange"],
         "dog": ["yellow_lab", "black_lab", "chocolate_lab", "beagle", "corgi", "dalmatian", "dachshund", "husky"]}
 PET_IMAGE = {"cat": "cat", "guinea_pig": "guinea", "dog": "dog"}   # The first part of each image name
@@ -92,6 +93,8 @@ def explain(e, best_match):
     where = "/".join(str(x) for x in path) or "(top level)"
     if path == ["location"] and e.validator == "anyOf":
         return 'location: give a "zip", or both "lat" and "lon".'
+    if len(path) == 2 and path[0] == "cars" and e.instance in SPECIAL_CARS:
+        return f'{where}: "{e.instance}" is a special car. List it in "special_cars" instead of "cars".'
     if e.validator == "anyOf" and isinstance(e.instance, dict) and len(path) == 2 and path[0] in ("buildings", "houses"):
         kind = e.instance.get("type")
         types = sorted(DEFAULTS) + sorted(PRESETS)
@@ -162,6 +165,7 @@ def fill(data):
     town["hemisphere"] = data.get("hemisphere", "north")
     town["drive_on"] = data.get("drive_on", "right")
     town["cars"] = data.get("cars", CARS)
+    town["special_cars"] = data.get("special_cars", [])
     town["extras"] = dict(EXTRAS, **data.get("extras", {}))
     # The radio station on the hill beside the river
     radio = data.get("radio_station")

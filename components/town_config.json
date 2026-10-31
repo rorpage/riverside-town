@@ -15,6 +15,7 @@
     "sports",
     "buggy"
   ],
+  "specialCars": [],
   "pets": [
     {
       "image": "cat_black",
