@@ -20,48 +20,56 @@
     {
       "image": "cat_black",
       "w": 33,
-      "h": 35
+      "h": 35,
+      "night": false
     },
     {
       "image": "cat_tabby_small",
       "w": 21,
-      "h": 23
+      "h": 23,
+      "night": false
     },
     {
       "image": "cat_white",
       "w": 33,
-      "h": 35
+      "h": 35,
+      "night": false
     },
     {
       "image": "cat_gray_white",
       "w": 33,
-      "h": 35
+      "h": 35,
+      "night": false
     },
     {
       "image": "guinea_white_orange",
       "w": 35,
-      "h": 22
+      "h": 22,
+      "night": false
     },
     {
       "image": "dog_yellow_lab",
       "w": 53,
-      "h": 37
+      "h": 37,
+      "night": false
     },
     {
       "image": "dog_beagle",
       "w": 42,
-      "h": 28
+      "h": 28,
+      "night": false
     },
     {
       "image": "dog_dachshund",
       "w": 42,
-      "h": 25
+      "h": 25,
+      "night": false
     }
   ],
-  "parkedCarX": 2788,
+  "parkedCarX": 2760,
   "radioLight": [
-    520,
-    24
+    470,
+    26
   ],
   "airplane": true,
   "fireflies": true,

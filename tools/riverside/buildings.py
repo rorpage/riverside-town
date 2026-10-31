@@ -513,9 +513,10 @@ def call_letters(s, cx, base, size, p):
 TOWER_W, TOWER_H, TOWER_GROUND = 300, 600, 595
 
 TOWER_LIGHT_Y = 29   # The y of the tower's light in its box
+TOWER_BASE_W = 170   # The distance between the tower's legs at the ground
 
 def tower_svg(p, light=True):
-    return lattice_tower(150, TOWER_GROUND, 40, 280, 24, wall(RUST, p), p, 10, 4, light)
+    return lattice_tower(150, TOWER_GROUND, 40, TOWER_BASE_W, 16, wall(RUST, p), p, 10, 3, light)
 
 def radio_draw(s, x, p, season):
     """A radio station like a 1940s brick broadcast building: a rounded center

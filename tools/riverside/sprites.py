@@ -82,9 +82,12 @@ def write(out):
     def save(content, vb, w, h, name):
         render(content, vb, w, h, os.path.join(out, name))
 
-    def save_pet(content, w, h, name):
+    def save_pet(content, w, h, name, night=False):
+        """Saves an animal at both sizes. With night on, the files end in
+        _night (for example, cat_gray_small_night.png); MainScene.brs shows
+        them at night in place of the day images."""
         for suffix, k in (("", PET_SCALE), ("_small", PET_SCALE * SMALL_PET)):
-            save(content, f"0 0 {w} {h}", round(w * k), round(h * k), f"{name}{suffix}.png")
+            save(content, f"0 0 {w} {h}", round(w * k), round(h * k), f"{name}{suffix}{'_night' if night else ''}.png")
 
     random.seed(7)
     stars = "".join(f'<circle cx="{random.randint(10,1910)}" cy="{random.randint(10,390)}" r="{random.choice([1.5,2,2.5])}" fill="#F8FAFC"/>' for _ in range(70))
@@ -326,6 +329,9 @@ def write(out):
         return f'<g transform="scale(2)">{s}</g>'
     save_pet(cat("#22272B", "#22272B", "#F6C46A"), 60, 64, "cat_black")
     save_pet(cat("#5F676E", "#3E444A", "#15181B", True), 60, 64, "cat_gray")
+    # The gray cat is close to the color of the sidewalk at night, so it has a
+    # darker image for night
+    save_pet(cat("#3F454B", "#272B2F", "#15181B", True), 60, 64, "cat_gray", night=True)
     save_pet(cat("#9A6B42", "#2B2118", "#F6C46A", True), 60, 64, "cat_tabby")
     save_pet(cat("#F4F1EA", "#F4F1EA", "#F2B33D", outline="#B9B2A6"), 60, 64, "cat_white")
     save_pet(cat("#6E767D", "#6E767D", "#F2B33D", white="#F4F1EA"), 60, 64, "cat_gray_white")

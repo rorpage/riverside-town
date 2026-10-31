@@ -31,12 +31,13 @@ LETTERS = "abcde"
 
 # Layers that have a different image in each season. MainScene.brs builds
 # the same list from the number of town sections.
-SEASONAL = {"far": ["winter"], "far_b": ["winter"], "near": ["winter"], "near_b": ["winter"], "hills": SEASONS, "hills_b": SEASONS}
+SEASONAL = {"far": ["winter"], "far_b": ["winter"], "near": ["winter"], "near_b": ["winter"], "hills": SEASONS, "hills_b": SEASONS,
+            "hills_c": SEASONS}
 
 # Each layer is cropped to the band it uses: name -> (y, height). These must
 # match the strips in components/MainScene.xml.
 CROPS = {"clouds": (90, 255), "far": (295, 425), "far_b": (295, 425), "near": (400, 360), "near_b": (400, 360),
-         "hills": (420, 490), "hills_b": (420, 490), "town": (550, 530)}
+         "hills": (420, 490), "hills_b": (420, 490), "hills_c": (420, 490), "town": (550, 530)}
 
 def pet_size(images, pet):
     """The size of an animal on screen. Animal images are saved at the size
@@ -57,7 +58,8 @@ def layers(town):
            "far": lambda p, s: scenery.far(p, s, ex["table_mountain"]), "far_b": scenery.far_b,
            "near": scenery.near, "near_b": scenery.near_b,
            "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], town["radio_station"]),
-           "hills_b": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], tile="b")}
+           "hills_b": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], tile="b"),
+           "hills_c": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], tile="c")}
     for i in range(len(town["sections"])):
         out[f"town_{LETTERS[i]}"] = lambda p, s, i=i: town_section(town, i, p, s)
     return out
@@ -91,7 +93,8 @@ def runtime_config(town, images):
     pets = []
     for pet in town["pets"]:
         w, h = pet_size(images, pet)
-        pets.append({"image": pet["image"], "w": w, "h": h})
+        night = os.path.exists(os.path.join(images, pet["image"] + "_night.png"))
+        pets.append({"image": pet["image"], "w": w, "h": h, "night": night})
     return {
         "title": town["title"], "lat": str(town["lat"]), "lon": str(town["lon"]),
         "temperatureUnit": "celsius" if town["temperature"] == "C" else "fahrenheit",
