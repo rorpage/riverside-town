@@ -29,15 +29,28 @@ sub init()
         { name: "jeep",  w: 270, h: 140, wheels: [[68, 108], [214, 108]], r: 28, bottom: 136, ground: 200 },
         { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 140 },
         { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 },
-        { name: "buggy",  w: 250, h: 112, wheels: [[52, 84], [198, 84]],  r: 26, bottom: 110, ground: 260 }
+        { name: "buggy",  w: 250, h: 112, wheels: [[52, 84], [198, 84]],  r: 26, bottom: 110, ground: 260 },
+        { name: "delorean", w: 300, h: 106, wheels: [[66, 84], [232, 84]], r: 20, bottom: 104, ground: 360, special: true },
+        { name: "herbie", w: 260, h: 112, wheels: [[58, 88], [204, 88]], r: 22, bottom: 110, ground: 280, special: true }
     ]
-    ' Only the cars listed in the settings drive by
+    ' Only the cars listed in the settings drive by. Special cars come from their
+    ' own list, specialCars.
     m.carDefs = []
     for each def in allCars
-        for each name in m.config.cars
+        names = m.config.cars
+        if isSpecial(def) then names = m.config.specialCars
+        for each name in names
             if name = def.name then m.carDefs.Push(def)
         end for
     end for
+    ' Special cars drive by less often. Seconds before the first trip: at least
+    ' specialFirstMin, plus up to specialFirstMore. Seconds between trips: at
+    ' least specialWaitMin, plus up to specialWaitMore. Regular cars wait 2 to 9
+    ' seconds between trips.
+    m.specialFirstMin = 30
+    m.specialFirstMore = 90
+    m.specialWaitMin = 180
+    m.specialWaitMore = 300
 
     ' Open-Meteo weather codes (WMO) to text
     m.codeText = {
@@ -181,8 +194,8 @@ end sub
 ' defaults below are used, so the screensaver still starts.
 function loadTownConfig() as object
     cfg = {
-        lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north",
-        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], pets: [], parkedCarX: -1, radioLight: [],
+        lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north", driveOn: "right",
+        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [],
         airplane: true, fireflies: true, fallingLeaves: true, seasons: true
     }
     text = ReadAsciiFile("pkg:/components/town_config.json")
@@ -674,11 +687,17 @@ sub makeCar(def as object)
     timer.id = name + "_timer"
     timer.repeat = false
     timer.duration = 1 + Rnd(6)
+    if isSpecial(def) then timer.duration = m.specialFirstMin + Rnd(m.specialFirstMore)
     timer.observeField("fire", "onCarTimer")
     timer.control = "start"
 
     m.cars[name] = { def: def, node: car, body: body, wheels: wheels, interps: interps, move: move, moveInterp: moveInterp, spin: spin, timer: timer, lane: "" }
 end sub
+
+' True for a special car: one with special: true in allCars
+function isSpecial(def as object) as boolean
+    return def.DoesExist("special")
+end function
 
 function carNameFromId(id as string) as string
     return Left(id, Instr(1, id, "_") - 1)
@@ -690,10 +709,12 @@ end sub
 
 ' Sends a car across the screen. Only one car uses a lane at a time so faster
 ' cars never drive through slower ones.
-' Near lane: drives left to right, full size.
-' Far lane: drives right to left, slightly smaller. It uses a mirrored copy of
-' the car image instead of a negative scale, because Roku does not draw spinning
-' children correctly inside a mirrored (negative scale) group.
+' Near lane: full size. Far lane: slightly smaller.
+' With driveOn "right" in the settings, the near lane drives left to right and
+' the far lane right to left. With "left", the directions are the other way
+' around. A car that drives right to left uses a mirrored copy of the car image
+' instead of a negative scale, because Roku does not draw spinning children
+' correctly inside a mirrored (negative scale) group.
 sub spawnCar(name as string)
     c = m.cars[name]
     free = []
@@ -714,20 +735,23 @@ sub spawnCar(name as string)
 
     if lane = "near"
         s = 1.0
-        facingLeft = false
         groundY = 1072
         m.nearLane.appendChild(car)
-        speed = d.ground - m.cameraSpeed   ' moving with the scroll direction looks slower
-        fromX = -d.w - 40
-        toX = 1960
+        facingLeft = (m.config.driveOn = "left")
     else
         s = 0.86
-        facingLeft = true
         groundY = 1002
         m.farLane.appendChild(car)
+        facingLeft = (m.config.driveOn <> "left")
+    end if
+    if facingLeft
         speed = d.ground + m.cameraSpeed   ' moving against the scroll direction looks faster
         fromX = 1960
         toX = -d.w - 40
+    else
+        speed = d.ground - m.cameraSpeed   ' moving with the scroll direction looks slower
+        fromX = -d.w - 40
+        toX = 1960
     end if
 
     car.scaleRotateCenter = [d.w / 2, d.h / 2]
@@ -769,16 +793,22 @@ sub onCarMoveState(event as object)
     m.laneBusy[c.lane] = ""
     c.lane = ""
     c.timer.duration = 2 + Rnd(7)
+    if isSpecial(c.def) then c.timer.duration = m.specialWaitMin + Rnd(m.specialWaitMore)
     c.timer.control = "start"
 end sub
 
 ' Parks a randomly chosen car, facing a random direction, at the gas station.
+' Special cars never park there.
 ' parkedCarX in the settings is the center of the parking space in townStrip
 ' coordinates, or -1 if the town has no gas station. The car is a child of
 ' townStrip, so it scrolls with the town. The wheels do not spin.
 sub parkCar()
-    if m.config.parkedCarX < 0 or m.carDefs.Count() = 0 then return
-    d = m.carDefs[Rnd(m.carDefs.Count()) - 1]
+    regular = []
+    for each def in m.carDefs
+        if not isSpecial(def) then regular.Push(def)
+    end for
+    if m.config.parkedCarX < 0 or regular.Count() = 0 then return
+    d = regular[Rnd(regular.Count()) - 1]
     facingLeft = Rnd(2) = 2
     ' The strip starts at screen y = 550, and the station ground is at screen y = 898.
     addParkedCar(d, facingLeft, m.config.parkedCarX, "parked_car")

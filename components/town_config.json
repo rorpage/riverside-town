@@ -5,6 +5,7 @@
   "temperatureUnit": "fahrenheit",
   "clock24": false,
   "hemisphere": "north",
+  "driveOn": "right",
   "sections": 4,
   "cars": [
     "sedan",
@@ -14,6 +15,7 @@
     "sports",
     "buggy"
   ],
+  "specialCars": [],
   "pets": [
     {
       "image": "cat_black",

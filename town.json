@@ -4,6 +4,7 @@
   "location": { "lat": 39.7684, "lon": -86.1581 },
   "units": { "temperature": "F", "clock": "12h" },
   "hemisphere": "north",
+  "drive_on": "right",
   "buildings": [
     "101",
     { "type": "bakery", "name": "Bakery" },
@@ -46,6 +47,7 @@
     { "type": "dog", "color": "dachshund" }
   ],
   "cars": ["sedan", "van", "jeep", "truck", "sports", "buggy"],
+  "special_cars": [],
   "extras": {
     "airplane": true,
     "kayaks": true,

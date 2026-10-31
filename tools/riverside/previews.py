@@ -19,7 +19,9 @@ LETTERS = "abcde"
 # Car sizes and wheel positions. These copy m.carDefs in components/MainScene.brs.
 CARS = {"sedan": (280, 104, [(62, 80), (218, 80)], 22, 102), "van": (310, 130, [(66, 104), (246, 104)], 24, 128),
         "jeep": (270, 140, [(68, 108), (214, 108)], 28, 136), "truck": (300, 130, [(70, 104), (238, 104)], 24, 128),
-        "sports": (304, 104, [(64, 84), (234, 84)], 18, 102), "buggy": (250, 112, [(52, 84), (198, 84)], 26, 110)}
+        "sports": (304, 104, [(64, 84), (234, 84)], 18, 102), "buggy": (250, 112, [(52, 84), (198, 84)], 26, 110),
+        "delorean": (300, 106, [(66, 84), (232, 84)], 20, 104),
+        "herbie": (260, 112, [(58, 88), (204, 88)], 22, 110)}
 PARK_SCALE = 0.78  # Copies parkCar() in MainScene.brs
 
 def car_sprite(images, name, left):
@@ -117,8 +119,10 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     cars = town["cars"]
     far_car = "truck" if "truck" in cars else cars[-1]
     near_car = near_car if near_car in cars else cars[0]
-    paste_car(im, images, far_car, 1150, 1002, 0.86, left=True)
-    paste_car(im, images, near_car, 420, 1072, 1.0)
+    # With drive_on "right", the near lane drives to the right and the far lane to the left
+    near_left = town["drive_on"] == "left"
+    paste_car(im, images, far_car, 1150, 1002, 0.86, left=not near_left)
+    paste_car(im, images, near_car, 420, 1072, 1.0, left=near_left)
     if fx and (fx != "leaves" or town["extras"]["falling_leaves"]):
         im.alpha_composite(Image.open(os.path.join(images, f"{fx}.png")).convert("RGBA").resize((1920, 1080)))
     # The panel at its first position in m.infoSpots
