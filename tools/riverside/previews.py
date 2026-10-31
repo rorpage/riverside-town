@@ -20,15 +20,19 @@ LETTERS = "abcde"
 CARS = {"sedan": (280, 104, [(62, 80), (218, 80)], 22, 102), "van": (310, 130, [(66, 104), (246, 104)], 24, 128),
         "jeep": (270, 140, [(68, 108), (214, 108)], 28, 136), "truck": (300, 130, [(70, 104), (238, 104)], 24, 128),
         "sports": (304, 104, [(64, 84), (234, 84)], 18, 102), "buggy": (250, 112, [(52, 84), (198, 84)], 26, 110),
-        "delorean": (300, 106, [(66, 84), (232, 84)], 20, 104),
-        "herbie": (260, 112, [(58, 88), (204, 88)], 22, 110)}
+        "aston": (300, 106, [(86, 84), (244, 84)], 19, 103), "herbie": (270, 106, [(62, 86), (217, 86)], 19, 105),
+        "kitt": (300, 92, [(67, 69), (228, 69)], 18, 87), "ecto1": (360, 150, [(82, 124), (293, 124)], 18, 142),
+        "delorean": (310, 112, [(76, 85), (245, 85)], 18, 103), "mcqueen": (300, 106, [(75, 71), (245, 71)], 28, 99),
+        "mustang": (310, 96, [(71, 77), (243, 77)], 18, 95)}
+# Special cars have their own wheel image, like wheelUri() in MainScene.brs
+SPECIAL = {"aston", "herbie", "kitt", "ecto1", "delorean", "mcqueen", "mustang"}
 PARK_SCALE = 0.78  # Copies parkCar() in MainScene.brs
 
 def car_sprite(images, name, left):
     w, h, wheels, r, bottom = CARS[name]
     car = Image.new("RGBA", (w, h))
     car.alpha_composite(Image.open(os.path.join(images, f"car_{name}{'_left' if left else ''}.png")).convert("RGBA"))
-    wheel = Image.open(os.path.join(images, "wheel.png")).convert("RGBA").resize((r * 2, r * 2), Image.LANCZOS)
+    wheel = Image.open(os.path.join(images, f"wheel_{name}.png" if name in SPECIAL else "wheel.png")).convert("RGBA").resize((r * 2, r * 2), Image.LANCZOS)
     for wx, wy in wheels:
         car.alpha_composite(wheel, ((w - wx if left else wx) - r, wy - r))
     return car, bottom

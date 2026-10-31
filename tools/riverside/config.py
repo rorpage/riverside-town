@@ -60,7 +60,7 @@ DEFAULTS = {
 # The cars that drive by when town.json has no "cars" list
 CARS = ["sedan", "van", "jeep", "truck", "sports", "buggy"]
 # Special cars from movies. They are off unless a town lists them in "special_cars".
-SPECIAL_CARS = ["delorean", "herbie"]
+SPECIAL_CARS = ["aston", "herbie", "kitt", "ecto1", "delorean", "mcqueen", "mustang"]
 PETS = {"cat": ["black", "gray", "tabby", "white", "gray_white"], "guinea_pig": ["black_orange", "white_orange"],
         "dog": ["yellow_lab", "black_lab", "chocolate_lab", "beagle", "corgi", "dalmatian", "dachshund", "husky"]}
 PET_IMAGE = {"cat": "cat", "guinea_pig": "guinea", "dog": "dog"}   # The first part of each image name

@@ -23,6 +23,7 @@ sub init()
     ' Cars. "ground" is the speed along the road in pixels per second.
     ' wheels = wheel centers inside the car image, r = wheel radius,
     ' bottom = lowest pixel of the tires in the car image.
+    ' Special cars have their own wheel image, wheel_<name>.png (see wheelUri).
     allCars = [
         { name: "sedan", w: 280, h: 104, wheels: [[62, 80], [218, 80]],   r: 22, bottom: 102, ground: 300 },
         { name: "van",   w: 310, h: 130, wheels: [[66, 104], [246, 104]], r: 24, bottom: 128, ground: 220 },
@@ -30,8 +31,13 @@ sub init()
         { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 165 },
         { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 },
         { name: "buggy",  w: 250, h: 112, wheels: [[52, 84], [198, 84]],  r: 26, bottom: 110, ground: 260 },
-        { name: "delorean", w: 300, h: 106, wheels: [[66, 84], [232, 84]], r: 20, bottom: 104, ground: 360, special: true },
-        { name: "herbie", w: 260, h: 112, wheels: [[58, 88], [204, 88]], r: 22, bottom: 110, ground: 280, special: true }
+        { name: "aston",    w: 300, h: 106, wheels: [[86, 84], [244, 84]],   r: 19, bottom: 103, ground: 330, special: true },
+        { name: "herbie",   w: 270, h: 106, wheels: [[62, 86], [217, 86]],   r: 19, bottom: 105, ground: 280, special: true },
+        { name: "kitt",     w: 300, h: 92,  wheels: [[67, 69], [228, 69]],   r: 18, bottom: 87,  ground: 400, special: true },
+        { name: "ecto1",    w: 360, h: 150, wheels: [[82, 124], [293, 124]], r: 18, bottom: 142, ground: 240, special: true },
+        { name: "delorean", w: 310, h: 112, wheels: [[76, 85], [245, 85]],   r: 18, bottom: 103, ground: 360, special: true },
+        { name: "mcqueen",  w: 300, h: 106, wheels: [[75, 71], [245, 71]],   r: 28, bottom: 99,  ground: 420, special: true },
+        { name: "mustang",  w: 310, h: 96,  wheels: [[71, 77], [243, 77]],   r: 18, bottom: 95,  ground: 380, special: true }
     ]
     ' Only the cars listed in the settings drive by. Special cars come from their
     ' own list, specialCars.
@@ -47,10 +53,10 @@ sub init()
     ' specialFirstMin, plus up to specialFirstMore. Seconds between trips: at
     ' least specialWaitMin, plus up to specialWaitMore. Regular cars wait 2 to 9
     ' seconds between trips.
-    m.specialFirstMin = 15
-    m.specialFirstMore = 45
-    m.specialWaitMin = 60
-    m.specialWaitMore = 120
+    m.specialFirstMin = 5
+    m.specialFirstMore = 20
+    m.specialWaitMin = 20
+    m.specialWaitMore = 40
     ' After a car leaves a lane, the lane stays empty for a random time between
     ' laneGapMin and laneGapMax milliseconds (1 to 10 seconds) before the next
     ' car can use it.
@@ -714,7 +720,7 @@ sub makeCar(def as object)
     for each w in def.wheels
         wheel = car.createChild("Poster")
         wheel.id = name + "_wheel" + i.ToStr()
-        wheel.uri = "pkg:/images/wheel.png"
+        wheel.uri = wheelUri(def)
         wheel.width = def.r * 2
         wheel.height = def.r * 2
         wheel.translation = [w[0] - def.r, w[1] - def.r]
@@ -747,6 +753,12 @@ sub makeCar(def as object)
 
     m.cars[name] = { def: def, node: car, body: body, wheels: wheels, interps: interps, move: move, moveInterp: moveInterp, spin: spin, timer: timer, lane: "" }
 end sub
+
+' The wheel image for a car. Special cars have their own wheels.
+function wheelUri(def as object) as string
+    if isSpecial(def) then return "pkg:/images/wheel_" + def.name + ".png"
+    return "pkg:/images/wheel.png"
+end function
 
 ' True for a special car: one with special: true in allCars
 function isSpecial(def as object) as boolean
@@ -894,7 +906,7 @@ sub addParkedCar(d as object, facingLeft as boolean, centerX as integer, id as s
         wx = w[0]
         if facingLeft then wx = d.w - wx
         wheel = car.createChild("Poster")
-        wheel.uri = "pkg:/images/wheel.png"
+        wheel.uri = wheelUri(d)
         wheel.width = d.r * 2
         wheel.height = d.r * 2
         wheel.translation = [wx - d.r, w[1] - d.r]
