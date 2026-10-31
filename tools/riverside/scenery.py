@@ -1,19 +1,82 @@
 """The scenery layers behind the town: sky, clouds, mountains, hills with the
 river, and the street."""
 import random
-from .art import wall, round_tree, pine, bicycle
+from .art import wall, round_tree, pine, bicycle, hex_rgb
 from . import buildings
 
-def sky(p):
-    return (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/>'
-            f'<stop offset="0.62" stop-color="{p["horizon"]}"/></linearGradient></defs><rect width="8" height="1080" fill="url(#g)"/>')
+def sky(p, overcast=False):
+    """The sky gradient. With overcast on, it uses the gray sky colors."""
+    top, bottom = (p["skyGray"], p["horizonGray"]) if overcast else (p["sky"], p["horizon"])
+    return (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{top}"/>'
+            f'<stop offset="0.62" stop-color="{bottom}"/></linearGradient></defs><rect width="8" height="1080" fill="url(#g)"/>')
 
-def clouds(p, season):
+# Cloud levels, from the fewest clouds to the most. MainScene.brs picks one
+# from the cloud cover in the weather (see cloudLevel() there) and shows
+# clouds_<level>_<period>.png. "few" is also used before the first weather
+# request finishes.
+CLOUD_LEVELS = ["few", "scattered", "broken", "overcast"]
+
+def puff(cx, cy, s, fill):
+    """One cloud: three circles on a rounded base, s times the size of the
+    middle cloud in the "few" image. It is 220 * s pixels wide, and it goes
+    from 70 * s pixels above cy to 38 * s pixels below it."""
+    return (f'<g fill="{fill}"><circle cx="{cx - 60 * s:.0f}" cy="{cy:.0f}" r="{38 * s:.0f}"/>'
+            f'<circle cx="{cx:.0f}" cy="{cy - 18 * s:.0f}" r="{52 * s:.0f}"/>'
+            f'<circle cx="{cx + 60 * s:.0f}" cy="{cy:.0f}" r="{40 * s:.0f}"/>'
+            f'<rect x="{cx - 98 * s:.0f}" y="{cy:.0f}" width="{196 * s:.0f}" height="{38 * s:.0f}" rx="{19 * s:.0f}"/></g>')
+
+def shaded_puff(cx, cy, s, p):
+    """A cloud with a gray underside, for the broken and overcast levels."""
+    return puff(cx, cy + 8 * s, s, p["cloudGray"]) + puff(cx, cy, s, p["cloud"])
+
+def wrap(svg):
+    """Draws svg three times: moved 1920 pixels left, in place, and moved 1920
+    pixels right. Anything that crosses x=0 or x=1920 then shows on the other
+    side too, in the same order, so the tile joins up at the edges."""
+    return f'<g transform="translate(-1920,0)">{svg}</g>{svg}<g transform="translate(1920,0)">{svg}</g>'
+
+def deck(p):
+    """A gray cloud layer across the whole top of the clouds band, with a bumpy
+    lower edge and a darker underside. The bumps are about 80 pixels apart."""
+    rnd = random.Random(41)
+    bumps = [(i * 80 + rnd.randint(-20, 20), rnd.randint(30, 52), rnd.randint(-8, 10)) for i in range(24)]
+    def row(y, fill):
+        return f'<g fill="{fill}">' + "".join(f'<circle cx="{x}" cy="{y + dy}" r="{r}"/>' for x, r, dy in bumps) + "</g>"
+    # The top of the layer starts at the color of the overcast sky at y=90
+    # (see sky()), so there is no line where the clouds image starts.
+    sky_top = mix(p["skyGray"], p["horizonGray"], 90 / (1080 * 0.62))
+    return (row(222, p["cloudDark"])
+            + f'<linearGradient id="deck" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{sky_top}"/>'
+            + f'<stop offset="0.5" stop-color="{p["cloudGray"]}"/></linearGradient>'
+            + '<rect x="-40" y="90" width="2000" height="120" fill="url(#deck)"/>'
+            + row(206, p["cloudGray"]))
+
+def mix(a, b, t):
+    """The color t of the way from color a to color b."""
+    return "#" + "".join(f"{round(x + (y - x) * t):02X}" for x, y in zip(hex_rgb(a), hex_rgb(b)))
+
+def clouds(p, season, level="few"):
+    """The clouds layer for one cloud level (see CLOUD_LEVELS). The clouds
+    band is y=90 to y=345 (CROPS in generate_images.py)."""
     c = p["cloud"]
-    return f'''<g fill="{c}">
+    few = f'''<g fill="{c}">
 <circle cx="360" cy="200" r="38"/><circle cx="420" cy="182" r="52"/><circle cx="480" cy="200" r="40"/><rect x="322" y="200" width="196" height="38" rx="19"/>
 <circle cx="1050" cy="150" r="30"/><circle cx="1100" cy="136" r="42"/><circle cx="1150" cy="150" r="32"/><rect x="1020" y="150" width="162" height="30" rx="15"/>
 <circle cx="1640" cy="300" r="34"/><circle cx="1695" cy="284" r="46"/><circle cx="1750" cy="300" r="34"/><rect x="1606" y="300" width="178" height="34" rx="17"/></g>'''
+    if level == "few":
+        return few
+    if level == "scattered":
+        # The three clouds of "few" plus four more
+        return wrap(few + "".join(puff(x, y, s, c) for x, y, s in
+                                  ((150, 290, 0.8), (760, 250, 1.0), (1380, 190, 0.9), (1880, 170, 0.75))))
+    if level == "broken":
+        # Larger clouds with gray undersides, close enough to touch in places
+        spots = ((80, 200, 1.2), (330, 290, 0.9), (560, 190, 1.35), (820, 260, 1.1), (1050, 170, 1.2),
+                 (1280, 280, 1.0), (1500, 190, 1.3), (1730, 270, 1.05), (1900, 175, 0.8))
+        return wrap("".join(shaded_puff(x, y, s, p) for x, y, s in spots))
+    # Overcast: the gray layer, with some lower gray clouds under it
+    lower = ((200, 290, 0.9), (700, 296, 1.0), (1180, 285, 0.85), (1650, 296, 1.0))
+    return wrap(deck(p) + "".join(puff(x, y + 8 * s, s, p["cloudDark"]) + puff(x, y, s, p["cloudGray"]) for x, y, s in lower))
 
 def snow_caps(points, t, fill, min_rise=30):
     """Snow on every peak of a mountain outline. t is how far down each slope the

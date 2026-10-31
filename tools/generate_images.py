@@ -54,12 +54,12 @@ def town_section(town, i, p, season):
 def layers(town):
     """Returns name -> drawing function(p, season) for every scenery layer."""
     ex = town["extras"]
-    out = {"clouds": scenery.clouds,
-           "far": lambda p, s: scenery.far(p, s, ex["table_mountain"]), "far_b": scenery.far_b,
+    out = {f"clouds_{level}": (lambda p, s, level=level: scenery.clouds(p, s, level)) for level in scenery.CLOUD_LEVELS}
+    out.update({"far": lambda p, s: scenery.far(p, s, ex["table_mountain"]), "far_b": scenery.far_b,
            "near": scenery.near, "near_b": scenery.near_b,
            "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], town["radio_station"]),
            "hills_b": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], tile="b"),
-           "hills_c": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], tile="c")}
+           "hills_c": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], tile="c")})
     for i in range(len(town["sections"])):
         out[f"town_{LETTERS[i]}"] = lambda p, s, i=i: town_section(town, i, p, s)
     return out
@@ -71,8 +71,10 @@ def write_images(town, out):
             os.remove(os.path.join(out, f))
     for pal in P:
         render(scenery.sky(P[pal]), "0 0 8 1080", 8, 1080, os.path.join(out, f"sky_{pal}.png"))
+        render(scenery.sky(P[pal], overcast=True), "0 0 8 1080", 8, 1080, os.path.join(out, f"sky_overcast_{pal}.png"))
         for name, fn in layers(town).items():
-            y, h = CROPS["town" if name.startswith("town") else name]
+            # The town sections share one crop, and so do the cloud levels
+            y, h = CROPS[name.split("_")[0] if name.startswith(("town", "clouds")) else name]
             seasons = SEASONS if name.startswith("town") else SEASONAL.get(name, [])
             vb = f"0 {y} 1920 {h}"
             for season in seasons:

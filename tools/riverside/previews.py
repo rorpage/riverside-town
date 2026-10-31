@@ -78,21 +78,28 @@ def temp_text(town, f):
         return f"{round((f - 32) * 5 / 9)}\u00b0C"
     return f"{f}\u00b0F"
 
-def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=None, plane=None, pets=(), near_car="sports"):
+def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=None, plane=None, pets=(), near_car="sports",
+            clouds="few"):
     """One screen of the town, showing town section number section. plane is
     the (x, y) of an airplane, or None. pets is a list of (animal, x), where
-    animal is an entry of town["pets"]."""
+    animal is an entry of town["pets"]. clouds is a cloud level from
+    scenery.CLOUD_LEVELS; with "overcast", the sky is gray, the stars are
+    hidden, and the sun or moon is dim, like applyScene() in MainScene.brs."""
+    overcast = clouds == "overcast"
     p = season_palette(pal, season)
     sky_im = Image.new("RGBA", (1920, 1080))
     stars = Image.open(os.path.join(images, "stars.png")).convert("RGBA")
-    if pal != "day":
+    if pal != "day" and not overcast:
         if pal == "dusk":
             stars.putalpha(stars.getchannel("A").point(lambda v: v * 0.35))
         sky_im.alpha_composite(stars, (0, 0))
     # The sun or moon, placed like applyScene() in MainScene.brs
     body, pos = ("moon.png", (150, 100)) if pal == "night" else ("sun.png", (150, 110) if pal == "day" else (180, 340))
-    sky_im.alpha_composite(Image.open(os.path.join(images, body)).convert("RGBA"), pos)
-    im = Image.open(os.path.join(images, f"sky_{pal}.png")).convert("RGBA").resize((1920, 1080))
+    body_im = Image.open(os.path.join(images, body)).convert("RGBA")
+    if overcast:
+        body_im.putalpha(body_im.getchannel("A").point(lambda v: v * 0.35))
+    sky_im.alpha_composite(body_im, pos)
+    im = Image.open(os.path.join(images, f"sky_{'overcast_' if overcast else ''}{pal}.png")).convert("RGBA").resize((1920, 1080))
     im.alpha_composite(sky_im)
     # The far and near mountains change tiles part way along the street, so
     # the previews show the B tiles for odd sections, like the real strip
@@ -105,7 +112,7 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     light = scenery.radio_light(town["radio_station"]) if tile == "a" and pal != "day" else None
     if light:
         hills += f'<circle cx="{light[0]}" cy="{light[1]}" r="7" fill="#E74C3C" fill-opacity="0.35"/><circle cx="{light[0]}" cy="{light[1]}" r="3" fill="#FF6B5B"/>'
-    art_svg = (scenery.clouds(p, season) + far + near + hills
+    art_svg = (scenery.clouds(p, season, clouds) + far + near + hills
                + layers[f"town_{LETTERS[section]}"](p, season))
     im.alpha_composite(Image.open(io.BytesIO(render(art_svg, "0 0 1920 1080", 1920, 1080))).convert("RGBA"))
     if season == "summer" and pal == "night" and town["extras"]["fireflies"]:
@@ -155,9 +162,11 @@ def write_all(town, layers, images, build, docs=None):
     pets = [(animal, 200 + k * 1560 // max(1, len(town["pets"]))) for k, animal in enumerate(town["pets"])]
     rnd.shuffle(pets)
     shots = [("preview.png", 1280, dict(pal="day", season="summer", hour=(10, 4), temp=84, cond="Clear", section=0, plane=(560, 262)))]
-    for season, temp, cond, fx in (("spring", 62, "Partly cloudy", None), ("summer", 84, "Clear", None),
-                                   ("fall", 55, "Mostly clear", "leaves"), ("winter", 28, "Overcast", None)):
-        shots.append((f"preview_{season}.png", 640, dict(pal="day", season=season, hour=(10, 4), temp=temp, cond=cond, fx=fx, section=min(1, last))))
+    # The cloud level matches the weather text, like cloudLevel() in MainScene.brs
+    for season, temp, cond, fx, clouds in (("spring", 62, "Partly cloudy", None, "scattered"), ("summer", 84, "Clear", None, "few"),
+                                           ("fall", 55, "Mostly clear", "leaves", "few"), ("winter", 28, "Overcast", None, "overcast")):
+        shots.append((f"preview_{season}.png", 640, dict(pal="day", season=season, hour=(10, 4), temp=temp, cond=cond, fx=fx,
+                                                         section=min(1, last), clouds=clouds)))
     for pal, hour in (("day", (10, 4)), ("dusk", (19, 12)), ("night", (22, 42))):
         shots.append((f"preview_{pal}.png", 640, dict(pal=pal, season="summer", hour=hour, temp=78, cond="Clear", section=0)))
     for i in range(n):

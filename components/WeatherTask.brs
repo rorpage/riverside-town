@@ -8,7 +8,7 @@ end sub
 sub fetchWeather()
     url = "https://api.open-meteo.com/v1/forecast"
     url = url + "?latitude=" + m.top.lat + "&longitude=" + m.top.lon
-    url = url + "&current=temperature_2m,weather_code,is_day"
+    url = url + "&current=temperature_2m,weather_code,cloud_cover,is_day"
     url = url + "&daily=sunrise,sunset&forecast_days=1"
     url = url + "&temperature_unit=" + m.top.unit + "&timezone=auto"
 
@@ -30,9 +30,12 @@ sub fetchWeather()
         temp: data.current.temperature_2m
         code: data.current.weather_code
         isDay: data.current.is_day
+        cloudCover: -1
         sunrise: ""
         sunset: ""
     }
+    ' Cloud cover in percent (0 to 100). It stays -1 if it is missing.
+    if data.current.cloud_cover <> invalid then result.cloudCover = data.current.cloud_cover
     if data.daily <> invalid and data.daily.sunrise <> invalid and data.daily.sunrise.Count() > 0
         result.sunrise = data.daily.sunrise[0]
         result.sunset = data.daily.sunset[0]

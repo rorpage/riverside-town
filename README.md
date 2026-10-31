@@ -60,6 +60,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 
   The dates are close to the equinoxes and solstices, which move by a day or so from year to year. In the southern hemisphere, the seasons are the other way around. Pine trees stay green all year. In every season but winter, three kayaks (red, yellow, and blue) sit on the grass beside the river.
 - Weather effects from the current weather:
+  - Clouds: the number of clouds follows the cloud cover from the weather, in percent. Below 25 percent there are a few clouds, from 25 percent there are more, from 50 percent there are many larger clouds with gray undersides, and from 85 percent the sky is overcast: a gray layer of cloud covers the top of the sky, the sky is gray, the stars are hidden, and the sun and moon are dim. The weather code also sets the fewest clouds that can show, so the sky matches the text in the panel: "Partly cloudy" shows at least the second level, fog and showers at least the third, and "Overcast", drizzle, rain, snow, and thunderstorms show an overcast sky.
   - Rain and drizzle: falling rain.
   - Snow: falling snow. While snow is falling, the ground shows snow in any season.
   - Fog: a fog layer over the scene.
@@ -318,7 +319,7 @@ Notes on the image sizes:
 - Each scenery layer is exactly 1920 pixels wide and its left and right edges line up, so two copies placed side by side repeat without a visible seam. The town layer is one image for each town section (`town_a` to `town_e`). The screensaver places them in order, then the first one again, so the street repeats without a jump.
 - The sky is an 8 pixel wide gradient that the scene stretches to full width. This uses much less memory than a full-size image. The fog image works the same way.
 - The hills are three different images, `hills`, `hills_b`, and `hills_c`, placed in the order A, B, C, A, so they repeat every 5760 pixels. Only the first has the radio station. The third has its own hill shapes, more trees, and no river.
-- Seasonal layers are named `<layer>_<season>_<period>.png`, for example `hills_fall_night.png`. The hills and the town sections have an image for every season. The far and near mountains only have a winter image (`far_winter_day.png`); in other seasons they use the image without a season in the name (`far_day.png`). The clouds and sky do not change with the seasons.
+- Seasonal layers are named `<layer>_<season>_<period>.png`, for example `hills_fall_night.png`. The hills and the town sections have an image for every season. The far and near mountains only have a winter image (`far_winter_day.png`); in other seasons they use the image without a season in the name (`far_day.png`). The clouds and sky do not change with the seasons. The clouds have one image for each cloud level, named `clouds_<level>_<period>.png` (`few`, `scattered`, `broken`, and `overcast`), and the overcast sky is `sky_overcast_<period>.png`.
 - The generator deletes the old images before it writes new ones, so files that are no longer used do not stay in `images/`.
 
 ## Adding features and releasing

@@ -155,6 +155,8 @@ sub init()
     m.season = ""
     m.sceneKey = ""
     m.precipKind = ""
+    ' Cloud level: "few", "scattered", "broken", or "overcast" (see cloudLevel)
+    m.cloudLevel = "few"
     m.storm = false
 
     m.lightningTimer = m.top.createChild("Timer")
@@ -352,14 +354,25 @@ sub applyScene()
     ' While snow is falling, the ground shows snow in any season.
     ground = season
     if m.precipKind = "snow" then ground = "winter"
-    key = period + "," + season + "," + ground + "," + m.precipKind
+    key = period + "," + season + "," + ground + "," + m.precipKind + "," + m.cloudLevel
     if key = m.sceneKey then return
     m.sceneKey = key
     m.period = period
     m.season = season
 
-    m.sky.uri = "pkg:/images/sky_" + period + ".png"
-    for each name in ["clouds", "far", "near", "hills"]
+    ' An overcast sky is gray, with no stars, and the sun or moon is dim.
+    overcast = m.cloudLevel = "overcast"
+    if overcast
+        m.sky.uri = "pkg:/images/sky_overcast_" + period + ".png"
+        m.sun.opacity = 0.35
+    else
+        m.sky.uri = "pkg:/images/sky_" + period + ".png"
+        m.sun.opacity = 1
+    end if
+    cloudUri = "pkg:/images/clouds_" + m.cloudLevel + "_" + period + ".png"
+    m.top.findNode("clouds1").uri = cloudUri
+    m.top.findNode("clouds2").uri = cloudUri
+    for each name in ["far", "near", "hills"]
         uri = layerUri(name, ground, period)
         m.top.findNode(name + "1").uri = uri
         m.top.findNode(name + "2").uri = uri
@@ -393,6 +406,7 @@ sub applyScene()
         m.sun.uri = "pkg:/images/moon.png"
         m.sun.translation = [150, 100]
     end if
+    if overcast then m.stars.opacity = 0
 end sub
 
 sub onPeriodTick()
@@ -452,8 +466,36 @@ sub onWeather()
     setPrecip(r.code)
     setFog(r.code)
     setStorm(r.code)
+    m.cloudLevel = cloudLevel(r.code, r.cloudCover)
     applyScene()
 end sub
+
+' Picks the cloud level from the cloud cover in percent. The weather code sets
+' a lowest level, so the sky always matches the weather text: "Overcast" (3),
+' rain, drizzle, snow, and thunderstorms show an overcast sky, fog and showers
+' at least broken clouds, and "Partly cloudy" (2) at least scattered clouds.
+' A cover of -1 means the weather had no cloud cover, and the code alone is used.
+function cloudLevel(code as dynamic, cover as dynamic) as string
+    levels = ["few", "scattered", "broken", "overcast"]
+    n = 0
+    if cover <> invalid
+        pct = Int(cover)
+        if pct >= 85
+            n = 3
+        else if pct >= 50
+            n = 2
+        else if pct >= 25
+            n = 1
+        end if
+    end if
+    c = Int(code)
+    least = 0
+    if c = 2 then least = 1
+    if c = 45 or c = 48 or (c >= 80 and c <= 86) then least = 2
+    if c = 3 or (c >= 51 and c <= 77) or c >= 95 then least = 3
+    if least > n then n = least
+    return levels[n]
+end function
 
 sub setFog(code as dynamic)
     c = Int(code)
