@@ -70,9 +70,8 @@ def clouds(p, season, level="few"):
         spots = ((80, 200, 1.2), (330, 290, 0.9), (560, 190, 1.35), (820, 260, 1.1), (1050, 170, 1.2),
                  (1280, 280, 1.0), (1500, 190, 1.3), (1730, 270, 1.05), (1900, 175, 0.8))
         return wrap("".join(puff(x, y, s, c) for x, y, s in spots))
-    # Overcast: the gray layer, with some lower gray clouds under it
-    lower = ((200, 290, 0.9), (700, 296, 1.0), (1180, 285, 0.85), (1650, 296, 1.0))
-    return wrap(deck(p) + "".join(puff(x, y, s, p["cloudGray"]) for x, y, s in lower))
+    # Overcast: only the gray layer, with no separate clouds under it
+    return wrap(deck(p))
 
 def snow_caps(points, t, fill, min_rise=30):
     """Snow on every peak of a mountain outline. t is how far down each slope the

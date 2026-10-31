@@ -380,14 +380,13 @@ sub applyScene()
     m.season = season
     m.ground = ground
 
-    ' An overcast sky is gray, with no stars, and the sun or moon is dim.
+    ' An overcast sky is gray, with no stars. The sun is hidden, and the moon
+    ' is dim (see the end of this sub).
     overcast = m.cloudLevel = "overcast"
     if overcast
         m.sky.uri = "pkg:/images/sky_overcast_" + period + ".png"
-        m.sun.opacity = 0.35
     else
         m.sky.uri = "pkg:/images/sky_" + period + ".png"
-        m.sun.opacity = 1
     end if
     cloudUri = "pkg:/images/clouds_" + m.cloudLevel + "_" + period + ".png"
     m.top.findNode("clouds1").uri = cloudUri
@@ -427,7 +426,15 @@ sub applyScene()
         m.sun.uri = "pkg:/images/moon.png"
         m.sun.translation = [150, 100]
     end if
-    if overcast then m.stars.opacity = 0
+    m.sun.opacity = 1
+    if overcast
+        m.stars.opacity = 0
+        if period = "night"
+            m.sun.opacity = 0.35
+        else
+            m.sun.opacity = 0
+        end if
+    end if
 end sub
 
 sub onPeriodTick()

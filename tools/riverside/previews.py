@@ -103,7 +103,8 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     the (x, y) of an airplane, or None. pets is a list of (animal, x), where
     animal is an entry of town["pets"]. clouds is a cloud level from
     scenery.CLOUD_LEVELS; with "overcast", the sky is gray, the stars are
-    hidden, and the sun or moon is dim, like applyScene() in MainScene.brs."""
+    hidden, the sun is hidden, and the moon is dim, like applyScene() in
+    MainScene.brs."""
     overcast = clouds == "overcast"
     p = season_palette(pal, season)
     sky_im = Image.new("RGBA", (1920, 1080))
@@ -117,7 +118,8 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     body_im = Image.open(os.path.join(images, body)).convert("RGBA")
     if overcast:
         body_im.putalpha(body_im.getchannel("A").point(lambda v: v * 0.35))
-    sky_im.alpha_composite(body_im, pos)
+    if not (overcast and pal != "night"):
+        sky_im.alpha_composite(body_im, pos)
     im = Image.open(os.path.join(images, f"sky_{'overcast_' if overcast else ''}{pal}.png")).convert("RGBA").resize((1920, 1080))
     im.alpha_composite(sky_im)
     # The far and near mountains change tiles part way along the street, so
