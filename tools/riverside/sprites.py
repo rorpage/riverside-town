@@ -251,9 +251,10 @@ def write(out):
 
     # DeLorean time machine from the first Back to the Future movie: a stainless
     # steel wedge with a gull-wing door, black louvers on the rear slope, and a
-    # black strip along the bottom. The time machine parts are the reactor on the
-    # rear deck, two vents at the back, copper coils on the rear side, and a pipe
-    # along the side. A town must list it in "cars"; it is not on by default.
+    # black strip along the bottom. The time machine parts are the ribbed plutonium
+    # reactor on the rear deck (not the Mr. Fusion from the end of the movie and
+    # the second movie), a bank of vents at the back, copper coils on the rear
+    # side, and a pipe along the side. A town must list it in "cars"; it is not on by default.
     ST, STD, TRIM, PIPE = "#BCC3C9", "#9AA3AA", "#3E4449", "#5B646C"
     delorean = (f'<path fill="{ST}" d="M8,76 L8,52 Q8,46 14,46 L62,44 L102,22 Q106,20 112,20 L156,20 Q162,20 166,24 L206,44 L282,56 Q294,58 294,64 L294,74 Q294,80 286,80 L14,80 Q8,80 8,76 Z"/>'
                 f'<path fill="{STD}" d="M8,62 L294,66 L294,74 Q294,80 286,80 L14,80 Q8,80 8,76 Z"/>'
@@ -261,10 +262,10 @@ def write(out):
                 f'<polygon points="110,26 154,25 196,44 112,44" fill="{GLASS}"/>'
                 f'<path d="M106,24 L106,66 M200,44 L204,66" stroke="#868F96" stroke-width="1.5" fill="none"/>'
                 + "".join(f'<line x1="{66 + i * 7}" y1="{44 - i * 3.7:.1f}" x2="{70 + i * 7}" y2="{46 - i * 3.7:.1f}" stroke="{TRIM}" stroke-width="2.5"/>' for i in range(6)) +
-                f'<rect x="24" y="30" width="28" height="16" rx="3" fill="#7E878F"/><ellipse cx="38" cy="31" rx="14" ry="3" fill="#A7AFB5"/>'
-                f'<rect x="24" y="38" width="28" height="3" fill="#E0B040"/>'
-                f'<rect x="0" y="47" width="16" height="5" rx="2" fill="{PIPE}"/><rect x="0" y="55" width="16" height="5" rx="2" fill="{PIPE}"/>'
-                f'<rect x="0" y="47" width="3" height="5" fill="{DARK}"/><rect x="0" y="55" width="3" height="5" fill="{DARK}"/>'
+                f'<path fill="#6E777F" d="M16,46 L16,37 Q16,32 22,32 L56,32 Q62,32 62,37 L62,46 Z"/>'
+                + "".join(f'<line x1="{x}" y1="33" x2="{x}" y2="45" stroke="#545C63" stroke-width="2"/>' for x in range(22, 60, 6)) +
+                f'<rect x="31" y="36" width="16" height="6" fill="#E0B040"/><polygon points="35,42 39,36 43,42" fill="{DARK}"/>'
+                + "".join(f'<rect x="0" y="{y}" width="20" height="5" rx="2" fill="{PIPE}"/><rect x="0" y="{y}" width="3" height="5" fill="{DARK}"/>' for y in (38, 45, 52)) +
                 f'<rect x="38" y="59" width="186" height="5" rx="2.5" fill="{PIPE}"/>'
                 + "".join(f'<line x1="{x}" y1="52" x2="{x}" y2="64" stroke="#B87333" stroke-width="2"/>' for x in (26, 30, 34)) +
                 '<rect x="282" y="60" width="11" height="4" fill="#F6C46A"/><rect x="8" y="62" width="6" height="7" fill="#C0392B"/>'
