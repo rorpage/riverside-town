@@ -733,8 +733,8 @@ sub spawnCar(name as string)
     c = m.cars[name]
     free = []
     now = m.clock.TotalMilliseconds()
-    for each name in ["near", "far"]
-        if m.laneBusy[name] = "" and now >= m.laneReadyAt[name] then free.Push(name)
+    for each laneName in ["near", "far"]
+        if m.laneBusy[laneName] = "" and now >= m.laneReadyAt[laneName] then free.Push(laneName)
     end for
     if free.Count() = 0
         c.timer.duration = 0.5
