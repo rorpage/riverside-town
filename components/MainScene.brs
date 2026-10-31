@@ -63,6 +63,8 @@ sub init()
     m.laneGapMin = 1000
     ' The animal posters that have a darker image for night (see addAnimal)
     m.nightAnimals = []
+    ' The street lamp posters (see buildLamps)
+    m.lampPosters = []
     m.laneGapMax = 10000
 
     ' Open-Meteo weather codes (WMO) to text
@@ -158,6 +160,7 @@ sub init()
 
     m.weather = invalid
     m.period = ""
+    m.ground = ""
     m.season = ""
     m.sceneKey = ""
     m.precipKind = ""
@@ -188,6 +191,7 @@ sub init()
     buildCars()
     parkCar()
     placeAnimals()
+    buildLamps()
     updateClock()
 
     m.weatherTask = m.top.findNode("weatherTask")
@@ -210,7 +214,7 @@ end sub
 function loadTownConfig() as object
     cfg = {
         lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north", driveOn: "right",
-        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [],
+        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [], lamps: [],
         airplane: true, fireflies: true, fallingLeaves: true, seasons: true
     }
     text = ReadAsciiFile("pkg:/components/town_config.json")
@@ -365,6 +369,7 @@ sub applyScene()
     m.sceneKey = key
     m.period = period
     m.season = season
+    m.ground = ground
 
     ' An overcast sky is gray, with no stars, and the sun or moon is dim.
     overcast = m.cloudLevel = "overcast"
@@ -389,6 +394,7 @@ sub applyScene()
     m.top.findNode("hillsC").uri = layerUri("hills_c", ground, period)
     updateTowerLight(period)
     updateAnimals(period)
+    updateLamps()
     for i = 0 to m.sections
         m.townPosters[i].uri = layerUri(m.townNames[i MOD m.sections], ground, period)
     end for
@@ -963,6 +969,39 @@ sub updateAnimals(period as string)
     if period = "night" then suffix = "_night"
     for each a in m.nightAnimals
         a.poster.uri = "pkg:/images/" + a.image + suffix + ".png"
+    end for
+end sub
+
+' The street lamps. lamps in the settings is the x of each lamp post in
+' townStrip coordinates. The lamps are separate posters, added after the
+' parked car and the animals, so the animals walk behind them. Town section 0
+' is shown twice in the strip, so a lamp there is added to the second copy
+' too. The lamp image is 72 x 168 pixels, with the post 36 pixels from its left
+' edge and its top at screen y = 772 (LAMP_BOX in tools/riverside/buildings.py).
+sub buildLamps()
+    strip = m.top.findNode("townStrip")
+    stripW = m.sections * 1920
+    for each x in m.config.lamps
+        addLamp(strip, x)
+        if x < 1920 then addLamp(strip, x + stripW)
+    end for
+    updateLamps()
+end sub
+
+sub addLamp(strip as object, x as integer)
+    lamp = strip.createChild("Poster")
+    lamp.width = 72
+    lamp.height = 168
+    lamp.translation = [x - 36, 772 - 550]
+    m.lampPosters.Push(lamp)
+end sub
+
+' The lamps are lit at dusk and night, and have snow on top in winter
+sub updateLamps()
+    name = "street_lamp_"
+    if m.ground = "winter" then name = "street_lamp_winter_"
+    for each lamp in m.lampPosters
+        lamp.uri = "pkg:/images/" + name + m.period + ".png"
     end for
 end sub
 

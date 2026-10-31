@@ -39,7 +39,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 ## Features
 
 - Five scenery layers that scroll at different speeds: clouds, far mountains, near mountains, hills with the river, and the town with the street. The far and near mountains each have two different images, so the mountains repeat only about every 13 minutes (far) and 5 minutes (near). As an option, the center far mountain can have a flat top, in the shape of Table Mountain in South Africa.
-- A town of one to five sections, each 1920 pixels wide, built from the buildings in `town.json`. The buildings have different wall colors and heights, and each sign uses its own font. Like the rest of the scene, the colors are darker at dusk and night.
+- A town of one to five sections, each 1920 pixels wide, built from the buildings in `town.json`. The buildings have different wall colors and heights, and each sign uses its own font. Like the rest of the scene, the colors are darker at dusk and night. Soft shadows under the awnings, roof edges, signs, and eaves, and on the sidewalk, give the buildings depth.
 - A car parked at the gas station, if the town has one. The car and the direction it faces are chosen at random each time the screensaver starts.
 - Six cars: a sports car in the style of a Bugatti, a sedan, a VW dune buggy with a green arch over the seats, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest. `town.json` can choose which cars drive by. It can also add special cars from movies: the Aston Martin DB5 from Goldfinger, Herbie (the Love Bug), KITT from Knight Rider, the Ecto-1 from Ghostbusters, the DeLorean time machine from the first Back to the Future movie, Lightning McQueen from Cars, and the 1969 Mustang Mach 1 from John Wick. Each special car has its own wheels. Special cars drive by less often than the other cars, about once every 20 seconds to 1 minute each, and never park at the gas station.
 - As options: bikes in bike racks, two bikes parked beside the radio station, old-fashioned street lights that light up at dusk and night, and a radio station on the hill beside the river, with a tall red tower whose light blinks at dusk and night.
@@ -58,7 +58,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   | Fall | September 22 to December 20 | Gold hills, orange and red trees, pumpkins by doors, leaves on the sidewalk, falling leaves |
   | Winter | December 21 to March 19 | Snow on the hills, mountains, roofs, sidewalk, and pine trees, bare trees, a frozen river |
 
-  The dates are close to the equinoxes and solstices, which move by a day or so from year to year. In the southern hemisphere, the seasons are the other way around. Pine trees stay green all year. In every season but winter, three kayaks (red, yellow, and blue) sit on the grass beside the river.
+  The dates are close to the equinoxes and solstices, which move by a day or so from year to year. In the southern hemisphere, the seasons are the other way around. Pine trees stay green all year. There is one river, and in every season but winter, eight kayaks in different colors sit on the grass on both sides of it.
 - Weather effects from the current weather:
   - Clouds: the number of clouds follows the cloud cover from the weather, in percent. Below 25 percent there are a few clouds, from 25 percent there are more, from 50 percent there are many larger clouds with gray undersides, and from 85 percent the sky is overcast: a gray layer of cloud covers the top of the sky, the sky is gray, the stars are hidden, and the sun and moon are dim. The weather code also sets the fewest clouds that can show, so the sky matches the text in the panel: "Partly cloudy" shows at least the second level, fog and showers at least the third, and "Overcast", drizzle, rain, snow, and thunderstorms show an overcast sky.
   - Rain and drizzle: falling rain.
@@ -160,13 +160,13 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `extras.seasons` | Seasons from the date. When it is `false`, it is always summer, but snow still shows while it is snowing. | `true` |
 | `extras.table_mountain` | A flat-topped mountain in the shape of Table Mountain, in the center of the far mountains | `false` |
 | `extras.bikes` | Two bikes parked beside the radio station (not in winter). Bike racks have bikes either way. | `false` |
-| `extras.street_lights` | Old-fashioned cast iron street lights along the sidewalk, 480 pixels apart. Their lanterns light up at dusk and night. | `false` |
+| `extras.street_lights` | Old-fashioned cast iron street lights along the sidewalk, about 480 pixels apart. A light moves to the side when it would cover a house number. Animals walk behind the lights. Their lanterns light up at dusk and night. | `false` |
 
 ### Buildings
 
 Each entry in `buildings` is a building with a `type`. A house can also be written as just its number, for example `"101"`.
 
-The buildings are placed in order, with a small space between them. When the next building does not fit in the current 1920 pixel section, it starts the next section. `{ "type": "section_break" }` starts a new section on purpose. Up to 3 trees, in different sizes, stand in the space left at the end of a section. The town can have up to 5 sections, because each section uses about 4 MB of memory on the Roku. If the buildings do not fit, the build stops and says how many to remove.
+The buildings are placed in order, with a space of at least 28 pixels between them (12 pixels if 28 would need another section), and the room that is left in a section is shared out between the spaces, so more of the hills and the river shows between the buildings. When the next building does not fit in the current 1920 pixel section, it starts the next section. `{ "type": "section_break" }` starts a new section on purpose. To spread out the buildings in a full section, move a `section_break` so some of its buildings go to a section with more room. Up to 3 trees, in different sizes, stand in the space left at the end of a section. The town can have up to 5 sections, because each section uses about 4 MB of memory on the Roku. If the buildings do not fit, the build stops and says how many to remove.
 
 These options work for most types:
 

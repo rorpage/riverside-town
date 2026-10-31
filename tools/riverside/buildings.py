@@ -10,7 +10,8 @@ into place with shift(). Their ORIGIN value is the left edge of that drawing.
 """
 import math
 from .art import (ACCENT, ICON, WHITE, DARK, wall, text, text_width, fit_size, sign, shift, arch,
-                  snow_flat, snow_ridge, pumpkins, flower_box, round_tree, is_dark, skewed, bicycle)
+                  snow_flat, snow_ridge, pumpkins, flower_box, round_tree, is_dark, skewed, bicycle,
+                  shadow, shadow_opacity)
 
 def colors(p):
     return p["houseA"], p["houseB"], p["wall2"], p["roof"], p["window"]
@@ -37,9 +38,11 @@ def house_draw(s, x, p, season):
                    + flower_box(season, p, hx + 10, r + 38, 40) + flower_box(season, p, hx + w - 50, r + 38, 40) for r in rows)
     return (f'<rect x="{hx}" y="{y}" width="{w}" height="{900 - y}" fill="{wall(s["color"], p)}"/>'
             f'<polygon points="{hx - 8},{y} {hx + w // 2},{peak} {hx + w + 8},{y}" fill="{R}"/>'
+            + shadow([(hx, y), (hx + w, y), (hx + w, y + 10), (hx + 12, y + 10)], p)
             + snow_ridge(season, p, (hx - 6, y - 3), (hx + w // 2, peak - 3), (hx + w + 6, y - 3)) + wins +
             f'<rect x="{doorX}" y="830" width="40" height="70" fill="{R}"/>'
             f'<rect x="{doorX - 2}" y="808" width="44" height="18" rx="3" fill="{R}"/>'
+            + shadow([(doorX + 4, 826), (doorX + 42, 826), (doorX + 46, 834), (doorX + 10, 834)], p)
             + text(str(s["number"]), s["font"], s["weight"], fit_size(str(s["number"]), s["font"], s["weight"], 14, 38, 1),
                    doorX + 20, 822, WHITE, 1)
             + pumpkins(season, doorX + 50))
@@ -63,6 +66,12 @@ def awning(season, p, x, w, style, color, stripes):
     else:
         out = f'<polygon points="{x + 10},800 {x + w - 10},800 {x + w},828 {x},828" fill="{color}"/>'
     return out + snow_flat(season, p, x + 8, 800, w - 16)
+
+def awning_shadow(p, x, w):
+    """The shadow of an awning on the wall, window, and door under it. The sun
+    is to the upper left, so the shadow is deeper on the right."""
+    return (shadow([(x, 828), (x + w, 828), (x + w, 852), (x + 24, 840), (x, 838)], p)
+            + shadow([(x, 828), (x + w, 828), (x + w, 838), (x + 30, 834), (x, 833)], p, 0.6))
 
 def window_books(wx, wy, ww, wh, p, s):
     R = p["roof"]
@@ -195,12 +204,14 @@ def shop_draw(s, x, p, season):
         out += (f'<rect x="{x + 24}" y="{r}" width="42" height="38" fill="{Wn}"/>'
                 f'<rect x="{x + w - 66}" y="{r}" width="42" height="38" fill="{Wn}"/>')
     out += f'<rect x="{x - 4}" y="{top}" width="{w + 8}" height="14" fill="{R}"/>' + snow_flat(season, p, x - 4, top, w + 8)
+    out += shadow([(x, top + 14), (x + w, top + 14), (x + w, top + 22), (x + 8, top + 22)], p)
 
     # Sign
     sx, sw = x + 18, w - 36
     sign_color = s.get("sign_color") or R
     tcolor = s.get("sign_text_color", WHITE)
     font, weight = s["font"], s["weight"]
+    out += f'<rect x="{sx + 5}" y="733" width="{sw}" height="48" rx="4" fill="#000000" fill-opacity="{shadow_opacity(p):.3f}"/>'
     out += f'<rect x="{sx}" y="728" width="{sw}" height="48" rx="4" fill="{sign_color}"/>'
     room, cx = sw - 16, sx + sw / 2
     if s.get("sign_icon") == "paw":
@@ -223,6 +234,8 @@ def shop_draw(s, x, p, season):
     if s.get("window_lettering"):
         lines = s["window_lettering"]
         out += window_lettering(lines if isinstance(lines, list) else str(lines).split("\n"), wx, wy, ww, wh)
+    if s.get("awning", "plain") != "none":
+        out += awning_shadow(p, x, w)
     return out
 
 # ---------- church ----------
@@ -727,13 +740,45 @@ def rack_bikes(x, p, season, start=0):
         out += f'<rect x="{x + 18}" y="876" width="132" height="5" rx="2" fill="{p["snow"]}"/>'
     return out
 
-# Old-fashioned street lights at the front of the sidewalk, 480 pixels apart
-# (480 divides 1920, so the spacing stays the same across section edges)
+# Old-fashioned street lights at the front of the sidewalk, about 480 pixels
+# apart (480 divides 1920, so the spacing stays about the same across section
+# edges). The lamps are not part of the town images: they are separate
+# posters that MainScene.brs adds to townStrip after the animals, so the
+# animals walk behind them. lamp_spots() moves a lamp to the side when it
+# would cover a house number.
 LAMP_X = [240, 720, 1200, 1680]
+LAMP_BOX = (-36, 772, 72, 168)   # The lamp image: left and top relative to the post, width, height
+LAMP_CLEAR = 18                  # Smallest space between a lamp's center and a house number plaque
+LAMP_MOVE = 200                  # Farthest a lamp moves from its place in LAMP_X
+
+def house_plaque(s, x):
+    """The left and right x of a house's number plaque, for a house whose left
+    edge is at x (see house_draw())."""
+    doorX = x + 8 + s["width"] // 2 - 20
+    return doorX - 2, doorX + 42
+
+def lamp_spots(section):
+    """The x of each street lamp in one town section. A lamp that would cover a
+    house number plaque moves left or right, by the smallest distance, until
+    it is clear of every plaque."""
+    blocked = [(l - LAMP_CLEAR, r + LAMP_CLEAR) for b, x in section if b["type"] == "house"
+               for l, r in [house_plaque(b, x)]]
+    out = []
+    for home in LAMP_X:
+        for d in range(0, LAMP_MOVE + 1, 2):
+            spot = next((x for x in (home - d, home + d) if 40 <= x <= 1880
+                         and not any(l < x < r for l, r in blocked)), None)
+            if spot is not None:
+                out.append(spot)
+                break
+        else:
+            out.append(home)
+    return out
 
 def street_lamp(x, p, season):
-    """A cast iron lamp post with a lantern on top. The lantern is lit at dusk
-    and night."""
+    """A cast iron lamp post with a lantern on top, with x at the center of the
+    post. The lantern is lit at dusk and night. In daylight it has a short
+    shadow on the sidewalk."""
     iron = wall("#2F3A33", p)
     lit = is_dark(p)
     glass = "#F6E7B0" if lit else wall("#C9DAEA", p)
@@ -742,6 +787,8 @@ def street_lamp(x, p, season):
         out += (f'<circle cx="{x}" cy="806" r="34" fill="#F6E7B0" fill-opacity="0.16"/>'
                 f'<circle cx="{x}" cy="806" r="18" fill="#F6E7B0" fill-opacity="0.28"/>'
                 f'<ellipse cx="{x}" cy="932" rx="30" ry="5" fill="#F6E7B0" fill-opacity="0.22"/>')
+    else:
+        out += f'<ellipse cx="{x + 12}" cy="933" rx="20" ry="3" fill="#000000" fill-opacity="{shadow_opacity(p)}"/>'
     out += (f'<path d="M{x - 9},934 L{x - 6},918 L{x + 6},918 L{x + 9},934 Z" fill="{iron}"/>'
             f'<rect x="{x - 2.5}" y="824" width="5" height="96" fill="{iron}"/>'
             f'<rect x="{x - 5}" y="866" width="10" height="4" rx="1" fill="{iron}"/>'
@@ -755,8 +802,18 @@ def street_lamp(x, p, season):
         out += f'<path d="M{x - 12},796 L{x + 12},796 L{x + 5},789 L{x - 5},789 Z" fill="{p["snow"]}"/>'
     return out
 
-def street_lamps(p, season):
-    return "".join(street_lamp(x, p, season) for x in LAMP_X)
+def street_lamps(xs, p, season):
+    """The lamps at each x in xs, for the previews."""
+    return "".join(street_lamp(x, p, season) for x in xs)
+
+# Building types with walls down to the sidewalk, which get a shadow on it
+SOLID = {"house", "shop", "church", "school", "columned_hall"}
+
+def sidewalk_shadows(section, p):
+    """A short shadow on the sidewalk in front of each building with walls,
+    falling to the right, away from the sun. Drawn after the street."""
+    return "".join(shadow([(x + 6, 900), (x + width(b) - 4, 900), (x + width(b) + 8, 909), (x + 18, 909)], p, 0.8)
+                   for b, x in section if b["type"] in SOLID)
 
 def sidewalk_bikes(section, p, season, extras):
     """Bikes drawn after the street: the bikes in each bike rack. These are the

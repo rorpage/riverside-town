@@ -48,8 +48,17 @@ def pet_size(images, pet):
 def town_section(town, i, p, season):
     section = town["sections"][i]
     return ("".join(buildings.draw(b, x, p, season) for b, x in section) + scenery.street(p, season, 11 + i)
-            + buildings.sidewalk_bikes(section, p, season, town["extras"])
-            + (buildings.street_lamps(p, season) if town["extras"]["street_lights"] else ""))
+            + buildings.sidewalk_shadows(section, p) + buildings.sidewalk_bikes(section, p, season, town["extras"]))
+
+def write_lamps(out):
+    """The street lamp images, one for each time of day, and one with snow on
+    the lantern for each time of day. MainScene.brs adds them to townStrip at
+    the x values in lamps in town_config.json."""
+    left, top, w, h = buildings.LAMP_BOX
+    for pal in P:
+        for season, suffix in (("summer", ""), ("winter", "_winter")):
+            render(buildings.street_lamp(0, P[pal], season), f"{left} {top} {w} {h}", w, h,
+                   os.path.join(out, f"street_lamp{suffix}_{pal}.png"))
 
 def layers(town):
     """Returns name -> drawing function(p, season) for every scenery layer."""
@@ -82,6 +91,8 @@ def write_images(town, out):
             if len(seasons) < len(SEASONS):
                 render(fn(P[pal], "summer"), vb, 1920, h, os.path.join(out, f"{name}_{pal}.png"))
     sprites.write(out)
+    if town["extras"]["street_lights"]:
+        write_lamps(out)
 
 def write_icons(town, out, build_dir):
     im = previews.composite(town, layers(town), "day", 0, "summer")
@@ -103,7 +114,7 @@ def runtime_config(town, images):
         "clock24": town["clock"] == "24h", "hemisphere": town["hemisphere"],
         "driveOn": town["drive_on"],
         "sections": len(town["sections"]), "cars": town["cars"], "specialCars": town["special_cars"], "pets": pets,
-        "parkedCarX": town["parked_car_x"], "radioLight": radio_light(town),
+        "parkedCarX": town["parked_car_x"], "radioLight": radio_light(town), "lamps": town["lamps"],
         "airplane": ex["airplane"], "fireflies": ex["fireflies"], "fallingLeaves": ex["falling_leaves"],
         "seasons": ex["seasons"],
     }

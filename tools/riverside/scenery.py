@@ -160,17 +160,21 @@ TREES = [(60,692),(110,686),(170,680),(240,672),(300,668),(620,662),(680,664),(7
          (1300,668),(1360,682),(1420,692),(1700,724),(1780,724),(1860,714)]
 
 # Kayaks pulled up on the grass beside the river, in every season but winter.
-# Each is (center x, center y, angle in degrees, color). The colors are day
-# colors, darkened for dusk and night with wall() like the buildings.
-KAYAKS = [(676, 806, -14, "#D9452F"), (1172, 846, 22, "#F2B33D"), (1218, 806, 18, "#2E86C1")]
+# There is only one river, on hills tile A, so all the kayaks are there. Each
+# is (center x, center y, angle in degrees, color, size). The ones higher up
+# the river are farther away, so they are smaller. The colors are day colors,
+# darkened for dusk and night with wall() like the buildings.
+KAYAKS = [(676, 806, -14, "#D9452F", 1), (1172, 846, 22, "#F2B33D", 1), (1218, 806, 18, "#2E86C1", 1),
+          (1290, 798, -10, "#27AE60", 1), (822, 736, -6, "#8E44AD", 0.75), (788, 756, 8, "#F2B33D", 0.75),
+          (1290, 714, 10, "#D9452F", 0.7), (884, 699, -4, "#2E86C1", 0.6)]
 def kayaks(p, season, places=KAYAKS):
     if season == "winter":
         return ""
     s = ""
-    for cx, cy, angle, color in places:
+    for cx, cy, angle, color, size in places:
         c = wall(color, p)
         paddle = wall("#5B6770", p)
-        s += (f'<g transform="translate({cx},{cy}) rotate({angle})">'
+        s += (f'<g transform="translate({cx},{cy}) rotate({angle}) scale({size})">'
               # Hull with pointed ends, a dark cockpit, and a paddle lying beside it
               f'<path d="M-36,0 Q-18,-7 0,-7 Q18,-7 36,0 Q18,6 0,6 Q-18,6 -36,0 Z" fill="{c}"/>'
               f'<ellipse cx="2" cy="-1" rx="8" ry="3" fill="#1F2A33"/>'
@@ -270,13 +274,13 @@ def radio_scene(p, season, spec):
     return (f'<g transform="translate({RADIO_X - half:.1f},{ground - 900 * k:.1f}) scale({k})">'
             + buildings.radio_draw(spec, 0, p, season) + '</g>')
 
-# The second hills tile. It has the same hills and river, so the tiles join,
-# with trees and kayaks in other places, and no radio station.
+# The second hills tile. It has the same hills as tile A, so the tiles join,
+# with trees in other places, and no river, kayaks, or radio station.
 TREES_B = [(40,694),(150,682),(210,676),(330,666),(560,662),(650,662),(780,656),
            (1250,664),(1330,676),(1480,700),(1560,712),(1650,722),(1830,718),
-           (95,700),(270,680),(440,670),(1400,700),(1610,728),(1760,734)]
-ROUND_TREES_B = [(280, 794), (690, 790), (1530, 818), (1700, 806)]
-KAYAKS_B = [(1250, 790, 12, "#27AE60"), (1330, 812, -8, "#D9452F")]
+           (95,700),(270,680),(440,670),(1400,700),(1610,728),(1760,734),
+           (900,650),(1000,648),(1100,650)]
+ROUND_TREES_B = [(280, 794), (690, 790), (1060, 794), (1530, 818), (1700, 806)]
 
 # The third hills tile has its own hill shapes and no river. Its pines stand in
 # groups on the far hill, and its round trees on the near hill. The y of each
@@ -296,10 +300,10 @@ def hills_c(p, season):
             + "".join(round_tree(x, y, 36, 30, p, season) for x, y in ROUND_TREES_C))
 
 def hills(p, season, with_kayaks=True, with_bikes=False, radio=None, tile="a"):
-    """One hills tile. tile "a" has the radio station, if there is one; tile
-    "b" (hills_b) has other trees and kayaks; tile "c" (hills_c) has its own
-    hill shapes. With with_bikes on, two bikes are parked beside the radio
-    station."""
+    """One hills tile. tile "a" has the river, the kayaks, and the radio
+    station, if there is one; tile "b" (hills_b) has other trees and no river;
+    tile "c" (hills_c) has its own hill shapes. With with_bikes on, two bikes
+    are parked beside the radio station."""
     if tile == "c":
         return hills_c(p, season)
     b = tile == "b"
@@ -309,11 +313,13 @@ def hills(p, season, with_kayaks=True, with_bikes=False, radio=None, tile="a"):
     rounds = ROUND_TREES_B if b else [(130 if radio else 420, 796), (1500, 800)]
     s = f'''<path fill="{p["hillFar"]}" d="M0,700 C300,620 600,660 960,640 C1300,620 1620,780 1920,700 L1920,910 L0,910 Z"/>
 {radio_tower(p, radio) if radio else ""}<path fill="{p["hill"]}" d="M0,780 C400,720 700,760 960,740 C1300,720 1520,840 1920,780 L1920,910 L0,910 Z"/>
-{t}{radio_scene(p, season, radio) if radio else ""}{"".join(round_tree(x, y, 36, 30, p, season) for x, y in rounds)}
-<path fill="{p["river"]}" d="M958,647 C935,668 1000,695 900,730 C760,780 640,800 560,900 L1080,900 C1100,820 1180,790 1240,750 C1320,700 1060,675 1000,662 C985,656 968,650 958,647 Z"/>
+{t}{radio_scene(p, season, radio) if radio else ""}{"".join(round_tree(x, y, 36, 30, p, season) for x, y in rounds)}'''
+    if b:
+        return s
+    river = f'''<path fill="{p["river"]}" d="M958,647 C935,668 1000,695 900,730 C760,780 640,800 560,900 L1080,900 C1100,820 1180,790 1240,750 C1320,700 1060,675 1000,662 C985,656 968,650 958,647 Z"/>
 <g stroke="{p["riverHi"]}" stroke-width="4" stroke-linecap="round" fill="none">
 <path d="M962,672 L980,672"/><path d="M930,700 L972,700"/><path d="M860,758 L930,758"/><path d="M1010,770 L1080,770"/><path d="M760,832 L850,832"/><path d="M930,850 L1030,850"/></g>'''
-    return (s + (kayaks(p, season, KAYAKS_B if b else KAYAKS) if with_kayaks else "")
+    return (s + river + (kayaks(p, season) if with_kayaks else "")
             + (radio_bikes(p, season) if with_bikes and radio else ""))
 
 def street(p, season, seed=11):
