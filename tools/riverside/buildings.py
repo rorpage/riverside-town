@@ -759,17 +759,13 @@ def street_lamps(p, season):
     return "".join(street_lamp(x, p, season) for x in LAMP_X)
 
 def sidewalk_bikes(section, p, season, extras):
-    """Bikes drawn after the street: the bikes in each bike rack, and, with the
-    bikes extra on, a bike in front of every other shop."""
+    """Bikes drawn after the street: the bikes in each bike rack. These are the
+    only bikes in town."""
     out, n = "", 0
     for b, x in section:
         if b["type"] == "bike_rack":
             out += rack_bikes(x, p, season, n)
             n += 3
-        elif extras.get("bikes") and b["type"] == "shop":
-            if n % 2 == 0:
-                out += bicycle(x + 6, 924, BIKE_SCALE, BIKE_COLORS[n // 2 % len(BIKE_COLORS)])
-            n += 1
     return out
 
 TYPES = {

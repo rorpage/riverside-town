@@ -42,7 +42,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 - A town of one to five sections, each 1920 pixels wide, built from the buildings in `town.json`. The buildings have different wall colors and heights, and each sign uses its own font. Like the rest of the scene, the colors are darker at dusk and night.
 - A car parked at the gas station, if the town has one. The car and the direction it faces are chosen at random each time the screensaver starts.
 - Six cars: a sports car in the style of a Bugatti, a sedan, a VW dune buggy with a green arch over the seats, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest. `town.json` can choose which cars drive by. It can also add special cars from movies: the DeLorean time machine from the first Back to the Future movie, and Herbie, the Love Bug. Special cars drive by less often, about once every 1 to 3 minutes, and never park at the gas station.
-- As options: bikes parked in front of shops and in bike racks, two bikes parked on the hills in the background, old-fashioned street lights that light up at dusk and night, and a radio station on the hill beside the river, with a tall red tower whose light blinks at dusk and night.
+- As options: bikes in bike racks, two bikes parked beside the radio station, old-fashioned street lights that light up at dusk and night, and a radio station on the hill beside the river, with a tall red tower whose light blinks at dusk and night.
 - Cats, dogs, and guinea pigs on the sidewalk, chosen in `town.json`. Cats come in five colors and two sizes, and there are eight kinds of dogs. They are placed at random spots each time the screensaver starts.
 - Two lanes. The near lane draws the cars at full size, and the far lane draws them slightly smaller. Cars drive on the right by default, so the near lane drives left to right and the far lane right to left. `drive_on` in `town.json` can make them drive on the left instead. Only one car uses a lane at a time, and after a car leaves the screen, its lane stays empty for a random 1 to 10 seconds.
 - A small Cessna airplane flies across the sky about every 1 to 3 minutes, in either direction. It flies at the distance of the far mountains, so it is small and its speed matches that distance: it takes about 17 seconds to cross the screen. At dusk and night its wingtip light is on, green when it flies right and red when it flies left, as on a real plane (green is on the right wingtip and red on the left). A white tail light blinks. At night both lights are brighter, with a wider glow. It does not fly in rain, snow, fog, or thunderstorms.
@@ -159,7 +159,7 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `extras.falling_leaves` | Falling leaves in fall | `true` |
 | `extras.seasons` | Seasons from the date. When it is `false`, it is always summer, but snow still shows while it is snowing. | `true` |
 | `extras.table_mountain` | A flat-topped mountain in the shape of Table Mountain, in the center of the far mountains | `false` |
-| `extras.bikes` | A bike in front of every other shop, and bikes parked on the hills in the background (not in winter) | `false` |
+| `extras.bikes` | Two bikes parked beside the radio station (not in winter). Bike racks have bikes either way. | `false` |
 | `extras.street_lights` | Old-fashioned cast iron street lights along the sidewalk, 480 pixels apart. Their lanterns light up at dusk and night. | `false` |
 
 ### Buildings
