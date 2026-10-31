@@ -42,7 +42,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 - A town of one to five sections, each 1920 pixels wide, built from the buildings in `town.json`. The buildings have different wall colors and heights, and each sign uses its own font. Like the rest of the scene, the colors are darker at dusk and night.
 - A car parked at the gas station, if the town has one. The car and the direction it faces are chosen at random each time the screensaver starts.
 - Six cars: a sports car in the style of a Bugatti, a sedan, a VW dune buggy with a green arch over the seats, a van, a Jeep, and an old truck. Each has its own speed, and the wheels spin at a rate that matches it. The sports car is the fastest. `town.json` can choose which cars drive by.
-- As options: bikes parked in front of shops and in bike racks, two bikes parked on the hills in the background, and a radio station with a tall red tower on the hill beside the river.
+- As options: bikes parked in front of shops and in bike racks, two bikes parked on the hills in the background, old-fashioned street lights that light up at dusk and night, and a radio station on the hill beside the river, with a tall red tower whose light blinks at dusk and night.
 - Cats, dogs, and guinea pigs on the sidewalk, chosen in `town.json`. Cats come in five colors and two sizes, and there are eight kinds of dogs. They are placed at random spots each time the screensaver starts.
 - Two lanes. The near lane drives left to right at full size. The far lane drives right to left and draws the cars slightly smaller.
 - A small Cessna airplane flies across the sky about every 1 to 3 minutes, in either direction. It flies at the distance of the far mountains, so it is small and its speed matches that distance: it takes about 17 seconds to cross the screen. At dusk and night its wingtip light is on, green when it flies right and red when it flies left, as on a real plane (green is on the right wingtip and red on the left). A white tail light blinks. At night both lights are brighter, with a wider glow. It does not fly in rain, snow, fog, or thunderstorms.
@@ -147,8 +147,8 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `hemisphere` | `"north"` or `"south"`. In the south, the seasons are the other way around. | `"north"` |
 | `buildings` | The buildings along the street, from left to right. See below. | none |
 | `houses` | House numbers to spread out between the buildings, for example `["12", "14", "16"]` | none |
-| `radio_station` | A radio station on the hill beside the river, smaller than the town buildings, like the kayaks. It is a 1940s brick broadcast building with a rounded center, a wall of windows, a door on each side, and antennas, with a tall red lattice tower behind it that has a red light on top at dusk and night. The call letters are slanted red letters with a black outline and shadow. Like the WSQK logo, the first Q is drawn as an O with a lightning bolt for its tail. It is an object with `name` (the call letters, required), `small_line` (a line in script below them, for example `"The Squawk"`), `power` (shown as "50,000 WATTS" on each side of the call letters), `letter_color`, `color` (the brick), and `tower` (default `true`). | none |
-| `pets` | Animals on the sidewalk, for example `{ "type": "cat", "color": "tabby", "size": "small" }`. Cats can be `"black"`, `"gray"` (dark gray with darker stripes), `"tabby"`, `"white"`, or `"gray_white"` (gray with a white chest, muzzle, and paws). Dogs (`"dog"`) can be `"yellow_lab"`, `"black_lab"`, `"chocolate_lab"`, `"beagle"`, `"corgi"`, `"dalmatian"`, `"dachshund"`, or `"husky"`. Guinea pigs (`"guinea_pig"`) can be `"black_orange"` or `"white_orange"`. `size` is `"regular"` (the default) or `"small"`, which is 0.75 times as big. Up to 10. | none |
+| `radio_station` | A radio station on the hill beside the river, smaller than the town buildings, like the kayaks. It is a 1940s brick broadcast building with a rounded center, a wall of windows, a door on each side, and antennas, with a tall red lattice tower behind it and to its right. The light on top of the tower blinks at dusk and night, like the airplane's tail light. The call letters are slanted red letters with a black outline and shadow. Like the WSQK logo, the first Q is drawn as an O with a lightning bolt for its tail. It is an object with `name` (the call letters, required), `small_line` (a line in script below them, for example `"The Squawk"`), `power` (shown as "50,000 WATTS" on each side of the call letters), `letter_color`, `color` (the brick), and `tower` (default `true`). | none |
+| `pets` | Animals on the sidewalk, for example `{ "type": "cat", "color": "tabby", "size": "small" }`. Cats can be `"black"`, `"gray"` (dark gray with darker stripes), `"tabby"`, `"white"`, or `"gray_white"` (gray with a white chest, muzzle, and paws). Dogs (`"dog"`) can be `"yellow_lab"`, `"black_lab"`, `"chocolate_lab"`, `"beagle"`, `"corgi"`, `"dalmatian"`, `"dachshund"`, or `"husky"`. Guinea pigs (`"guinea_pig"`) can be `"black_orange"` or `"white_orange"`. `size` is `"regular"` (the default) or `"small"`, which is 0.65 times as big. Up to 10. | none |
 | `cars` | Which cars drive by: `"sedan"`, `"van"`, `"jeep"`, `"truck"`, `"sports"`, and `"buggy"`. At least 2. | all six |
 | `extras.airplane` | The airplane | `true` |
 | `extras.kayaks` | The kayaks beside the river | `true` |
@@ -156,7 +156,8 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `extras.falling_leaves` | Falling leaves in fall | `true` |
 | `extras.seasons` | Seasons from the date. When it is `false`, it is always summer, but snow still shows while it is snowing. | `true` |
 | `extras.table_mountain` | A flat-topped mountain in the shape of Table Mountain, in the center of the far mountains | `false` |
-| `extras.bikes` | A bike in front of every other shop, and two bikes parked on the hills in the background (not in winter) | `false` |
+| `extras.bikes` | A bike in front of every other shop, and bikes parked on the hills in the background (not in winter) | `false` |
+| `extras.street_lights` | Old-fashioned cast iron street lights along the sidewalk, 480 pixels apart. Their lanterns light up at dusk and night. | `false` |
 
 ### Buildings
 
@@ -183,7 +184,7 @@ These options work for most types:
 | `columned_hall` | A stone building with columns and steps, like a library or a courthouse, with the name across the top | `clock` (a clock tower), `clock_time` (for example `"10:04"`), `letter_color`, `letter_outline` |
 | `gas_station` | A price sign, a canopy over one pump, and a small store. A car is parked under the canopy. | `canopy_name` (default `"FUEL STOP"`), `store_name` (default `"MARKET"`), `store_sign_color`, `price` (for example `"3.19"`; a small 9 is added for the 9/10 of a cent) |
 | `drive_through` | A restaurant with its name on a colored roof and a drive-through window | `roof_color`, `sign_text_color` |
-| `gazebo` | An eight-sided gazebo on a brick base, with a shingled roof, a cupola, white posts and railings, and front steps. It has hanging flower baskets in spring and summer, leaf garlands, corn stalks, hay, and pumpkins in fall, and wreaths in winter, and string lights at dusk and night. | `name` (a town sign stands to its left, with this name), `small_line` (a small line on the sign, for example `"FOUNDED \u00b7 1779"`), `sign_color`, `color` (the brick base) |
+| `gazebo` | An eight-sided gazebo on a brick base, with a shingled roof, a cupola, white posts and railings, and front steps. It has hanging flower baskets in spring and summer, leaf garlands, corn stalks, hay, and pumpkins in fall, and wreaths in winter. Strings of bulbs hang between the posts, with a lantern in the middle, and they are lit at dusk and night. | `name` (a town sign stands to its left, with this name), `small_line` (a small line on the sign, for example `"FOUNDED \u00b7 1779"`), `sign_color`, `color` (the brick base) |
 | `bike_rack` | A bike rack on the sidewalk with three bikes | none |
 | `tree` | A tree | none |
 | `section_break` | Starts a new town section | none |
@@ -262,7 +263,7 @@ The settings that are not in `town.json` are at the top of `init()` in `componen
 | Setting | What it controls |
 |---|---|
 | `m.layerSpeeds` | Scroll speed of each scenery layer, in pixels per second. |
-| `m.layerWidths` | Width of each scenery layer before it repeats. The far and near mountains are 3840 because each is two different 1920 pixel images. The town is 1920 times the number of town sections. |
+| `m.layerWidths` | Width of each scenery layer before it repeats. The far and near mountains and the hills are 3840 because each is two different 1920 pixel images. The town is 1920 times the number of town sections. |
 | `m.cameraSpeed` | Must match the `town` layer speed. Cars use it so their speed looks correct relative to the street. |
 | `allCars` | Each car's image size, wheel positions, wheel radius, and `ground` speed in pixels per second. `m.carDefs` holds the ones `town.json` turns on. |
 | `m.planeSpeed` | The airplane's own speed at the distance of the far mountains, in pixels per second. The comment above it in `MainScene.brs` shows how it was worked out. |
@@ -314,6 +315,7 @@ Notes on the image sizes:
 
 - Each scenery layer is exactly 1920 pixels wide and its left and right edges line up, so two copies placed side by side repeat without a visible seam. The town layer is one image for each town section (`town_a` to `town_e`). The screensaver places them in order, then the first one again, so the street repeats without a jump.
 - The sky is an 8 pixel wide gradient that the scene stretches to full width. This uses much less memory than a full-size image. The fog image works the same way.
+- The hills are two different images, `hills` and `hills_b`, placed in the order A, B, A, like the mountains, so they repeat every 3840 pixels. Only the first has the radio station.
 - Seasonal layers are named `<layer>_<season>_<period>.png`, for example `hills_fall_night.png`. The hills and the town sections have an image for every season. The far and near mountains only have a winter image (`far_winter_day.png`); in other seasons they use the image without a season in the name (`far_day.png`). The clouds and sky do not change with the seasons.
 - The generator deletes the old images before it writes new ones, so files that are no longer used do not stay in `images/`.
 

@@ -1048,6 +1048,9 @@
         },
         "bikes": {
           "type": "boolean"
+        },
+        "street_lights": {
+          "type": "boolean"
         }
       }
     }

@@ -53,6 +53,7 @@
     "falling_leaves": true,
     "seasons": true,
     "table_mountain": false,
-    "bikes": true
+    "bikes": true,
+    "street_lights": true
   }
 }

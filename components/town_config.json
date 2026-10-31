@@ -17,46 +17,50 @@
   "pets": [
     {
       "image": "cat_black",
-      "w": 42,
-      "h": 45
-    },
-    {
-      "image": "cat_tabby",
-      "w": 31,
-      "h": 34
-    },
-    {
-      "image": "cat_white",
-      "w": 42,
-      "h": 45
-    },
-    {
-      "image": "cat_gray_white",
-      "w": 42,
-      "h": 45
-    },
-    {
-      "image": "guinea_white_orange",
-      "w": 45,
-      "h": 28
-    },
-    {
-      "image": "dog_yellow_lab",
-      "w": 67,
-      "h": 47
-    },
-    {
-      "image": "dog_beagle",
-      "w": 54,
+      "w": 33,
       "h": 35
     },
     {
+      "image": "cat_tabby_small",
+      "w": 21,
+      "h": 23
+    },
+    {
+      "image": "cat_white",
+      "w": 33,
+      "h": 35
+    },
+    {
+      "image": "cat_gray_white",
+      "w": 33,
+      "h": 35
+    },
+    {
+      "image": "guinea_white_orange",
+      "w": 35,
+      "h": 22
+    },
+    {
+      "image": "dog_yellow_lab",
+      "w": 53,
+      "h": 37
+    },
+    {
+      "image": "dog_beagle",
+      "w": 42,
+      "h": 28
+    },
+    {
       "image": "dog_dachshund",
-      "w": 54,
-      "h": 31
+      "w": 42,
+      "h": 25
     }
   ],
   "parkedCarX": 2788,
+  "radioLight": [
+    520,
+    24
+  ],
   "airplane": true,
   "fireflies": true,
   "fallingLeaves": true,

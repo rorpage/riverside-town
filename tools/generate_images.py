@@ -31,28 +31,24 @@ LETTERS = "abcde"
 
 # Layers that have a different image in each season. MainScene.brs builds
 # the same list from the number of town sections.
-SEASONAL = {"far": ["winter"], "far_b": ["winter"], "near": ["winter"], "near_b": ["winter"], "hills": SEASONS}
+SEASONAL = {"far": ["winter"], "far_b": ["winter"], "near": ["winter"], "near_b": ["winter"], "hills": SEASONS, "hills_b": SEASONS}
 
 # Each layer is cropped to the band it uses: name -> (y, height). These must
 # match the strips in components/MainScene.xml.
 CROPS = {"clouds": (90, 255), "far": (295, 425), "far_b": (295, 425), "near": (400, 360), "near_b": (400, 360),
-         "hills": (420, 490), "town": (550, 530)}
-
-# Animals are shown at 0.7 times their image size, and small animals at 0.75
-# times that. previews.py uses the same numbers.
-PET_SCALE, SMALL_PET = 0.7, 0.75
+         "hills": (420, 490), "hills_b": (420, 490), "town": (550, 530)}
 
 def pet_size(images, pet):
-    """The size of an animal on screen, from the size of its image."""
+    """The size of an animal on screen. Animal images are saved at the size
+    they are shown (see PET_SCALE in sprites.py), so this is the image size."""
     with Image.open(os.path.join(images, pet["image"] + ".png")) as im:
-        w, h = im.size
-    k = PET_SCALE * (SMALL_PET if pet["small"] else 1)
-    return round(w * k), round(h * k)
+        return im.size
 
 def town_section(town, i, p, season):
     section = town["sections"][i]
     return ("".join(buildings.draw(b, x, p, season) for b, x in section) + scenery.street(p, season, 11 + i)
-            + buildings.sidewalk_bikes(section, p, season, town["extras"]))
+            + buildings.sidewalk_bikes(section, p, season, town["extras"])
+            + (buildings.street_lamps(p, season) if town["extras"]["street_lights"] else ""))
 
 def layers(town):
     """Returns name -> drawing function(p, season) for every scenery layer."""
@@ -60,7 +56,8 @@ def layers(town):
     out = {"clouds": scenery.clouds,
            "far": lambda p, s: scenery.far(p, s, ex["table_mountain"]), "far_b": scenery.far_b,
            "near": scenery.near, "near_b": scenery.near_b,
-           "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], town["radio_station"])}
+           "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], town["radio_station"]),
+           "hills_b": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], tile="b")}
     for i in range(len(town["sections"])):
         out[f"town_{LETTERS[i]}"] = lambda p, s, i=i: town_section(town, i, p, s)
     return out
@@ -100,10 +97,17 @@ def runtime_config(town, images):
         "temperatureUnit": "celsius" if town["temperature"] == "C" else "fahrenheit",
         "clock24": town["clock"] == "24h", "hemisphere": town["hemisphere"],
         "sections": len(town["sections"]), "cars": town["cars"], "pets": pets,
-        "parkedCarX": town["parked_car_x"],
+        "parkedCarX": town["parked_car_x"], "radioLight": radio_light(town),
         "airplane": ex["airplane"], "fireflies": ex["fireflies"], "fallingLeaves": ex["falling_leaves"],
         "seasons": ex["seasons"],
     }
+
+def radio_light(town):
+    """Where MainScene.brs puts the blinking light on the radio tower: [x, y]
+    in hills strip coordinates (the strip starts at screen y=CROPS["hills"]),
+    or [] if there is no tower."""
+    light = scenery.radio_light(town["radio_station"])
+    return [light[0], light[1] - CROPS["hills"][0]] if light else []
 
 def write_manifest(path, title):
     with open(path) as f:

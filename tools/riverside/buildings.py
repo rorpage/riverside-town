@@ -451,9 +451,10 @@ def tree_draw(s, x, p, season):
 # ---------- radio station ----------
 RUST = "#9C4A3A"
 
-def lattice_tower(cx, base, top, base_w, top_w, color, p, levels=5, legs=3):
+def lattice_tower(cx, base, top, base_w, top_w, color, p, levels=5, legs=3, light=True):
     """A steel lattice tower, narrower at the top, with cross bracing and a red
-    light on top that is lit at dusk and night."""
+    light on top that is lit at dusk and night. With light off, only the dark
+    lamp is drawn; a separate blinking light goes on top of it."""
     out = f'<g stroke="{color}" stroke-linecap="round" fill="none">'
     ys = [base + (top - base) * i / levels for i in range(levels + 1)]
     half = [base_w / 2 + (top_w / 2 - base_w / 2) * i / levels for i in range(levels + 1)]
@@ -465,7 +466,9 @@ def lattice_tower(cx, base, top, base_w, top_w, color, p, levels=5, legs=3):
                 f'<line x1="{cx - h0:.1f}" y1="{y0:.1f}" x2="{cx + h1:.1f}" y2="{y1:.1f}" stroke-width="1.2"/>'
                 f'<line x1="{cx + h0:.1f}" y1="{y0:.1f}" x2="{cx - h1:.1f}" y2="{y1:.1f}" stroke-width="1.2"/>')
     out += f'</g><line x1="{cx}" y1="{top}" x2="{cx}" y2="{top - 10}" stroke="{color}" stroke-width="2"/>'
-    if is_dark(p):
+    if not light:
+        out += f'<circle cx="{cx}" cy="{top - 11}" r="2.4" fill="#5B2A22"/>'
+    elif is_dark(p):
         out += (f'<circle cx="{cx}" cy="{top - 11}" r="7" fill="#E74C3C" fill-opacity="0.3"/>'
                 f'<circle cx="{cx}" cy="{top - 11}" r="2.6" fill="#E74C3C"/>')
     else:
@@ -509,8 +512,10 @@ def call_letters(s, cx, base, size, p):
 # center at x=150 and its ground at y=TOWER_GROUND. The station covers its base.
 TOWER_W, TOWER_H, TOWER_GROUND = 300, 600, 595
 
-def tower_svg(p):
-    return lattice_tower(150, TOWER_GROUND, 40, 280, 24, wall(RUST, p), p, 10, 4)
+TOWER_LIGHT_Y = 29   # The y of the tower's light in its box
+
+def tower_svg(p, light=True):
+    return lattice_tower(150, TOWER_GROUND, 40, 280, 24, wall(RUST, p), p, 10, 4, light)
 
 def radio_draw(s, x, p, season):
     """A radio station like a 1940s brick broadcast building: a rounded center
@@ -646,9 +651,6 @@ def gazebo_draw(s, x, p, season):
             f'<rect x="{x + 112}" y="654" width="38" height="5" fill="{white}"/>'
             + snow_ridge(season, p, (x - 6, 747), (x + 66, 696), (x + 196, 696), (x + 268, 747))
             + snow_ridge(season, p, (x + 98, 671), (x + 112, 656), (x + 150, 656), (x + 164, 671)))
-    # String lights along the eave at dusk and night
-    if is_dark(p):
-        out += "".join(f'<circle cx="{x + 8 + i * 12.4:.1f}" cy="{765 + (3 if i % 2 else 0)}" r="2" fill="#F6E7B0"/>' for i in range(21))
     # Decorations for each season
     if season == "fall":
         for a, b in zip(posts, posts[1:]):
@@ -671,13 +673,44 @@ def gazebo_draw(s, x, p, season):
                     f'<path d="M{x + cx - 8},774 Q{x + cx},786 {x + cx + 8},774 Z" fill="#6B4A3A"/>'
                     f'<circle cx="{x + cx}" cy="776" r="7" fill="#5E8B6B"/>'
                     + "".join(f'<circle cx="{x + cx + dx}" cy="{774 + dy}" r="2.4" fill="{c}"/>' for (dx, dy), c in zip(((-4, 0), (3, -2), (0, 4), (5, 3)), flowers * 2)))
+    return out + gazebo_lights(x, p, posts)
+
+def gazebo_lights(x, p, posts):
+    """Strings of bulbs hung between the posts under the roof, and a lantern
+    hanging in the middle. They are lit at dusk and night."""
+    lit = is_dark(p)
+    wire = wall("#5B6770", p)
+    bulb = "#F6E7B0" if lit else wall("#D9E2EA", p)
+    out = ""
+    for a, b in zip(posts, posts[1:]):
+        x0, x1, sag = x + a + 4, x + b - 4, 20
+        out += f'<path d="M{x0},766 Q{(x0 + x1) / 2},{766 + sag * 2} {x1},766" fill="none" stroke="{wire}" stroke-width="1"/>'
+        for i in range(1, 8):
+            t = i / 8
+            bx = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * (x0 + x1) / 2 + t ** 2 * x1
+            by = 766 + 2 * (1 - t) * t * sag * 2 + 2.5
+            if lit:
+                out += f'<circle cx="{bx:.1f}" cy="{by:.1f}" r="5" fill="#F6E7B0" fill-opacity="0.3"/>'
+            out += f'<circle cx="{bx:.1f}" cy="{by:.1f}" r="2.2" fill="{bulb}"/>'
+    # The lantern, on a chain from the middle of the ceiling
+    cx = x + 131
+    glass = "#F6C46A" if lit else p["window"]
+    out += (f'<line x1="{cx}" y1="762" x2="{cx}" y2="778" stroke="{wire}" stroke-width="1.5"/>'
+            + (f'<circle cx="{cx}" cy="788" r="16" fill="#F6E7B0" fill-opacity="0.25"/>' if lit else "") +
+            f'<polygon points="{cx - 6},780 {cx + 6},780 {cx + 4},777 {cx - 4},777" fill="{p["roof"]}"/>'
+            f'<rect x="{cx - 5}" y="780" width="10" height="14" fill="{glass}"/>'
+            f'<rect x="{cx - 5}" y="780" width="10" height="14" fill="none" stroke="{p["roof"]}" stroke-width="1.5"/>'
+            f'<line x1="{cx}" y1="780" x2="{cx}" y2="794" stroke="{p["roof"]}" stroke-width="1"/>'
+            f'<rect x="{cx - 6}" y="794" width="12" height="3" fill="{p["roof"]}"/>')
     return out
 
 # ---------- bike rack ----------
 BIKE_COLORS = ["#C0392B", "#2E86C1", "#F2B33D", "#27AE60", "#8E44AD"]
 
+BIKE_SCALE = 1.25   # Bikes on the sidewalk are 75 pixels long
+
 def rack_width(s):
-    return 140
+    return 176
 
 def rack_draw(s, x, p, season):
     """A bike rack on the sidewalk with three bikes. The bikes stand in front of
@@ -687,11 +720,42 @@ def rack_draw(s, x, p, season):
 
 def rack_bikes(x, p, season, start=0):
     metal = wall("#9CA6B1", p)
-    out = "".join(f'<path d="M{x + 18 + i * 38},922 L{x + 18 + i * 38},898 A11,11 0 0 1 {x + 40 + i * 38},898 L{x + 40 + i * 38},922" fill="none" stroke="{metal}" stroke-width="3"/>' for i in range(3))
-    out += "".join(bicycle(x + i * 38, 924, 1.0, BIKE_COLORS[(start + i) % len(BIKE_COLORS)], left=i % 2 == 1) for i in range(3))
+    out = "".join(f'<path d="M{x + 22 + i * 48},924 L{x + 22 + i * 48},893 A14,14 0 0 1 {x + 50 + i * 48},893 L{x + 50 + i * 48},924" fill="none" stroke="{metal}" stroke-width="3.5"/>' for i in range(3))
+    out += "".join(bicycle(x + i * 48, 926, BIKE_SCALE, BIKE_COLORS[(start + i) % len(BIKE_COLORS)], left=i % 2 == 1) for i in range(3))
     if season == "winter":
-        out += f'<rect x="{x + 14}" y="883" width="106" height="5" rx="2" fill="{p["snow"]}"/>'
+        out += f'<rect x="{x + 18}" y="876" width="132" height="5" rx="2" fill="{p["snow"]}"/>'
     return out
+
+# Old-fashioned street lights at the front of the sidewalk, 480 pixels apart
+# (480 divides 1920, so the spacing stays the same across section edges)
+LAMP_X = [240, 720, 1200, 1680]
+
+def street_lamp(x, p, season):
+    """A cast iron lamp post with a lantern on top. The lantern is lit at dusk
+    and night."""
+    iron = wall("#2F3A33", p)
+    lit = is_dark(p)
+    glass = "#F6E7B0" if lit else wall("#C9DAEA", p)
+    out = ""
+    if lit:
+        out += (f'<circle cx="{x}" cy="806" r="34" fill="#F6E7B0" fill-opacity="0.16"/>'
+                f'<circle cx="{x}" cy="806" r="18" fill="#F6E7B0" fill-opacity="0.28"/>'
+                f'<ellipse cx="{x}" cy="932" rx="30" ry="5" fill="#F6E7B0" fill-opacity="0.22"/>')
+    out += (f'<path d="M{x - 9},934 L{x - 6},918 L{x + 6},918 L{x + 9},934 Z" fill="{iron}"/>'
+            f'<rect x="{x - 2.5}" y="824" width="5" height="96" fill="{iron}"/>'
+            f'<rect x="{x - 5}" y="866" width="10" height="4" rx="1" fill="{iron}"/>'
+            f'<path d="M{x - 7},824 L{x + 7},824 L{x + 4},818 L{x - 4},818 Z" fill="{iron}"/>'
+            f'<path d="M{x - 8},818 L{x + 8},818 L{x + 10},796 L{x - 10},796 Z" fill="{glass}"/>'
+            f'<path d="M{x - 8},818 L{x + 8},818 L{x + 10},796 L{x - 10},796 Z" fill="none" stroke="{iron}" stroke-width="2"/>'
+            f'<line x1="{x}" y1="796" x2="{x}" y2="818" stroke="{iron}" stroke-width="1.2"/>'
+            f'<path d="M{x - 13},797 L{x + 13},797 L{x + 5},788 L{x - 5},788 Z" fill="{iron}"/>'
+            f'<circle cx="{x}" cy="785" r="3" fill="{iron}"/>')
+    if season == "winter":
+        out += f'<path d="M{x - 12},796 L{x + 12},796 L{x + 5},789 L{x - 5},789 Z" fill="{p["snow"]}"/>'
+    return out
+
+def street_lamps(p, season):
+    return "".join(street_lamp(x, p, season) for x in LAMP_X)
 
 def sidewalk_bikes(section, p, season, extras):
     """Bikes drawn after the street: the bikes in each bike rack, and, with the
@@ -703,7 +767,7 @@ def sidewalk_bikes(section, p, season, extras):
             n += 3
         elif extras.get("bikes") and b["type"] == "shop":
             if n % 2 == 0:
-                out += bicycle(x + 6, 922, 1.0, BIKE_COLORS[n // 2 % len(BIKE_COLORS)])
+                out += bicycle(x + 6, 924, BIKE_SCALE, BIKE_COLORS[n // 2 % len(BIKE_COLORS)])
             n += 1
     return out
 

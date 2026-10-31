@@ -100,11 +100,11 @@ TREES = [(60,692),(110,686),(170,680),(240,672),(300,668),(620,662),(680,664),(7
 # Each is (center x, center y, angle in degrees, color). The colors are day
 # colors, darkened for dusk and night with wall() like the buildings.
 KAYAKS = [(676, 806, -14, "#D9452F"), (1172, 846, 22, "#F2B33D"), (1218, 806, 18, "#2E86C1")]
-def kayaks(p, season):
+def kayaks(p, season, places=KAYAKS):
     if season == "winter":
         return ""
     s = ""
-    for cx, cy, angle, color in KAYAKS:
+    for cx, cy, angle, color in places:
         c = wall(color, p)
         paddle = wall("#5B6770", p)
         s += (f'<g transform="translate({cx},{cy}) rotate({angle})">'
@@ -120,16 +120,22 @@ def kayaks(p, season):
 # Each is (x of the left end, color, facing left). They are not drawn in
 # winter.
 HILL_BIKES = [(610, "#C0392B", False), (1610, "#2E86C1", True)]
-def hill_bikes(p, season):
+def hill_bikes(p, season, places=HILL_BIKES):
     if season == "winter":
         return ""
-    return "".join(bicycle(x, near_hill_y(x + 12) + 3, 0.42, wall(c, p), left) for x, c, left in HILL_BIKES)
+    # 0.7 is BIKE_SCALE in buildings.py times about RADIO_SCALE, the size of
+    # things at the distance of the hills
+    return "".join(bicycle(x, near_hill_y(x + 21) + 3, 0.7, wall(c, p), left) for x, c, left in places)
 
 # The radio station stands on the near hill to the left of the river, where
 # the hill is nearly flat and high enough to show above most roofs. It is
 # drawn at RADIO_SCALE, because the hills are farther away than the street,
 # with its tall tower behind it. RADIO_X is the center of the station.
 RADIO_X, RADIO_SCALE = 400, 0.55
+# The tower stands behind the station and to its right, TOWER_DX pixels from
+# the station's center. It is drawn before the near hill, so the hill covers
+# the bottom of its legs and it stands behind the top of the hill.
+TOWER_DX = 120
 
 def near_hill_y(x):
     """The y of the top of the near hill at x. The hill is two curves:
@@ -146,30 +152,66 @@ def near_hill_y(x):
         lo, hi = (t, hi) if bx < x else (lo, t)
     return (1 - t) ** 3 * p0[1] + 3 * (1 - t) ** 2 * t * p1[1] + 3 * (1 - t) * t ** 2 * p2[1] + t ** 3 * p3[1]
 
+def lowest_ground(center, half):
+    """The lowest point of the near hill between center - half and center + half."""
+    return max(near_hill_y(center + half * i / 10) for i in range(-10, 11))
+
+def tower_place(spec):
+    """The left edge and top of the tower's box, for the radio station in spec."""
+    k = RADIO_SCALE
+    x = RADIO_X + TOWER_DX
+    ground = lowest_ground(x, buildings.TOWER_W / 2 * k) + 10
+    return x - buildings.TOWER_W / 2 * k, ground - buildings.TOWER_GROUND * k
+
+def radio_light(spec):
+    """The center of the tower's blinking light, in screen coordinates, or None
+    if the station has no tower. MainScene.brs puts tower_light.png there."""
+    if not spec or not spec.get("tower", True):
+        return None
+    left, top = tower_place(spec)
+    k = RADIO_SCALE
+    return round(left + buildings.TOWER_W / 2 * k), round(top + buildings.TOWER_LIGHT_Y * k)
+
+def radio_tower(p, spec):
+    if not spec.get("tower", True):
+        return ""
+    left, top = tower_place(spec)
+    return (f'<g transform="translate({left:.1f},{top:.1f}) scale({RADIO_SCALE})">'
+            + buildings.tower_svg(p, light=False) + '</g>')
+
 def radio_scene(p, season, spec):
-    """The radio station and its tower on the hill. The ground line is the
-    lowest point of the hill under the base, so no part of the base is above
-    the ground."""
+    """The radio station on the hill. Its ground line is the lowest point of the
+    hill under the base, so no part of the base is above the ground."""
     k = RADIO_SCALE
     half = buildings.radio_width(spec) / 2 * k
-    ground = max(near_hill_y(RADIO_X + half * i / 10) for i in range(-10, 11)) + 1
-    out = ""
-    if spec.get("tower", True):
-        out += (f'<g transform="translate({RADIO_X - buildings.TOWER_W / 2 * k:.1f},{ground - buildings.TOWER_GROUND * k:.1f}) scale({k})">'
-                + buildings.tower_svg(p) + '</g>')
-    return out + (f'<g transform="translate({RADIO_X - half:.1f},{ground - 900 * k:.1f}) scale({k})">'
-                  + buildings.radio_draw(spec, 0, p, season) + '</g>')
+    ground = lowest_ground(RADIO_X, half) + 1
+    return (f'<g transform="translate({RADIO_X - half:.1f},{ground - 900 * k:.1f}) scale({k})">'
+            + buildings.radio_draw(spec, 0, p, season) + '</g>')
 
-def hills(p, season, with_kayaks=True, with_bikes=False, radio=None):
-    t = "".join(pine(x, b, p, season) for x, b in TREES)
+# The second hills tile. It has the same hills and river, so the tiles join,
+# with trees, kayaks, and a bike in other places, and no radio station.
+TREES_B = [(40,694),(150,682),(210,676),(330,666),(560,662),(650,662),(780,656),
+           (1250,664),(1330,676),(1480,700),(1560,712),(1650,722),(1830,718)]
+ROUND_TREES_B = [(280, 794), (690, 790), (1700, 806)]
+KAYAKS_B = [(1250, 790, 12, "#27AE60"), (1330, 812, -8, "#D9452F")]
+HILL_BIKES_B = [(470, "#F2B33D", True)]
+
+def hills(p, season, with_kayaks=True, with_bikes=False, radio=None, tile="a"):
+    """One hills tile. tile "a" has the radio station, if there is one; tile
+    "b" (hills_b) has other trees and kayaks."""
+    b = tile == "b"
+    if b:
+        radio = None
+    t = "".join(pine(x, y, p, season) for x, y in (TREES_B if b else TREES))
+    rounds = ROUND_TREES_B if b else [(130 if radio else 420, 796), (1500, 800)]
     s = f'''<path fill="{p["hillFar"]}" d="M0,700 C300,620 600,660 960,640 C1300,620 1620,780 1920,700 L1920,910 L0,910 Z"/>
-<path fill="{p["hill"]}" d="M0,780 C400,720 700,760 960,740 C1300,720 1520,840 1920,780 L1920,910 L0,910 Z"/>
-{t}{radio_scene(p, season, radio) if radio else ""}{round_tree(130 if radio else 420, 796, 36, 30, p, season)}{round_tree(1500, 800, 36, 30, p, season)}
+{radio_tower(p, radio) if radio else ""}<path fill="{p["hill"]}" d="M0,780 C400,720 700,760 960,740 C1300,720 1520,840 1920,780 L1920,910 L0,910 Z"/>
+{t}{radio_scene(p, season, radio) if radio else ""}{"".join(round_tree(x, y, 36, 30, p, season) for x, y in rounds)}
 <path fill="{p["river"]}" d="M958,647 C935,668 1000,695 900,730 C760,780 640,800 560,900 L1080,900 C1100,820 1180,790 1240,750 C1320,700 1060,675 1000,662 C985,656 968,650 958,647 Z"/>
 <g stroke="{p["riverHi"]}" stroke-width="4" stroke-linecap="round" fill="none">
 <path d="M962,672 L980,672"/><path d="M930,700 L972,700"/><path d="M860,758 L930,758"/><path d="M1010,770 L1080,770"/><path d="M760,832 L850,832"/><path d="M930,850 L1030,850"/></g>'''
-    return (s + (kayaks(p, season) if with_kayaks else "")
-            + (hill_bikes(p, season) if with_bikes else ""))
+    return (s + (kayaks(p, season, KAYAKS_B if b else KAYAKS) if with_kayaks else "")
+            + (hill_bikes(p, season, HILL_BIKES_B if b else HILL_BIKES) if with_bikes else ""))
 
 def street(p, season, seed=11):
     """The sidewalk, curb, and road at the bottom of every town section. The

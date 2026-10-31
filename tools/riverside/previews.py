@@ -97,7 +97,12 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     mtn = season if season == "winter" else "summer"
     far = scenery.far(p, mtn, town["extras"]["table_mountain"]) if section % 2 == 0 else scenery.far_b(p, mtn)
     near = scenery.near(p, mtn) if section % 2 == 0 else scenery.near_b(p, mtn)
-    art_svg = (scenery.clouds(p, season) + far + near + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"])
+    # The hills change tiles too; only the first has the radio station
+    hills = scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"], "a" if section % 2 == 0 else "b")
+    light = scenery.radio_light(town["radio_station"]) if section % 2 == 0 and pal != "day" else None
+    if light:
+        hills += f'<circle cx="{light[0]}" cy="{light[1]}" r="7" fill="#E74C3C" fill-opacity="0.35"/><circle cx="{light[0]}" cy="{light[1]}" r="3" fill="#FF6B5B"/>'
+    art_svg = (scenery.clouds(p, season) + far + near + hills
                + layers[f"town_{LETTERS[section]}"](p, season))
     im.alpha_composite(Image.open(io.BytesIO(render(art_svg, "0 0 1920 1080", 1920, 1080))).convert("RGBA"))
     if season == "summer" and pal == "night" and town["extras"]["fireflies"]:
@@ -105,9 +110,8 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     if plane and town["extras"]["airplane"]:
         im.alpha_composite(Image.open(os.path.join(images, f"plane_{pal}.png")).convert("RGBA").resize((56, 22), Image.LANCZOS), plane)
     for animal, px in pets:
+        # Animal images are saved at the size they are shown
         pet = Image.open(os.path.join(images, f"{animal['image']}.png")).convert("RGBA")
-        k = 0.7 * (0.75 if animal["small"] else 1)   # Copies PET_SCALE and SMALL_PET in generate_images.py
-        pet = pet.resize((round(pet.width * k), round(pet.height * k)), Image.LANCZOS)
         im.alpha_composite(pet, (px, 924 - pet.height))
     parked(town, images, im, section, "van" if pal == "day" else "sedan")
     cars = town["cars"]
