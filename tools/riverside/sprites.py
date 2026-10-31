@@ -3,7 +3,8 @@ effects, the airplane, the cars, and the animals. MainScene.brs places them."""
 import os
 import random
 from PIL import Image, ImageOps
-from .art import P, ACCENT, GLASS, DARK, render, text
+from .art import P, ACCENT, GLASS, DARK, render
+from . import movie_cars
 
 DARK_EYE = "#1F2A33"
 
@@ -252,56 +253,9 @@ def write(out):
              + wells([(52, 84), (198, 84)], 28))
     save(buggy, "0 0 250 112", 250, 112, "car_buggy.png")
 
-    # DeLorean time machine from the first Back to the Future movie: a stainless
-    # steel wedge with a gull-wing door, black louvers on the rear slope, and a
-    # black strip along the bottom. The time machine parts are the ribbed plutonium
-    # reactor on the rear deck (not the Mr. Fusion from the end of the movie and
-    # the second movie), a bank of vents at the back, copper coils on the rear
-    # side, and a pipe along the side. A town must list it in "cars"; it is not on by default.
-    ST, STD, TRIM, PIPE = "#BCC3C9", "#9AA3AA", "#3E4449", "#5B646C"
-    delorean = (f'<path fill="{ST}" d="M8,76 L8,52 Q8,46 14,46 L62,44 L102,22 Q106,20 112,20 L156,20 Q162,20 166,24 L206,44 L282,56 Q294,58 294,64 L294,74 Q294,80 286,80 L14,80 Q8,80 8,76 Z"/>'
-                f'<path fill="{STD}" d="M8,62 L294,66 L294,74 Q294,80 286,80 L14,80 Q8,80 8,76 Z"/>'
-                f'<rect x="12" y="70" width="278" height="8" fill="{TRIM}"/>'
-                f'<polygon points="110,26 154,25 196,44 112,44" fill="{GLASS}"/>'
-                f'<path d="M106,24 L106,66 M200,44 L204,66" stroke="#868F96" stroke-width="1.5" fill="none"/>'
-                + "".join(f'<line x1="{66 + i * 7}" y1="{44 - i * 3.7:.1f}" x2="{70 + i * 7}" y2="{46 - i * 3.7:.1f}" stroke="{TRIM}" stroke-width="2.5"/>' for i in range(6)) +
-                f'<path fill="#6E777F" d="M16,46 L16,37 Q16,32 22,32 L56,32 Q62,32 62,37 L62,46 Z"/>'
-                + "".join(f'<line x1="{x}" y1="33" x2="{x}" y2="45" stroke="#545C63" stroke-width="2"/>' for x in range(22, 60, 6)) +
-                f'<rect x="31" y="36" width="16" height="6" fill="#E0B040"/><polygon points="35,42 39,36 43,42" fill="{DARK}"/>'
-                + "".join(f'<rect x="0" y="{y}" width="20" height="5" rx="2" fill="{PIPE}"/><rect x="0" y="{y}" width="3" height="5" fill="{DARK}"/>' for y in (38, 45, 52)) +
-                f'<rect x="38" y="59" width="186" height="5" rx="2.5" fill="{PIPE}"/>'
-                + "".join(f'<line x1="{x}" y1="52" x2="{x}" y2="64" stroke="#B87333" stroke-width="2"/>' for x in (26, 30, 34)) +
-                '<rect x="282" y="60" width="11" height="4" fill="#F6C46A"/><rect x="8" y="62" width="6" height="7" fill="#C0392B"/>'
-                + wells([(66, 84), (232, 84)], 24))
-    save(delorean, "0 0 300 106", 300, 106, "car_delorean.png")
-
-    # Herbie, the Love Bug from the Disney movies: a white VW Beetle with the
-    # number 53 in a circle on the door. The racing stripes run over the middle of
-    # the top, so they do not show from the side. The left image is drawn again
-    # instead of mirrored, so the number does not read backward. A town must list it in "cars"; it is not on by default.
-    def herbie(left):
-        HB, HBD, CHROME = "#F4F4F0", "#C9CDD0", "#C9D2DA"
-        body = "M16,84 C6,72 8,52 30,40 C50,26 72,14 104,12 C140,10 160,16 176,34 C186,44 214,46 234,56 C248,64 252,76 246,84 Z"
-        s = (f'<path d="{body}" fill="{HB}" stroke="{HBD}" stroke-width="1.5"/>'
-             f'<path d="M58,42 C68,28 84,22 102,21 L102,42 Z" fill="{GLASS}"/>'
-             f'<path d="M108,21 C134,20 148,24 162,40 L108,42 Z" fill="{GLASS}"/>'
-             f'<path d="M106,20 L106,80 M164,40 Q170,60 168,80" stroke="{HBD}" stroke-width="1.5" fill="none"/>'
-             f'<path d="M20,88 Q20,58 58,56 Q94,58 96,88 Z" fill="{HB}" stroke="{HBD}" stroke-width="1.5"/>'
-             f'<path d="M166,88 Q168,60 204,58 Q240,60 244,88 Z" fill="{HB}" stroke="{HBD}" stroke-width="1.5"/>'
-             f'<rect x="92" y="80" width="78" height="6" rx="2" fill="#5B646C"/>'
-             f'<ellipse cx="232" cy="62" rx="6" ry="7" fill="#F6C46A" stroke="{CHROME}" stroke-width="2"/>'
-             f'<ellipse cx="22" cy="72" rx="3" ry="5" fill="#C0392B"/>'
-             f'<rect x="240" y="76" width="14" height="5" rx="2" fill="{CHROME}"/><rect x="2" y="74" width="16" height="5" rx="2" fill="{CHROME}"/>'
-             + wells([(58, 88), (204, 88)], 26))
-        if left:
-            s = f'<g transform="translate(260,0) scale(-1,1)">{s}</g>'
-        # The number on the door is added after the car is turned, so it is not drawn backward
-        cx = 260 - 136 if left else 136
-        s += (f'<circle cx="{cx}" cy="61" r="14" fill="#FFFFFF" stroke="#1F2A33" stroke-width="2"/>'
-              + text("53", "oswald", 700, 19, cx, 68, "#1F2A33"))
-        return s
-    save(herbie(False), "0 0 260 112", 260, 112, "car_herbie.png")
-    save(herbie(True), "0 0 260 112", 260, 112, "car_herbie_left.png")
+    # The special cars from movies, with their own wheel images. Their left
+    # images are drawn in movie_cars.py, not mirrored here.
+    movie_cars.draw(save)
 
     # Animals that sit or stand on the sidewalk. MainScene.brs places them at
     # random spots when the screensaver starts. They are drawn larger than they
@@ -356,7 +310,7 @@ def write(out):
     save_pet(guinea_pig("#F8FAFC", [(8, 10, 4, 3.5, "#E8913A"), (16, 14, 3.5, 2.5, "#E8913A"), (13, 7, 2.5, 2, "#E8913A"), (26, 9, 2.5, 2.5, "#E8913A")]), 64, 40, "guinea_white_orange")
 
 
-    # Mirrored car bodies for the far lane, where cars drive right to left. Herbie
-    # is not in this list, because its left image is drawn above.
-    for n in ["sedan", "van", "jeep", "truck", "sports", "buggy", "delorean"]:
+    # Mirrored car bodies for the far lane, where cars drive right to left. The
+    # special cars are not in this list, because movie_cars.py draws their left images.
+    for n in ["sedan", "van", "jeep", "truck", "sports", "buggy"]:
         ImageOps.mirror(Image.open(os.path.join(out, f"car_{n}.png"))).save(os.path.join(out, f"car_{n}_left.png"))

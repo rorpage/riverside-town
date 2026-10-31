@@ -1037,8 +1037,13 @@
       "description": "Cars from movies that drive by less often than the other cars and never park at the gas station. Default none.",
       "items": {
         "enum": [
+          "aston",
+          "herbie",
+          "kitt",
+          "ecto1",
           "delorean",
-          "herbie"
+          "mcqueen",
+          "mustang"
         ]
       }
     },
