@@ -7,6 +7,11 @@ from .art import P, ACCENT, GLASS, DARK, render
 
 DARK_EYE = "#1F2A33"
 
+# Animals are drawn in a larger box and saved at the size they are shown on
+# screen, so the screensaver never scales them: PET_SCALE times the box size,
+# and SMALL_PET times that for the small size (name_small.png).
+PET_SCALE, SMALL_PET = 0.55, 0.65
+
 # Dog breeds: body and dark colors, ears ("floppy" or "pointy"), leg length,
 # body length, tail ("up", "curl", or "short"), size, and markings
 DOGS = {
@@ -76,6 +81,10 @@ def dog(body, dark, ears="floppy", leg=9, length=1.0, tail="up", size=1.0, spots
 def write(out):
     def save(content, vb, w, h, name):
         render(content, vb, w, h, os.path.join(out, name))
+
+    def save_pet(content, w, h, name):
+        for suffix, k in (("", PET_SCALE), ("_small", PET_SCALE * SMALL_PET)):
+            save(content, f"0 0 {w} {h}", round(w * k), round(h * k), f"{name}{suffix}.png")
 
     random.seed(7)
     stars = "".join(f'<circle cx="{random.randint(10,1910)}" cy="{random.randint(10,390)}" r="{random.choice([1.5,2,2.5])}" fill="#F8FAFC"/>' for _ in range(70))
@@ -152,6 +161,9 @@ def write(out):
     # A larger, brighter flash for night, shown at 16x16 instead of 8x8
     save('<circle cx="16" cy="16" r="15" fill="#FFFFFF" fill-opacity="0.18"/><circle cx="16" cy="16" r="9" fill="#FFFFFF" fill-opacity="0.4"/>'
          '<circle cx="16" cy="16" r="4.5" fill="#FFFFFF"/>', "0 0 32 32", 32, 32, "plane_strobe_night.png")
+    # The blinking red light on top of the radio tower, shown at 24x24
+    save('<circle cx="24" cy="24" r="22" fill="#E74C3C" fill-opacity="0.18"/><circle cx="24" cy="24" r="13" fill="#E74C3C" fill-opacity="0.4"/>'
+         '<circle cx="24" cy="24" r="6" fill="#FF6B5B"/>', "0 0 48 48", 48, 48, "tower_light.png")
 
     # Wheel (drawn separately so it can spin)
     save('<circle cx="32" cy="32" r="32" fill="#1F2A33"/><circle cx="32" cy="32" r="18" fill="#C9D2DA"/>'
@@ -262,18 +274,18 @@ def write(out):
         if outline:
             s = f'<g stroke="{outline}" stroke-width="0.7">{s}</g>'
         return f'<g transform="scale(2)">{s}</g>'
-    save(cat("#22272B", "#22272B", "#F6C46A"), "0 0 60 64", 60, 64, "cat_black.png")
-    save(cat("#5F676E", "#3E444A", "#15181B", True), "0 0 60 64", 60, 64, "cat_gray.png")
-    save(cat("#9A6B42", "#2B2118", "#F6C46A", True), "0 0 60 64", 60, 64, "cat_tabby.png")
-    save(cat("#F4F1EA", "#F4F1EA", "#F2B33D", outline="#B9B2A6"), "0 0 60 64", 60, 64, "cat_white.png")
-    save(cat("#6E767D", "#6E767D", "#F2B33D", white="#F4F1EA"), "0 0 60 64", 60, 64, "cat_gray_white.png")
+    save_pet(cat("#22272B", "#22272B", "#F6C46A"), 60, 64, "cat_black")
+    save_pet(cat("#5F676E", "#3E444A", "#15181B", True), 60, 64, "cat_gray")
+    save_pet(cat("#9A6B42", "#2B2118", "#F6C46A", True), 60, 64, "cat_tabby")
+    save_pet(cat("#F4F1EA", "#F4F1EA", "#F2B33D", outline="#B9B2A6"), 60, 64, "cat_white")
+    save_pet(cat("#6E767D", "#6E767D", "#F2B33D", white="#F4F1EA"), 60, 64, "cat_gray_white")
 
     # Dogs, standing and facing right. Each breed is the same drawing with its
     # own body length, legs, ears, tail, colors, and markings. size is how big
     # the breed is, compared with a lab.
     for name, d in DOGS.items():
         body, w, h = dog(**d)
-        save(body, f"0 0 {w} {h}", w, h, f"dog_{name}.png")
+        save_pet(body, w, h, f"dog_{name}")
 
     def guinea_pig(body, spots):
         s = (f'<ellipse cx="15" cy="12" rx="13" ry="7.5" fill="{body}"/>'
@@ -284,8 +296,8 @@ def write(out):
              '<circle cx="30" cy="13" r="0.9" fill="#C88A6E"/>'
              f'<rect x="8" y="17" width="3" height="3" rx="1" fill="#C88A6E"/><rect x="20" y="17" width="3" height="3" rx="1" fill="#C88A6E"/>')
         return f'<g transform="scale(2)">{s}</g>'
-    save(guinea_pig("#E8913A", [(7, 11, 7, 6, "#22272B"), (16, 8, 4, 3, "#22272B"), (26, 10, 3, 3.5, "#22272B")]), "0 0 64 40", 64, 40, "guinea_black_orange.png")
-    save(guinea_pig("#F8FAFC", [(8, 10, 4, 3.5, "#E8913A"), (16, 14, 3.5, 2.5, "#E8913A"), (13, 7, 2.5, 2, "#E8913A"), (26, 9, 2.5, 2.5, "#E8913A")]), "0 0 64 40", 64, 40, "guinea_white_orange.png")
+    save_pet(guinea_pig("#E8913A", [(7, 11, 7, 6, "#22272B"), (16, 8, 4, 3, "#22272B"), (26, 10, 3, 3.5, "#22272B")]), 64, 40, "guinea_black_orange")
+    save_pet(guinea_pig("#F8FAFC", [(8, 10, 4, 3.5, "#E8913A"), (16, 14, 3.5, 2.5, "#E8913A"), (13, 7, 2.5, 2, "#E8913A"), (26, 9, 2.5, 2.5, "#E8913A")]), 64, 40, "guinea_white_orange")
 
 
     # Mirrored car bodies for the far lane, where cars drive right to left

@@ -13,10 +13,10 @@ sub init()
 
     ' Scroll speed of each scenery layer in pixels per second. Farther = slower.
     m.layerSpeeds = { clouds: 8, far: 5, near: 12, hills: 24, town: 55 }
-    ' Width of each layer before it repeats. The far and near mountains are two
-    ' different 1920 px tiles each, and the town has one 1920 px tile for each
-    ' town section.
-    m.layerWidths = { clouds: 1920, far: 3840, near: 3840, hills: 1920, town: m.sections * 1920 }
+    ' Width of each layer before it repeats. The far and near mountains and the
+    ' hills are two different 1920 px tiles each, and the town has one 1920 px
+    ' tile for each town section.
+    m.layerWidths = { clouds: 1920, far: 3840, near: 3840, hills: 3840, town: m.sections * 1920 }
     ' The street moves with the town layer, so cars use this as the ground speed offset.
     m.cameraSpeed = 55
 
@@ -60,7 +60,7 @@ sub init()
     ' SEASONAL in tools/generate_images.py. Every town section has an image
     ' for each season.
     allSeasons = ["spring", "summer", "fall", "winter"]
-    m.seasonalLayers = { far: ["winter"], far_b: ["winter"], near: ["winter"], near_b: ["winter"], hills: allSeasons }
+    m.seasonalLayers = { far: ["winter"], far_b: ["winter"], near: ["winter"], near_b: ["winter"], hills: allSeasons, hills_b: allSeasons }
     m.townNames = []
     for i = 0 to m.sections - 1
         name = "town_" + Mid("abcde", i + 1, 1)
@@ -154,6 +154,7 @@ sub init()
 
     ' ---------- Start ----------
     buildTown()
+    buildTowerLight()
     applyScene()
     startParallax()
     buildCars()
@@ -181,7 +182,7 @@ end sub
 function loadTownConfig() as object
     cfg = {
         lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north",
-        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], pets: [], parkedCarX: -1,
+        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], pets: [], parkedCarX: -1, radioLight: [],
         airplane: true, fireflies: true, fallingLeaves: true, seasons: true
     }
     text = ReadAsciiFile("pkg:/components/town_config.json")
@@ -215,6 +216,50 @@ sub buildTown()
         m.townPosters.Push(p)
     end for
     m.top.findNode("townMove").keyValue = [[0, 0], [-m.sections * 1920, 0]]
+end sub
+
+' The blinking red light on top of the radio tower on the hills. radioLight in
+' the settings is the center of the light in hills strip coordinates, or empty
+' if there is no tower. Hills tile A is at x = 0 and again at x = 3840, so
+' there is a light in both copies. It blinks at dusk and night, like the
+' airplane's tail light.
+sub buildTowerLight()
+    m.towerLightAnim = invalid
+    if m.config.radioLight.Count() < 2 then return
+    strip = m.top.findNode("hillsStrip")
+    anim = m.top.createChild("Animation")
+    anim.id = "towerLightAnim"
+    anim.repeat = true
+    anim.easeFunction = "linear"
+    anim.duration = 1.8
+    m.towerLights = []
+    for i = 0 to 1
+        light = strip.createChild("Poster")
+        light.id = "towerLight" + i.ToStr()
+        light.uri = "pkg:/images/tower_light.png"
+        light.width = 24
+        light.height = 24
+        light.translation = [m.config.radioLight[0] + i * 3840 - 12, m.config.radioLight[1] - 12]
+        light.opacity = 0
+        interp = anim.createChild("FloatFieldInterpolator")
+        interp.key = [0.0, 0.12, 0.22, 1.0]
+        interp.keyValue = [1.0, 1.0, 0.0, 0.0]
+        interp.fieldToInterp = light.id + ".opacity"
+        m.towerLights.Push(light)
+    end for
+    m.towerLightAnim = anim
+end sub
+
+sub updateTowerLight(period as string)
+    if m.towerLightAnim = invalid then return
+    if period = "day"
+        m.towerLightAnim.control = "stop"
+        for each light in m.towerLights
+            light.opacity = 0
+        end for
+    else
+        m.towerLightAnim.control = "start"
+    end if
 end sub
 
 sub startParallax()
@@ -301,6 +346,8 @@ sub applyScene()
     end for
     m.top.findNode("farB").uri = layerUri("far_b", ground, period)
     m.top.findNode("nearB").uri = layerUri("near_b", ground, period)
+    m.top.findNode("hillsB").uri = layerUri("hills_b", ground, period)
+    updateTowerLight(period)
     for i = 0 to m.sections
         m.townPosters[i].uri = layerUri(m.townNames[i MOD m.sections], ground, period)
     end for
@@ -735,6 +782,7 @@ sub parkCar()
     facingLeft = Rnd(2) = 2
     ' The strip starts at screen y = 550, and the station ground is at screen y = 898.
     addParkedCar(d, facingLeft, m.config.parkedCarX, "parked_car")
+    print "MainScene: parked the "; d.name; " at x = "; m.config.parkedCarX
     ' Town section 0 is shown twice in the strip, so a car parked there is
     ' added to the second copy too
     if m.config.parkedCarX < 1920 then addParkedCar(d, facingLeft, m.config.parkedCarX + m.sections * 1920, "parked_car_copy")

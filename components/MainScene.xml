@@ -37,11 +37,13 @@
       </Group>
     </Group>
     <!-- The hills image starts at y=420, above the hills, so the tower behind the
-         radio station on the hill fits. -->
+         radio station on the hill fits. There are two hills tiles: A (with the radio
+         station, if there is one), B, then A again. -->
     <Group translation="[0,420]">
       <Group id="hillsStrip">
         <Poster id="hills1" width="1920" height="490" />
-        <Poster id="hills2" width="1920" height="490" translation="[1920,0]" />
+        <Poster id="hillsB" width="1920" height="490" translation="[1920,0]" />
+        <Poster id="hills2" width="1920" height="490" translation="[3840,0]" />
       </Group>
     </Group>
     <!-- The town is one to five different tiles, set in components/town_config.json. MainScene.brs
@@ -108,7 +110,7 @@
       <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-3840,0]]" fieldToInterp="nearStrip.translation" />
     </Animation>
     <Animation id="hillsAnim" repeat="true" easeFunction="linear">
-      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="hillsStrip.translation" />
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[-3840,0]]" fieldToInterp="hillsStrip.translation" />
     </Animation>
     <Animation id="townAnim" repeat="true" easeFunction="linear">
       <Vector2DFieldInterpolator id="townMove" key="[0.0, 1.0]" keyValue="[[0,0],[-1920,0]]" fieldToInterp="townStrip.translation" />
