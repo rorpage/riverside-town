@@ -179,16 +179,16 @@ def kayaks(p, season, places=KAYAKS):
               '</g>')
     return s
 
-# Two bikes parked on the top of the near hill, far away, so they are small.
-# Each is (x of the left end, color, facing left). They are not drawn in
-# winter.
-HILL_BIKES = [(610, "#C0392B", False), (1610, "#2E86C1", True)]
-def hill_bikes(p, season, places=HILL_BIKES, curves=None):
+# Two bikes parked beside the radio station, on the top of the near hill, far
+# away, so they are small. Each is (x of the left end, color, facing left).
+# They are only drawn with the radio station, and not in winter.
+RADIO_BIKES = [(545, "#C0392B", False), (590, "#2E86C1", True)]
+def radio_bikes(p, season):
     if season == "winter":
         return ""
     # 0.7 is BIKE_SCALE in buildings.py times about RADIO_SCALE, the size of
     # things at the distance of the hills
-    return "".join(bicycle(x, near_hill_y(x + 21, curves or NEAR_HILL) + 3, 0.7, wall(c, p), left) for x, c, left in places)
+    return "".join(bicycle(x, near_hill_y(x + 21) + 3, 0.7, wall(c, p), left) for x, c, left in RADIO_BIKES)
 
 # The radio station stands on the near hill to the left of the river, where
 # the hill is nearly flat and high enough to show above most roofs. It is
@@ -271,13 +271,12 @@ def radio_scene(p, season, spec):
             + buildings.radio_draw(spec, 0, p, season) + '</g>')
 
 # The second hills tile. It has the same hills and river, so the tiles join,
-# with trees, kayaks, and a bike in other places, and no radio station.
+# with trees and kayaks in other places, and no radio station.
 TREES_B = [(40,694),(150,682),(210,676),(330,666),(560,662),(650,662),(780,656),
            (1250,664),(1330,676),(1480,700),(1560,712),(1650,722),(1830,718),
            (95,700),(270,680),(440,670),(1400,700),(1610,728),(1760,734)]
 ROUND_TREES_B = [(280, 794), (690, 790), (1530, 818), (1700, 806)]
 KAYAKS_B = [(1250, 790, 12, "#27AE60"), (1330, 812, -8, "#D9452F")]
-HILL_BIKES_B = [(470, "#F2B33D", True)]
 
 # The third hills tile has its own hill shapes and no river. Its pines stand in
 # groups on the far hill, and its round trees on the near hill. The y of each
@@ -288,22 +287,21 @@ PINES_C = [(x, round(curve_y(FAR_HILL_C, x)) + dy) for x, dy in
             (1560, 16), (1620, 26), (1690, 18), (1850, 14))]
 ROUND_TREES_C = [(x, round(curve_y(NEAR_HILL_C, x)) + dy) for x, dy in
                  ((250, 40), (640, 30), (980, 36), (1400, 34), (1760, 30))]
-HILL_BIKES_C = [(820, "#27AE60", False)]
 
-def hills_c(p, season, with_bikes=False):
+def hills_c(p, season):
     """The third hills tile (hills_c): its own hill shapes, more trees, and no
     river."""
     return (hill_path(FAR_HILL_C, p["hillFar"]) + hill_path(NEAR_HILL_C, p["hill"])
             + "".join(pine(x, y, p, season) for x, y in PINES_C)
-            + "".join(round_tree(x, y, 36, 30, p, season) for x, y in ROUND_TREES_C)
-            + (hill_bikes(p, season, HILL_BIKES_C, NEAR_HILL_C) if with_bikes else ""))
+            + "".join(round_tree(x, y, 36, 30, p, season) for x, y in ROUND_TREES_C))
 
 def hills(p, season, with_kayaks=True, with_bikes=False, radio=None, tile="a"):
     """One hills tile. tile "a" has the radio station, if there is one; tile
     "b" (hills_b) has other trees and kayaks; tile "c" (hills_c) has its own
-    hill shapes."""
+    hill shapes. With with_bikes on, two bikes are parked beside the radio
+    station."""
     if tile == "c":
-        return hills_c(p, season, with_bikes)
+        return hills_c(p, season)
     b = tile == "b"
     if b:
         radio = None
@@ -316,7 +314,7 @@ def hills(p, season, with_kayaks=True, with_bikes=False, radio=None, tile="a"):
 <g stroke="{p["riverHi"]}" stroke-width="4" stroke-linecap="round" fill="none">
 <path d="M962,672 L980,672"/><path d="M930,700 L972,700"/><path d="M860,758 L930,758"/><path d="M1010,770 L1080,770"/><path d="M760,832 L850,832"/><path d="M930,850 L1030,850"/></g>'''
     return (s + (kayaks(p, season, KAYAKS_B if b else KAYAKS) if with_kayaks else "")
-            + (hill_bikes(p, season, HILL_BIKES_B if b else HILL_BIKES) if with_bikes else ""))
+            + (radio_bikes(p, season) if with_bikes and radio else ""))
 
 def street(p, season, seed=11):
     """The sidewalk, curb, and road at the bottom of every town section. The
