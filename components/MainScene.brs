@@ -30,7 +30,8 @@ sub init()
         { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 140 },
         { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 },
         { name: "buggy",  w: 250, h: 112, wheels: [[52, 84], [198, 84]],  r: 26, bottom: 110, ground: 260 },
-        { name: "delorean", w: 300, h: 106, wheels: [[66, 84], [232, 84]], r: 20, bottom: 104, ground: 360 }
+        { name: "delorean", w: 300, h: 106, wheels: [[66, 84], [232, 84]], r: 20, bottom: 104, ground: 360 },
+        { name: "herbie", w: 260, h: 112, wheels: [[58, 88], [204, 88]], r: 22, bottom: 110, ground: 280 }
     ]
     ' Only the cars listed in the settings drive by
     m.carDefs = []

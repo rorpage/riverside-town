@@ -57,8 +57,8 @@ DEFAULTS = {
     "section_break": dict(),
 }
 
-# The cars that drive by when town.json has no "cars" list. "delorean" is also a
-# valid car, but a town must list it to turn it on.
+# The cars that drive by when town.json has no "cars" list. "delorean" and
+# "herbie" are also valid cars, but a town must list them to turn them on.
 CARS = ["sedan", "van", "jeep", "truck", "sports", "buggy"]
 PETS = {"cat": ["black", "gray", "tabby", "white", "gray_white"], "guinea_pig": ["black_orange", "white_orange"],
         "dog": ["yellow_lab", "black_lab", "chocolate_lab", "beagle", "corgi", "dalmatian", "dachshund", "husky"]}
