@@ -96,6 +96,7 @@ def runtime_config(town, images):
         "title": town["title"], "lat": str(town["lat"]), "lon": str(town["lon"]),
         "temperatureUnit": "celsius" if town["temperature"] == "C" else "fahrenheit",
         "clock24": town["clock"] == "24h", "hemisphere": town["hemisphere"],
+        "driveOn": town["drive_on"],
         "sections": len(town["sections"]), "cars": town["cars"], "pets": pets,
         "parkedCarX": town["parked_car_x"], "radioLight": radio_light(town),
         "airplane": ex["airplane"], "fireflies": ex["fireflies"], "fallingLeaves": ex["falling_leaves"],

@@ -66,7 +66,8 @@ These apply to code, comments, commit messages, README.md, and this file.
 
 ## Scene behavior to keep consistent
 
-- `m.cameraSpeed` must equal the `town` value in `m.layerSpeeds`. A car's on-screen speed is its `ground` speed minus the camera speed in the near lane (moving right) and plus the camera speed in the far lane (moving left).
+- `m.cameraSpeed` must equal the `town` value in `m.layerSpeeds`. A car's on-screen speed is its `ground` speed minus the camera speed when it moves right and plus the camera speed when it moves left.
+- `drive_on` in `town.json` (`driveOn` in `town_config.json`) sets the side of the road. With `"right"` (the default), the near lane moves right and the far lane moves left. With `"left"`, the directions are the other way around. `spawnCar()` in `MainScene.brs` and `preview()` in `previews.py` both follow it.
 - `town.json` can turn cars off. `m.carDefs` holds only the cars that are on. The schema requires at least 2 cars.
 - The DeLorean (`delorean`) is the time machine from the first Back to the Future movie. It is not in the default car list (`CARS` in `config.py` and `cars` in `loadTownConfig()`), so a town must list it to turn it on. Herbie (`herbie`), the Love Bug, is the same: not on by default. Do not add either one to the sample `town.json`, because the sample has no real references. Herbie's left image (`car_herbie_left.png`) is drawn again instead of mirrored, so the number 53 on the door does not read backward.
 - Car ground speeds are ordered on purpose: the sports car fastest by a clear amount, then the DeLorean, then the sedan, then Herbie, then the VW buggy, then the van and Jeep, then the old truck slowest. Keep that order unless the owner asks for a change.

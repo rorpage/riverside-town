@@ -183,7 +183,7 @@ end sub
 ' defaults below are used, so the screensaver still starts.
 function loadTownConfig() as object
     cfg = {
-        lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north",
+        lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north", driveOn: "right",
         sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], pets: [], parkedCarX: -1, radioLight: [],
         airplane: true, fireflies: true, fallingLeaves: true, seasons: true
     }
@@ -692,10 +692,12 @@ end sub
 
 ' Sends a car across the screen. Only one car uses a lane at a time so faster
 ' cars never drive through slower ones.
-' Near lane: drives left to right, full size.
-' Far lane: drives right to left, slightly smaller. It uses a mirrored copy of
-' the car image instead of a negative scale, because Roku does not draw spinning
-' children correctly inside a mirrored (negative scale) group.
+' Near lane: full size. Far lane: slightly smaller.
+' With driveOn "right" in the settings, the near lane drives left to right and
+' the far lane right to left. With "left", the directions are the other way
+' around. A car that drives right to left uses a mirrored copy of the car image
+' instead of a negative scale, because Roku does not draw spinning children
+' correctly inside a mirrored (negative scale) group.
 sub spawnCar(name as string)
     c = m.cars[name]
     free = []
@@ -716,20 +718,23 @@ sub spawnCar(name as string)
 
     if lane = "near"
         s = 1.0
-        facingLeft = false
         groundY = 1072
         m.nearLane.appendChild(car)
-        speed = d.ground - m.cameraSpeed   ' moving with the scroll direction looks slower
-        fromX = -d.w - 40
-        toX = 1960
+        facingLeft = (m.config.driveOn = "left")
     else
         s = 0.86
-        facingLeft = true
         groundY = 1002
         m.farLane.appendChild(car)
+        facingLeft = (m.config.driveOn <> "left")
+    end if
+    if facingLeft
         speed = d.ground + m.cameraSpeed   ' moving against the scroll direction looks faster
         fromX = 1960
         toX = -d.w - 40
+    else
+        speed = d.ground - m.cameraSpeed   ' moving with the scroll direction looks slower
+        fromX = -d.w - 40
+        toX = 1960
     end if
 
     car.scaleRotateCenter = [d.w / 2, d.h / 2]

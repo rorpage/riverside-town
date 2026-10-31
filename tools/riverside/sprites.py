@@ -272,22 +272,14 @@ def write(out):
                 + wells([(66, 84), (232, 84)], 24))
     save(delorean, "0 0 300 106", 300, 106, "car_delorean.png")
 
-    # Herbie, the Love Bug from the Disney movies: a white VW Beetle with red,
-    # white, and blue racing stripes over the top and the number 53 in a circle on
-    # the door. The stripes are drawn as wide lines along the top edge of the body,
-    # cut off by the body shape, so only the side of each stripe shows. The left
-    # image is drawn again instead of mirrored, so the number does not read
-    # backward. A town must list it in "cars"; it is not on by default.
+    # Herbie, the Love Bug from the Disney movies: a white VW Beetle with the
+    # number 53 in a circle on the door. The racing stripes run over the middle of
+    # the top, so they do not show from the side. The left image is drawn again
+    # instead of mirrored, so the number does not read backward. A town must list it in "cars"; it is not on by default.
     def herbie(left):
         HB, HBD, CHROME = "#F4F4F0", "#C9CDD0", "#C9D2DA"
         body = "M16,84 C6,72 8,52 30,40 C50,26 72,14 104,12 C140,10 160,16 176,34 C186,44 214,46 234,56 C248,64 252,76 246,84 Z"
-        s = (f'<defs><clipPath id="herbie_body"><path d="{body}"/></clipPath></defs>'
-             f'<path d="{body}" fill="{HB}" stroke="{HBD}" stroke-width="1.5"/>'
-             # The red, white, and blue stripes over the top, seen from the side
-             f'<g clip-path="url(#herbie_body)" fill="none">'
-             f'<path d="M14,70 C10,52 30,40 30,40 C50,26 72,14 104,12 C140,10 160,16 176,34 C186,44 214,46 234,56 C248,64 252,76 250,80" stroke="#2B4C9B" stroke-width="22"/>'
-             f'<path d="M14,70 C10,52 30,40 30,40 C50,26 72,14 104,12 C140,10 160,16 176,34 C186,44 214,46 234,56 C248,64 252,76 250,80" stroke="{HB}" stroke-width="14"/>'
-             f'<path d="M14,70 C10,52 30,40 30,40 C50,26 72,14 104,12 C140,10 160,16 176,34 C186,44 214,46 234,56 C248,64 252,76 250,80" stroke="#C8312B" stroke-width="10"/></g>'
+        s = (f'<path d="{body}" fill="{HB}" stroke="{HBD}" stroke-width="1.5"/>'
              f'<path d="M58,42 C68,28 84,22 102,21 L102,42 Z" fill="{GLASS}"/>'
              f'<path d="M108,21 C134,20 148,24 162,40 L108,42 Z" fill="{GLASS}"/>'
              f'<path d="M106,20 L106,80 M164,40 Q170,60 168,80" stroke="{HBD}" stroke-width="1.5" fill="none"/>'

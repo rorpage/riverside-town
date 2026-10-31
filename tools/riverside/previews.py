@@ -119,8 +119,10 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     cars = town["cars"]
     far_car = "truck" if "truck" in cars else cars[-1]
     near_car = near_car if near_car in cars else cars[0]
-    paste_car(im, images, far_car, 1150, 1002, 0.86, left=True)
-    paste_car(im, images, near_car, 420, 1072, 1.0)
+    # With drive_on "right", the near lane drives to the right and the far lane to the left
+    near_left = town["drive_on"] == "left"
+    paste_car(im, images, far_car, 1150, 1002, 0.86, left=not near_left)
+    paste_car(im, images, near_car, 420, 1072, 1.0, left=near_left)
     if fx and (fx != "leaves" or town["extras"]["falling_leaves"]):
         im.alpha_composite(Image.open(os.path.join(images, f"{fx}.png")).convert("RGBA").resize((1920, 1080)))
     # The panel at its first position in m.infoSpots

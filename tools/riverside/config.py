@@ -160,6 +160,7 @@ def fill(data):
     town["temperature"] = units.get("temperature", "F")
     town["clock"] = units.get("clock", "12h")
     town["hemisphere"] = data.get("hemisphere", "north")
+    town["drive_on"] = data.get("drive_on", "right")
     town["cars"] = data.get("cars", CARS)
     town["extras"] = dict(EXTRAS, **data.get("extras", {}))
     # The radio station on the hill beside the river
