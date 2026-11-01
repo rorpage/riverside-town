@@ -60,7 +60,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 
   The dates are close to the equinoxes and solstices, which move by a day or so from year to year. In the southern hemisphere, the seasons are the other way around. Pine trees stay green all year. There is one river, and in every season but winter, eight kayaks in different colors sit on the grass on both sides of it.
 - Weather effects from the current weather:
-  - Clouds: the number of clouds follows the cloud cover from the weather, in percent. Below 25 percent there are a few clouds, from 25 percent there are more, from 50 percent there are many larger clouds with gray undersides, and from 85 percent the sky is overcast: a gray layer of cloud covers the top of the sky, the sky is gray, the stars are hidden, and the sun and moon are dim. The weather code also sets the fewest clouds that can show, so the sky matches the text in the panel: "Partly cloudy" shows at least the second level, fog and showers at least the third, and "Overcast", drizzle, rain, snow, and thunderstorms show an overcast sky.
+  - Clouds: the number of clouds follows the cloud cover from the weather, in percent. Below 25 percent there are a few clouds, from 25 percent there are more, from 50 percent there are many larger clouds, and from 85 percent the sky is overcast: a gray layer of cloud covers the top of the sky with no separate clouds under it, the sky is gray, and the stars, the sun, and the moon are hidden. The weather code also sets the fewest clouds that can show, so the sky matches the text in the panel: "Partly cloudy" shows at least the second level, fog and showers at least the third, and "Overcast", drizzle, rain, snow, and thunderstorms show an overcast sky.
   - Rain and drizzle: falling rain.
   - Snow: falling snow. While snow is falling, the ground shows snow in any season.
   - Fog: a fog layer over the scene.
@@ -101,6 +101,8 @@ The workflow in the template repository uses the `rorpage/riverside-town@v1` act
     name: riverside-town-previews
     path: out/previews/
 ```
+
+After the two uploads, the workflow deletes the downloads from earlier runs, so only the newest ones count against the storage space of your GitHub account. This step needs `actions: write` in the workflow's `permissions`. If a build fails, the downloads from the last build that passed are kept.
 
 GitHub puts each download in a zip file. `out/roku/` holds the screensaver files without a zip, so the zip that GitHub makes has the manifest at the top level, which is what the Roku needs.
 
@@ -184,13 +186,22 @@ These options work for most types:
 | `bakery`, `bookstore`, `diner`, `computer_store`, `ice_cream`, `art_store`, `photo_store`, `pet_shop`, `restaurant` | A shop with a font, colors, and window already chosen. Any shop option changes them. | the shop options |
 | `church` | A church | `style` (`"steeple"`: a bell tower with a spire; `"tower"`: a stone church with a square tower), `cross` (default `true`) |
 | `school` | A two-story school with the name over the door | `cross`, `bell_tower`, `width` (240 to 480, default 300) |
-| `columned_hall` | A stone building with columns and steps, like a library or a courthouse, with the name across the top | `clock` (a clock tower), `clock_time` (for example `"10:04"`), `letter_color`, `letter_outline` |
+| `columned_hall` | A stone building with columns and steps, like a library, a courthouse, or a university, with the name across the top. The building always has the stone colors of the town; its `color` is not used. A town can have more than one, each with its own name and lettering colors. | `clock` (a clock tower), `clock_time` (for example `"10:04"`), `letter_color` (the color of the name; default: the roof color), `letter_outline` (a 2 pixel outline around each letter; default: none) |
 | `gas_station` | A price sign, a canopy over one pump, and a small store. A car is parked under the canopy. | `canopy_name` (default `"FUEL STOP"`), `store_name` (default `"MARKET"`), `store_sign_color`, `price` (for example `"3.19"`; a small 9 is added for the 9/10 of a cent) |
 | `drive_through` | A restaurant with its name on a colored roof and a drive-through window | `roof_color`, `sign_text_color` |
 | `gazebo` | An eight-sided gazebo on a brick base, with a shingled roof, a cupola, white posts and railings, and front steps. It has hanging flower baskets in spring and summer, leaf garlands, corn stalks, hay, and pumpkins in fall, and wreaths in winter. Strings of bulbs hang between the posts, with a lantern in the middle, and they are lit at dusk and night. | `name` (a town sign stands to its left, with this name), `small_line` (a small line on the sign, for example `"FOUNDED \u00b7 1779"`), `sign_color`, `color` (the brick base) |
 | `bike_rack` | A bike rack on the sidewalk with three bikes | none |
 | `tree` | A tree | none |
 | `section_break` | Starts a new town section | none |
+
+A columned hall can show a university that someone in the family went to, in the university's colors. Add one for each university:
+
+```json
+{ "type": "columned_hall", "name": "NORTH STATE", "font": "graduate", "weight": 400, "letter_color": "#C8102E", "letter_outline": "#FFFFFF" },
+{ "type": "columned_hall", "name": "LAKESIDE COLLEGE", "font": "cinzel", "weight": 700, "letter_color": "#FFB81C", "letter_outline": "#003A70" }
+```
+
+The lettering colors are the same at all times of day, like the colors of the store signs.
 
 `window` choices for shops: `"books"` (rows of book spines), `"computer"`, `"camera"`, `"palette"` (a painter's palette), `"ice_cream"` (three cones), `"pets"` (a fish bowl, a puppy, and a kitten on a table), `"table"` (a table with a checkered tablecloth), or `"none"`.
 

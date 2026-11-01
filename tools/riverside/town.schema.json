@@ -481,7 +481,7 @@
               "color": {
                 "type": "string",
                 "pattern": "^#[0-9A-Fa-f]{6}$",
-                "description": "A color written as #RRGGBB"
+                "description": "Not used. The columned hall always has the stone colors of the town."
               },
               "font": {
                 "enum": [
@@ -537,12 +537,12 @@
               "letter_color": {
                 "type": "string",
                 "pattern": "^#[0-9A-Fa-f]{6}$",
-                "description": "A color written as #RRGGBB"
+                "description": "The color of the name across the top, written as #RRGGBB, for example a university's color. It is the same at all times of day. Default: the roof color."
               },
               "letter_outline": {
                 "type": "string",
                 "pattern": "^#[0-9A-Fa-f]{6}$",
-                "description": "A color written as #RRGGBB"
+                "description": "A 2 pixel outline around each letter of the name, written as #RRGGBB, for example a university's second color. Default: no outline."
               }
             },
             "required": [

@@ -224,8 +224,17 @@ function loadTownConfig() as object
         print "MainScene: could not read town_config.json, using the defaults"
         return cfg
     end if
+    ' A for each loop over an associative array literal gives its keys in lower
+    ' case (for example, "specialcars"), but the keys from ParseJson keep their
+    ' case ("specialCars"). Compare the keys in lower case, or every setting
+    ' with a capital letter in its name keeps its default.
+    found = {}
+    for each key in data
+        found[LCase(key)] = data[key]
+    end for
     for each key in cfg
-        if data.DoesExist(key) and data[key] <> invalid then cfg[key] = data[key]
+        k = LCase(key)
+        if found.DoesExist(k) and found[k] <> invalid then cfg[k] = found[k]
     end for
     cfg.sections = Int(cfg.sections)
     if cfg.sections < 1 then cfg.sections = 1
@@ -371,14 +380,13 @@ sub applyScene()
     m.season = season
     m.ground = ground
 
-    ' An overcast sky is gray, with no stars, and the sun or moon is dim.
+    ' An overcast sky is gray, with no stars, sun, or moon (see the end of
+    ' this sub).
     overcast = m.cloudLevel = "overcast"
     if overcast
         m.sky.uri = "pkg:/images/sky_overcast_" + period + ".png"
-        m.sun.opacity = 0.35
     else
         m.sky.uri = "pkg:/images/sky_" + period + ".png"
-        m.sun.opacity = 1
     end if
     cloudUri = "pkg:/images/clouds_" + m.cloudLevel + "_" + period + ".png"
     m.top.findNode("clouds1").uri = cloudUri
@@ -418,7 +426,11 @@ sub applyScene()
         m.sun.uri = "pkg:/images/moon.png"
         m.sun.translation = [150, 100]
     end if
-    if overcast then m.stars.opacity = 0
+    m.sun.opacity = 1
+    if overcast
+        m.stars.opacity = 0
+        m.sun.opacity = 0
+    end if
 end sub
 
 sub onPeriodTick()
