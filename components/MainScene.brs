@@ -380,8 +380,8 @@ sub applyScene()
     m.season = season
     m.ground = ground
 
-    ' An overcast sky is gray, with no stars. The sun is hidden, and the moon
-    ' is dim (see the end of this sub).
+    ' An overcast sky is gray, with no stars, sun, or moon (see the end of
+    ' this sub).
     overcast = m.cloudLevel = "overcast"
     if overcast
         m.sky.uri = "pkg:/images/sky_overcast_" + period + ".png"
@@ -429,11 +429,7 @@ sub applyScene()
     m.sun.opacity = 1
     if overcast
         m.stars.opacity = 0
-        if period = "night"
-            m.sun.opacity = 0.35
-        else
-            m.sun.opacity = 0
-        end if
+        m.sun.opacity = 0
     end if
 end sub
 
