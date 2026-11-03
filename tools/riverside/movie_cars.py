@@ -268,19 +268,20 @@ def mcqueen(left):
 
 def mustang():
     # The 1969 Ford Mustang Mach 1 from John Wick: dark gray, a long hood with a
-    # scoop, a fastback roof, a small spoiler, and a chrome front bumper.
+    # scoop, a fastback roof, a small spoiler, and a chrome front bumper. The
+    # body has no outline; light lines inside it show the doors and the side.
     BODY, LINE = "#3A4045", "#8C969C"
-    s = (f'<path d="M86,104 L84,96 L118,96 L116,104" stroke="{LINE}" stroke-width="4" fill="{BODY}"/>'
-         f'<path fill="{BODY}" stroke="{LINE}" stroke-width="3" d="M70,196 L62,176 L64,134 Q70,112 110,108 '
+    s = (f'<path d="M86,104 L84,96 L118,96 L116,104" stroke="{BODY}" stroke-width="4" fill="{BODY}"/>'
+         f'<path fill="{BODY}" d="M70,196 L62,176 L64,134 Q70,112 110,108 '
          f'Q200,88 290,70 Q310,66 330,66 L418,66 Q434,68 446,78 L500,112 Q620,122 712,138 Q736,144 740,160 '
          f'L742,180 Q738,196 720,200 L84,206 Q72,204 70,196 Z"/>'
-         + wells("mustang", 7, LINE) +
+         + wells("mustang", 7) +
          f'<path fill="{WINDOW}" d="M302,80 L418,76 Q428,78 436,84 L480,112 L300,118 Z"/>'
          f'<path d="M292,84 L292,200 M498,114 L500,200" stroke="{LINE}" stroke-width="3" fill="none"/>'
          f'<path d="M66,130 L736,152" stroke="{LINE}" stroke-width="3" fill="none"/>'
          + "".join(f'<path d="M{x},92 L{x + 6},110" stroke="{LINE}" stroke-width="3"/>' for x in (256, 268, 280)) +
          f'<rect x="306" y="132" width="20" height="5" rx="2" fill="{LINE}"/>'
-         f'<path d="M546,116 L590,114 L596,122 L548,124 Z" fill="#2A2F33" stroke="{LINE}" stroke-width="2"/>'
+         f'<path d="M546,116 L590,114 L596,122 L548,124 Z" fill="#2A2F33"/>'
          f'<rect x="62" y="160" width="12" height="20" rx="3" fill="{RED_LIGHT}"/>'
          f'<circle cx="724" cy="158" r="8" fill="{AMBER}" stroke="{LINE}" stroke-width="2"/>'
          f'<rect x="686" y="182" width="62" height="10" rx="5" fill="{CHROME}"/>')
