@@ -10,11 +10,11 @@ A car with text or a logo on its side (Herbie, the Ecto-1, and Lightning
 McQueen) has a left image that is drawn again instead of mirrored, so the text
 does not read backward. The others are mirrored in sprites.py.
 """
-from .art import text
+from .art import text, CAR_GLASS
 
 DARK = "#1F2A33"
 CHROME, CHROME_D = "#E3E7EA", "#9AA3AA"
-WINDOW = "#26303A"
+WINDOW = CAR_GLASS
 RED_LIGHT, AMBER = "#C0392B", "#F6C46A"
 
 # name: image width and height, scale, x and y offset, wheel centers and wheel
@@ -71,7 +71,7 @@ def aston():
          f'<rect x="478" y="142" width="44" height="10" rx="4" fill="#5B646C"/>'
          f'<ellipse cx="690" cy="150" rx="10" ry="9" fill="{AMBER}" stroke="{CHROME}" stroke-width="3"/>'
          f'<rect x="48" y="140" width="10" height="24" rx="3" fill="{RED_LIGHT}"/>'
-         f'<rect x="38" y="178" width="26" height="12" rx="5" fill="{CHROME}"/>'
+         f'<rect x="42" y="180" width="16" height="9" rx="4" fill="{CHROME}"/>'
          f'<rect x="690" y="180" width="24" height="12" rx="5" fill="{CHROME}"/>')
     return ref("aston", s), ref("aston", s, True)
 
@@ -118,15 +118,15 @@ def herbie(left):
 
 def kitt():
     # KITT from Knight Rider: a black 1982 Pontiac Trans Am with a long pointed
-    # nose and the red scanner light at the front. Light lines show the shape
-    # of the black body.
+    # nose and the red scanner light at the front. The body has no outline;
+    # light lines inside it show the doors and the side.
     BODY, LINE = "#16191C", "#7C868E"
-    s = (f'<path fill="{BODY}" stroke="{LINE}" stroke-width="4" d="M44,148 L36,128 L38,100 Q42,86 70,82 '
+    s = (f'<path fill="{BODY}" d="M44,148 L36,128 L38,100 Q42,86 70,82 '
          f'Q140,64 214,36 Q238,26 262,24 L350,22 Q366,22 380,30 L438,58 Q560,74 640,94 Q684,106 700,128 '
          f'L696,144 Q690,154 670,158 L60,162 Q46,158 44,148 Z"/>'
-         f'<path d="M44,74 L82,72 L80,84" stroke="{LINE}" stroke-width="4" fill="{BODY}"/>'
-         + wells("kitt", 8, LINE) +
-         f'<path fill="#4B5864" d="M262,32 L354,30 L418,74 L262,82 Z"/>'
+         f'<path d="M44,74 L82,72 L80,84" stroke="{BODY}" stroke-width="4" fill="{BODY}"/>'
+         + wells("kitt", 8) +
+         f'<path fill="{WINDOW}" d="M262,32 L354,30 L418,74 L262,82 Z"/>'
          f'<path d="M262,32 L262,80" stroke="{BODY}" stroke-width="6"/>'
          f'<path d="M50,118 L690,116" stroke="{LINE}" stroke-width="3" fill="none"/>'
          f'<path d="M256,84 L256,158 M440,78 L470,156" stroke="{LINE}" stroke-width="3" fill="none"/>'
@@ -275,7 +275,7 @@ def mustang():
          f'Q200,88 290,70 Q310,66 330,66 L418,66 Q434,68 446,78 L500,112 Q620,122 712,138 Q736,144 740,160 '
          f'L742,180 Q738,196 720,200 L84,206 Q72,204 70,196 Z"/>'
          + wells("mustang", 7, LINE) +
-         f'<path fill="#1C2125" d="M302,80 L418,76 Q428,78 436,84 L480,112 L300,118 Z"/>'
+         f'<path fill="{WINDOW}" d="M302,80 L418,76 Q428,78 436,84 L480,112 L300,118 Z"/>'
          f'<path d="M292,84 L292,200 M498,114 L500,200" stroke="{LINE}" stroke-width="3" fill="none"/>'
          f'<path d="M66,130 L736,152" stroke="{LINE}" stroke-width="3" fill="none"/>'
          + "".join(f'<path d="M{x},92 L{x + 6},110" stroke="{LINE}" stroke-width="3"/>' for x in (256, 268, 280)) +

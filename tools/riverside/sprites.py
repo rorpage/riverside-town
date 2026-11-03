@@ -3,7 +3,7 @@ effects, the airplane, the cars, and the animals. MainScene.brs places them."""
 import os
 import random
 from PIL import Image, ImageOps
-from .art import P, ACCENT, GLASS, DARK, render
+from .art import P, ACCENT, CAR_GLASS, DARK, render
 from . import movie_cars
 
 DARK_EYE = "#1F2A33"
@@ -180,7 +180,7 @@ def write(out):
     # The roof is toward the back and the windshield slopes a long way forward, so
     # the front (right side) is easy to see.
     sedan = (f'<path fill="#4A82A8" d="M6,72 L6,56 Q8,40 30,38 L70,36 L90,10 Q94,6 104,6 L156,6 Q166,6 174,12 L236,38 L262,40 Q276,42 276,56 L276,72 Q276,80 268,80 L14,80 Q6,80 6,72 Z"/>'
-             f'<polygon points="80,36 98,12 136,12 136,36" fill="{GLASS}"/><polygon points="142,12 168,12 222,36 142,36" fill="{GLASS}"/>'
+             f'<polygon points="80,36 98,12 136,12 136,36" fill="{CAR_GLASS}"/><polygon points="142,12 168,12 222,36 142,36" fill="{CAR_GLASS}"/>'
              '<line x1="139" y1="38" x2="139" y2="76" stroke="#34495E" stroke-width="2"/>'
              '<rect x="266" y="46" width="10" height="8" fill="#F6C46A"/><rect x="6" y="46" width="8" height="10" fill="#C0392B"/>'
              + wells([(62, 80), (218, 80)], 26))
@@ -188,8 +188,8 @@ def write(out):
 
     van = ('<path fill="#F2F4F6" d="M6,24 Q6,10 20,10 L222,10 Q232,10 240,18 L288,64 Q302,70 302,84 L302,100 Q302,106 296,106 L12,106 Q6,106 6,100 Z"/>'
            '<rect x="6" y="78" width="296" height="8" fill="#4A82A8"/>'
-           f'<polygon points="236,22 282,64 236,64" fill="{GLASS}"/>'
-           f'<rect x="20" y="22" width="60" height="36" rx="4" fill="{GLASS}"/><rect x="90" y="22" width="60" height="36" rx="4" fill="{GLASS}"/><rect x="160" y="22" width="66" height="36" rx="4" fill="{GLASS}"/>'
+           f'<polygon points="236,22 282,64 236,64" fill="{CAR_GLASS}"/>'
+           f'<rect x="20" y="22" width="60" height="36" rx="4" fill="{CAR_GLASS}"/><rect x="90" y="22" width="60" height="36" rx="4" fill="{CAR_GLASS}"/><rect x="160" y="22" width="66" height="36" rx="4" fill="{CAR_GLASS}"/>'
            '<line x1="156" y1="20" x2="156" y2="100" stroke="#B7C4CF" stroke-width="2"/>'
            '<rect x="292" y="72" width="10" height="10" fill="#F6C46A"/><rect x="6" y="60" width="6" height="14" fill="#C0392B"/>'
            + wells([(66, 104), (246, 104)], 28))
@@ -210,7 +210,7 @@ def write(out):
     TR, TRD = "#B5523F", "#8C3B2E"
     truck = (f'<rect x="8" y="50" width="112" height="46" rx="4" fill="{TR}"/>'
              f'<path fill="{TR}" d="M120,96 L120,22 Q120,8 136,8 L170,8 Q184,8 186,22 L190,48 L190,96 Z"/>'
-             f'<rect x="132" y="18" width="44" height="28" rx="6" fill="{GLASS}"/>'
+             f'<rect x="132" y="18" width="44" height="28" rx="6" fill="{CAR_GLASS}"/>'
              f'<path fill="{TR}" d="M188,48 L264,54 Q278,56 280,68 L282,96 L188,96 Z"/>'
              + wells([(70, 104), (238, 104)], 27) +
              f'<path fill="{TRD}" d="M28,106 A42,36 0 0 1 112,106 Z" fill-rule="evenodd"/>'
@@ -229,7 +229,7 @@ def write(out):
     sports = ('<g transform="translate(0,16)">'
               f'<path fill="{SP}" d="M8,72 L8,46 Q10,40 24,38 L84,36 Q108,22 142,20 Q170,20 196,30 L252,46 L284,52 Q296,55 296,64 L296,72 Q296,80 288,80 L16,80 Q8,80 8,72 Z"/>'
               f'<path fill="{SPD}" d="M134,21 Q170,20 196,30 L252,46 L284,52 Q296,55 296,64 L296,72 Q296,80 288,80 L160,80 Q132,80 130,60 Q128,38 134,21 Z"/>'
-              f'<path fill="{GLASS}" d="M100,38 Q120,27 142,26 Q166,26 192,34 L236,47 L104,44 Z"/>'
+              f'<path fill="{CAR_GLASS}" d="M100,38 Q120,27 142,26 Q166,26 192,34 L236,47 L104,44 Z"/>'
               f'<path d="M136,22 Q128,42 130,60 Q132,76 152,78" stroke="{CHROME}" stroke-width="4" fill="none" stroke-linecap="round"/>'
               f'<path fill="{DARK}" d="M100,54 L118,51 L120,64 L102,64 Z"/>'
               f'<path d="M290,58 Q296,58 296,64 Q296,70 290,70" stroke="{CHROME}" stroke-width="3" fill="{DARK}"/>'

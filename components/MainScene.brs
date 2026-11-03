@@ -28,7 +28,7 @@ sub init()
         { name: "sedan", w: 280, h: 104, wheels: [[62, 80], [218, 80]],   r: 22, bottom: 102, ground: 300 },
         { name: "van",   w: 310, h: 130, wheels: [[66, 104], [246, 104]], r: 24, bottom: 128, ground: 220 },
         { name: "jeep",  w: 270, h: 140, wheels: [[68, 108], [214, 108]], r: 28, bottom: 136, ground: 200 },
-        { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 165 },
+        { name: "truck", w: 300, h: 130, wheels: [[70, 104], [238, 104]], r: 24, bottom: 128, ground: 185 },
         { name: "sports", w: 304, h: 104, wheels: [[64, 84], [234, 84]], r: 18, bottom: 102, ground: 480 },
         { name: "buggy",  w: 250, h: 112, wheels: [[52, 84], [198, 84]],  r: 26, bottom: 110, ground: 260 },
         { name: "aston",    w: 300, h: 106, wheels: [[86, 84], [244, 84]],   r: 19, bottom: 103, ground: 330, special: true },
@@ -53,10 +53,10 @@ sub init()
     ' specialFirstMin, plus up to specialFirstMore. Seconds between trips: at
     ' least specialWaitMin, plus up to specialWaitMore. Regular cars wait 2 to 9
     ' seconds between trips.
-    m.specialFirstMin = 5
-    m.specialFirstMore = 20
-    m.specialWaitMin = 20
-    m.specialWaitMore = 40
+    m.specialFirstMin = 20
+    m.specialFirstMore = 60
+    m.specialWaitMin = 90
+    m.specialWaitMore = 150
     ' After a car leaves a lane, the lane stays empty for a random time between
     ' laneGapMin and laneGapMax milliseconds (1 to 10 seconds) before the next
     ' car can use it.
@@ -373,7 +373,8 @@ sub applyScene()
     ' While snow is falling, the ground shows snow in any season.
     ground = season
     if m.precipKind = "snow" then ground = "winter"
-    key = period + "," + season + "," + ground + "," + m.precipKind + "," + m.cloudLevel
+    leaves = leafMonths()
+    key = period + "," + season + "," + ground + "," + m.precipKind + "," + m.cloudLevel + "," + leaves.ToStr()
     if key = m.sceneKey then return
     m.sceneKey = key
     m.period = period
@@ -406,7 +407,7 @@ sub applyScene()
     for i = 0 to m.sections
         m.townPosters[i].uri = layerUri(m.townNames[i MOD m.sections], ground, period)
     end for
-    updateSeasonFx(season, period)
+    updateSeasonFx(season, period, leaves)
     updatePlaneImage()
     if period = "night"
         m.fog.opacity = 0.6
@@ -437,14 +438,27 @@ sub onPeriodTick()
     applyScene()
 end sub
 
+' True in the months when leaves fall: October and November in the northern
+' hemisphere, April and May in the southern hemisphere. When a season is
+' forced with seasonOverride, leaves fall whenever that season is fall.
+function leafMonths() as boolean
+    if m.seasonOverride <> "" then return m.seasonOverride = "fall"
+    dt = CreateObject("roDateTime")
+    dt.ToLocalTime()
+    month = dt.GetMonth()
+    if m.config.hemisphere = "south" then return month = 4 or month = 5
+    return month = 10 or month = 11
+end function
+
 ' Falling leaves in fall and fireflies on summer nights. They are hidden
 ' while rain or snow is falling. Nothing falls in spring or winter (unless it
-' is snowing). The leaves start out falling, and then onLeafTimer() stops and
-' starts them at random times.
-sub updateSeasonFx(season as string, period as string)
+' is snowing). Leaves fall only in fall and only in the months from
+' leafMonths(). The leaves start out falling, and then onLeafTimer() stops
+' and starts them at random times.
+sub updateSeasonFx(season as string, period as string, leaves as boolean)
     fx = ""
     if m.precipKind = "" and m.config.fallingLeaves
-        if season = "fall" then fx = "leaves"
+        if season = "fall" and leaves then fx = "leaves"
     end if
     m.seasonFxAnim.control = "stop"
     m.leafFadeAnim.control = "stop"
