@@ -204,10 +204,12 @@ def round_tree(x, ground, h, r, p, season):
     return s
 
 # Pine trees are triangles, 52 pixels tall and 32 pixels wide, with the base
-# at b. Each shape cuts one or two small triangles (notches) out of the sides.
+# at b. Each shape cuts no, one, or two small triangles (notches) out of the
+# sides.
 # A notch is (side, height above the base, depth): the notch is 8 pixels tall,
 # centered at that height, and its point is depth pixels in from the edge.
 PINE_SHAPES = [
+    [],  # A full triangle with no notches
     [("right", 30, 4)],
     [("left", 22, 4), ("right", 34, 3)],
     [("left", 32, 4)],
