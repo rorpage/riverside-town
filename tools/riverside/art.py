@@ -203,20 +203,15 @@ def round_tree(x, ground, h, r, p, season):
             s += f'<circle cx="{x + ax * r:.0f}" cy="{cy + ay * r:.0f}" r="{max(3, r // 7)}" fill="{p["leaf2"]}"/>'
     return s
 
-# Pine tree shapes. Each pine is 52 pixels tall and at most 32 pixels wide,
-# with its base at b. Each side is a list of notches from the top down:
-# (height above the base, half width at the notch, half width just below it).
-# At a notch the outline steps in, so the tree looks like layers of branches.
-# The last value is the half width at the base.
+# Pine trees are triangles, 52 pixels tall and 32 pixels wide, with the base
+# at b. Each shape cuts one or two small triangles (notches) out of the sides.
+# A notch is (side, height above the base, depth): the notch is 8 pixels tall,
+# centered at that height, and its point is depth pixels in from the edge.
 PINE_SHAPES = [
-    # Two layers
-    {"left": [(26, 10, 6)], "right": [(26, 10, 6)], "base": 16},
-    # Three layers
-    {"left": [(34, 8, 4), (18, 12, 8)], "right": [(34, 8, 4), (18, 12, 8)], "base": 16},
-    # Four layers, a little narrower
-    {"left": [(38, 6, 3), (26, 9, 6), (14, 12, 9)], "right": [(38, 6, 3), (26, 9, 6), (14, 12, 9)], "base": 14},
-    # Three layers, with the notches at different heights on each side
-    {"left": [(36, 7, 4), (20, 11, 7)], "right": [(32, 9, 5), (16, 13, 9)], "base": 15},
+    [("right", 30, 4)],
+    [("left", 22, 4), ("right", 34, 3)],
+    [("left", 32, 4)],
+    [("left", 28, 3), ("right", 16, 4)],
 ]
 
 def pine_shape(x, b):
@@ -226,22 +221,25 @@ def pine_shape(x, b):
     return PINE_SHAPES[((x * 2654435761 + b * 40503) >> 16) % len(PINE_SHAPES)]
 
 def pine(x, b, p, season):
-    shape = pine_shape(x, b)
-    right = [(x, b - 52)]
-    for h, out, inn in shape["right"]:
-        right += [(x + out, b - h), (x + inn, b - h + 3)]
-    right.append((x + shape["base"], b))
-    left = [(x - shape["base"], b)]
-    for h, out, inn in reversed(shape["left"]):
-        left += [(x - inn, b - h + 3), (x - out, b - h)]
-    pts = " ".join(f"{px},{py}" for px, py in right + left)
-    s = f'<polygon points="{pts}" fill="{p["tree"]}"/>'
+    notches = pine_shape(x, b)
+
+    def edge(h):
+        # Half the width of the triangle at h pixels above the base
+        return 16 * (52 - h) / 52
+
+    def side(name, sign):
+        # The points down one side, from the top to the base
+        pts = []
+        for n, h, depth in sorted((n for n in notches if n[0] == name), key=lambda n: -n[1]):
+            pts += [(x + sign * edge(h + 4), b - h - 4), (x + sign * (edge(h) - depth), b - h),
+                    (x + sign * edge(h - 4), b - h + 4)]
+        return pts
+
+    pts = [(x, b - 52)] + side("right", 1) + [(x + 16, b), (x - 16, b)] + list(reversed(side("left", -1)))
+    s = '<polygon points="' + " ".join(f"{px:.1f},{py:.1f}" for px, py in pts) + f'" fill="{p["tree"]}"/>'
     if season == "winter":
-        # Snow on the top, and on the top of each lower layer of branches
-        s += f'<polygon points="{x},{b-52} {x-3.5},{b-42} {x},{b-44} {x+3.5},{b-42}" fill="{p["snow"]}"/>'
-        for h, out, inn in shape["left"]:
-            s += (f'<path d="M{x - inn + 1},{b - h + 5} L{x - inn + 5},{b - h + 4}" stroke="{p["snow"]}" '
-                  f'stroke-width="2.5" stroke-linecap="round"/>')
+        s += (f'<polygon points="{x},{b-52} {x-7},{b-36} {x},{b-39} {x+7},{b-36}" fill="{p["snow"]}"/>'
+              f'<path d="M{x-12},{b-12} L{x-4},{b-15}" stroke="{p["snow"]}" stroke-width="3" stroke-linecap="round"/>')
     return s
 
 def is_dark(p):

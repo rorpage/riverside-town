@@ -197,10 +197,11 @@ def write(out):
 
     OL, OLD = "#6B7B3A", "#4A5528"
     jeep = (f'<circle cx="22" cy="80" r="22" fill="{DARK}"/><circle cx="22" cy="80" r="9" fill="#5B6770"/>'
+            # Black windows inside the frame, from the rear post to the windshield
+            f'<polygon points="105,62 105,24 192,18 184,62" fill="{CAR_GLASS}"/>'
             f'<path fill="{OL}" d="M20,62 L186,62 L194,52 L256,58 Q262,60 262,68 L262,100 Q262,106 256,106 L26,106 Q20,106 20,100 Z"/>'
             f'<path d="M105,62 L105,24 L190,18" stroke="{OLD}" stroke-width="7" fill="none" stroke-linejoin="round"/>'
             f'<polygon points="180,62 188,62 198,16 191,14" fill="{OLD}"/>'
-            f'<rect x="120" y="42" width="28" height="22" rx="3" fill="{OLD}"/>'
             f'<circle cx="257" cy="76" r="6" fill="#F6C46A"/>'
             + wells([(68, 108), (214, 108)], 33) +
             f'<path d="M30,108 A38,38 0 0 1 106,108" stroke="{OLD}" stroke-width="9" fill="none"/>'
@@ -240,14 +241,17 @@ def write(out):
     # VW dune buggy: an open body with round fenders over the wheels, a green arch
     # over the seats, and the engine showing at the back
     BG, BGD = "#8BC34A", "#5E8F2E"
-    buggy = (f'<path d="M8,74 L8,62 Q10,54 22,52 L66,52 L70,58 L178,58 Q226,58 240,70 L242,80 L10,80 Z" fill="{BG}"/>'
+    # Black windows under the arch, drawn first so the body covers their bottom
+    buggy = (f'<path d="M56,60 L56,50 A69,38 0 0 1 194,50 L194,60 Z" fill="{CAR_GLASS}"/>'
+             f'<path d="M8,74 L8,62 Q10,54 22,52 L66,52 L70,58 L178,58 Q226,58 240,70 L242,80 L10,80 Z" fill="{BG}"/>'
              f'<path d="M14,84 A38,38 0 0 1 90,84 L82,84 A30,30 0 0 0 22,84 Z" fill="{BGD}"/>'
              f'<path d="M160,84 A38,38 0 0 1 236,84 L228,84 A30,30 0 0 0 168,84 Z" fill="{BGD}"/>'
              # A green arch over the seats, in the same color and thickness as the
              # fenders. Its ends sit on the top middle of each fender (x=52 and
              # x=198, the wheel centers).
              f'<path d="M48,50 A77,46 0 0 1 202,50 L194,50 A69,38 0 0 0 56,50 Z" fill="{BGD}"/>'
-             f'<rect x="112" y="36" width="12" height="22" rx="3" fill="#34495E"/>'
+             # A green post down the middle, between the front and back windows
+             f'<rect x="121" y="12" width="8" height="46" fill="{BGD}"/>'
              f'<rect x="4" y="54" width="18" height="16" rx="3" fill="#5B6770"/><rect x="0" y="66" width="10" height="4" rx="2" fill="#9CA6B1"/>'
              f'<circle cx="214" cy="56" r="6" fill="#F6C46A"/><rect x="8" y="62" width="6" height="8" fill="#C0392B"/>'
              + wells([(52, 84), (198, 84)], 28))
