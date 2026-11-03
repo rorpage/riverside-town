@@ -632,8 +632,8 @@ def gazebo_draw(s, x, p, season):
     white = wall(WHITE, p)
     roof = wall("#5E5850", p)
     brick = wall(s["color"], p)
-    # Shadowed inside, behind the posts
-    out += f'<rect x="{x + 20}" y="760" width="222" height="98" fill="{R}" fill-opacity="0.35"/>'
+    # The inside is open, so the scenery behind shows between the posts.
+    # Back posts:
     for cx in (52, 210):
         out += f'<rect x="{x + cx - 3}" y="764" width="6" height="92" fill="{wall("#D9E2EA", p)}"/>'
     # Brick base and front steps

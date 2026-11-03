@@ -10,7 +10,9 @@ TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 ACCENT = "#E8703F"
 ICON = "#6E7A85"      # Gray for the icons in shop windows
-GLASS, DARK = "#C9DAEA", "#1F2A33"
+DARK = "#1F2A33"
+# Car windows. Every car, including the special cars, uses this black.
+CAR_GLASS = "#111417"
 WHITE = "#F8FAFC"
 
 P = {
@@ -201,11 +203,45 @@ def round_tree(x, ground, h, r, p, season):
             s += f'<circle cx="{x + ax * r:.0f}" cy="{cy + ay * r:.0f}" r="{max(3, r // 7)}" fill="{p["leaf2"]}"/>'
     return s
 
+# Pine tree shapes. Each pine is 52 pixels tall and at most 32 pixels wide,
+# with its base at b. Each side is a list of notches from the top down:
+# (height above the base, half width at the notch, half width just below it).
+# At a notch the outline steps in, so the tree looks like layers of branches.
+# The last value is the half width at the base.
+PINE_SHAPES = [
+    # Two layers
+    {"left": [(26, 10, 6)], "right": [(26, 10, 6)], "base": 16},
+    # Three layers
+    {"left": [(34, 8, 4), (18, 12, 8)], "right": [(34, 8, 4), (18, 12, 8)], "base": 16},
+    # Four layers, a little narrower
+    {"left": [(38, 6, 3), (26, 9, 6), (14, 12, 9)], "right": [(38, 6, 3), (26, 9, 6), (14, 12, 9)], "base": 14},
+    # Three layers, with the notches at different heights on each side
+    {"left": [(36, 7, 4), (20, 11, 7)], "right": [(32, 9, 5), (16, 13, 9)], "base": 15},
+]
+
+def pine_shape(x, b):
+    """Picks a pine shape from the tree position, so the same tree has the
+    same shape in every image. The numbers mix the position up, so trees
+    next to each other usually get different shapes."""
+    return PINE_SHAPES[((x * 2654435761 + b * 40503) >> 16) % len(PINE_SHAPES)]
+
 def pine(x, b, p, season):
-    s = f'<polygon points="{x},{b-52} {x-16},{b} {x+16},{b}" fill="{p["tree"]}"/>'
+    shape = pine_shape(x, b)
+    right = [(x, b - 52)]
+    for h, out, inn in shape["right"]:
+        right += [(x + out, b - h), (x + inn, b - h + 3)]
+    right.append((x + shape["base"], b))
+    left = [(x - shape["base"], b)]
+    for h, out, inn in reversed(shape["left"]):
+        left += [(x - inn, b - h + 3), (x - out, b - h)]
+    pts = " ".join(f"{px},{py}" for px, py in right + left)
+    s = f'<polygon points="{pts}" fill="{p["tree"]}"/>'
     if season == "winter":
-        s += (f'<polygon points="{x},{b-52} {x-7},{b-36} {x},{b-39} {x+7},{b-36}" fill="{p["snow"]}"/>'
-              f'<path d="M{x-12},{b-12} L{x-4},{b-15}" stroke="{p["snow"]}" stroke-width="3" stroke-linecap="round"/>')
+        # Snow on the top, and on the top of each lower layer of branches
+        s += f'<polygon points="{x},{b-52} {x-3.5},{b-42} {x},{b-44} {x+3.5},{b-42}" fill="{p["snow"]}"/>'
+        for h, out, inn in shape["left"]:
+            s += (f'<path d="M{x - inn + 1},{b - h + 5} L{x - inn + 5},{b - h + 4}" stroke="{p["snow"]}" '
+                  f'stroke-width="2.5" stroke-linecap="round"/>')
     return s
 
 def is_dark(p):
