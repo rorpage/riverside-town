@@ -20,6 +20,12 @@ You can make your own town. The houses, shops, and other buildings, their names,
 |---|---|---|
 | ![The town on a summer day](docs/preview_day.png) | ![The town at dusk, with lit windows](docs/preview_dusk.png) | ![The town at night, with stars, the moon, and fireflies](docs/preview_night.png) |
 
+## December
+
+| Early December, at dusk | A snowy night in December |
+|---|---|
+| ![The town at dusk in early December, still fall, with Christmas lights along the roofs and wreaths on the street lights](docs/preview_christmas_dusk.png) | ![Section D on a winter night in December, with lit Christmas lights on the roofs, wreaths on the street lights, and garland and wreaths on the gazebo and the town sign](docs/preview_christmas_night.png) |
+
 ## The sample town
 
 The `town.json` in this repository describes a sample town with four sections.
@@ -59,6 +65,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   | Winter | December 21 to March 19 | Snow on the hills, mountains, roofs, sidewalk, and pine trees, bare trees, a frozen river |
 
   The dates are close to the equinoxes and solstices, which move by a day or so from year to year. In the southern hemisphere, the seasons are the other way around. Pine trees stay green all year. Some are plain triangles, and the others have one or two small notches cut into their sides, in four different patterns. There is one river, and in every season but winter, eight kayaks in different colors sit on the grass on both sides of it.
+- Christmas decorations for all of December (in both hemispheres): strings of colored lights along the roofs of the houses, shops, churches, school, columned hall, gas station, and drive-through restaurant, a wreath on each street light, and garland on the gazebo, the town sign, and the columned hall. The gazebo also gets a wreath on each front post. The lights glow at dusk and night. The pumpkins are put away in December. The radio station and the scenery behind the town do not change. `extras.christmas` in `town.json` turns them off.
 - Weather effects from the current weather:
   - Clouds: the number of clouds follows the cloud cover from the weather, in percent. Below 25 percent there are a few clouds, from 25 percent there are more, from 50 percent there are many larger clouds, and from 85 percent the sky is overcast: a gray layer of cloud covers the top of the sky with no separate clouds under it, the sky is gray, and the stars, the sun, and the moon are hidden. The weather code also sets the fewest clouds that can show, so the sky matches the text in the panel: "Partly cloudy" shows at least the second level, fog and showers at least the third, and "Overcast", drizzle, rain, snow, and thunderstorms show an overcast sky.
   - Rain and drizzle: falling rain.
@@ -163,6 +170,7 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `extras.table_mountain` | A flat-topped mountain in the shape of Table Mountain, in the center of the far mountains | `false` |
 | `extras.bikes` | Two bikes parked beside the radio station (not in winter). Bike racks have bikes either way. | `false` |
 | `extras.street_lights` | Old-fashioned cast iron street lights along the sidewalk, about 480 pixels apart. A light moves to the side when it would cover a house number. Animals walk behind the lights. Their lanterns light up at dusk and night. | `false` |
+| `extras.christmas` | Christmas decorations in December: colored lights along the roofs of the buildings in town, a wreath on each street light, and garland on the gazebo, the town sign, and the columned hall. The lights glow at dusk and night. | `true` |
 
 ### Buildings
 
@@ -285,6 +293,7 @@ The settings that are not in `town.json` are at the top of `init()` in `componen
 | `m.leafOnMin`, `m.leafOnMore`, `m.leafOffMin`, `m.leafOffMore` | How long the fall leaves fall and how long they stop, in seconds: at least the `Min` value, plus a random amount up to the `More` value. The defaults are 25 to 70 seconds falling and 15 to 60 seconds stopped. |
 | `m.infoSpots` | The positions the clock panel moves between. They are all in the top-right corner. |
 | `m.seasonOverride` | Set to `"spring"`, `"summer"`, `"fall"`, or `"winter"` to always show that season, for example to preview it. Leave it as `""` to choose the season from the date. |
+| `m.christmasOverride` | Set to `"on"` to always show the Christmas decorations, or `"off"` to never show them. Leave it as `""` to show them in December. It does nothing when `extras.christmas` is `false`, because the town then has no Christmas images. |
 | `m.seasonalLayers` | Which scenery layers have a different image for some seasons. It must match `SEASONAL` in `tools/generate_images.py`. |
 
 The panel's transparency is set by the `color` value on the `Rectangle` inside the `info` group in `components/MainScene.xml`. The last two characters are the opacity: `00` is fully clear and `FF` is fully solid.
@@ -310,7 +319,7 @@ The generator writes:
 - every PNG into `images/`, including the mirrored car images used by the far lane
 - `components/town_config.json`, the settings the screensaver reads: the coordinates, units, number of town sections, cars, animals, extras, and where the gas station is
 - the title into `manifest`
-- full-scene previews into `build/`, which git ignores: one for each town section, season, and day and night (`composite_<season>_<period>_<section>.png`). The summer previews include the parked car so its position can be checked.
+- full-scene previews into `build/`, which git ignores: one for each town section, season, and day and night (`composite_<season>_<period>_<section>.png`). The summer previews include the parked car so its position can be checked. With `extras.christmas` on, there are also previews of the Christmas decorations in fall and winter, by day and at dusk (`composite_christmas_<season>_<period>_<section>.png`).
 - the preview images for this README into `docs/`, when `--docs docs` is given
 
 Where each part of the drawing is:

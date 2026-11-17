@@ -92,5 +92,9 @@
   "airplane": true,
   "fireflies": true,
   "fallingLeaves": true,
-  "seasons": true
+  "seasons": true,
+  "christmasSeasons": [
+    "fall",
+    "winter"
+  ]
 }

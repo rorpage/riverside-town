@@ -11,7 +11,7 @@ import os
 import random
 from PIL import Image
 from . import scenery, buildings
-from .art import ACCENT, season_palette, svg, render, text, text_width
+from .art import ACCENT, season_palette, christmas_palette, svg, render, text, text_width
 import cairosvg
 
 LETTERS = "abcde"
@@ -63,17 +63,20 @@ def mountains(town, p, season):
     return (scenery.clouds(p, season) + scenery.far(p, mtn, town["extras"]["table_mountain"]) + scenery.near(p, mtn)
             + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"]))
 
-def composite(town, layers, pal, section, season, images=None, car=None):
+def composite(town, layers, pal, section, season, images=None, car=None, christmas=False):
     """One town section with the scenery behind it. car is the name of a car to
-    park at the gas station, or None; images is the folder with the car images."""
+    park at the gas station, or None; images is the folder with the car images.
+    With christmas, the town has its December decorations. The scenery behind
+    the town does not change."""
     p = season_palette(pal, season)
+    town_p = christmas_palette(p) if christmas else p
     full = (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/><stop offset="0.62" stop-color="{p["horizon"]}"/></linearGradient></defs>'
             f'<rect width="1920" height="1080" fill="url(#g)"/><circle cx="220" cy="180" r="64" fill="{ACCENT}"/>'
-            + mountains(town, p, season) + layers[f"town_{LETTERS[section]}"](p, season))
+            + mountains(town, p, season) + layers[f"town_{LETTERS[section]}"](town_p, season))
     im = Image.open(io.BytesIO(render(full, "0 0 1920 1080", 1920, 1080))).convert("RGBA")
     if car:
         parked(town, images, im, section, car)
-    im.alpha_composite(lamps_image(town, section, p, season))
+    im.alpha_composite(lamps_image(town, section, town_p, season))
     return im
 
 def panel(clock, temp, cond, px):
@@ -98,14 +101,17 @@ def temp_text(town, f):
     return f"{f}\u00b0F"
 
 def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=None, plane=None, pets=(), near_car="sports",
-            clouds="few"):
+            clouds="few", christmas=False):
     """One screen of the town, showing town section number section. plane is
     the (x, y) of an airplane, or None. pets is a list of (animal, x), where
     animal is an entry of town["pets"]. clouds is a cloud level from
     scenery.CLOUD_LEVELS; with "overcast", the sky is gray, the stars are
-    hidden, and there is no sun or moon, like applyScene() in MainScene.brs."""
+    hidden, and there is no sun or moon, like applyScene() in MainScene.brs.
+    With christmas, the town and the street lamps have their December
+    decorations."""
     overcast = clouds == "overcast"
     p = season_palette(pal, season)
+    town_p = christmas_palette(p) if christmas else p
     sky_im = Image.new("RGBA", (1920, 1080))
     stars = Image.open(os.path.join(images, "stars.png")).convert("RGBA")
     if pal != "day" and not overcast:
@@ -130,7 +136,7 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     if light:
         hills += f'<circle cx="{light[0]}" cy="{light[1]}" r="7" fill="#E74C3C" fill-opacity="0.35"/><circle cx="{light[0]}" cy="{light[1]}" r="3" fill="#FF6B5B"/>'
     art_svg = (scenery.clouds(p, season, clouds) + far + near + hills
-               + layers[f"town_{LETTERS[section]}"](p, season))
+               + layers[f"town_{LETTERS[section]}"](town_p, season))
     im.alpha_composite(Image.open(io.BytesIO(render(art_svg, "0 0 1920 1080", 1920, 1080))).convert("RGBA"))
     if season == "summer" and pal == "night" and town["extras"]["fireflies"]:
         im.alpha_composite(Image.open(os.path.join(images, "fireflies_a.png")).convert("RGBA").resize((1920, 400)), (0, 540))
@@ -145,7 +151,7 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
         pet = Image.open(os.path.join(images, f"{name}.png")).convert("RGBA")
         im.alpha_composite(pet, (px, 924 - pet.height))
     parked(town, images, im, section, "van" if pal == "day" else "sedan")
-    im.alpha_composite(lamps_image(town, section, p, season))
+    im.alpha_composite(lamps_image(town, section, town_p, season))
     cars = town["cars"]
     far_car = "truck" if "truck" in cars else cars[-1]
     near_car = near_car if near_car in cars else cars[0]
@@ -172,6 +178,13 @@ def write_all(town, layers, images, build, docs=None):
             for i in range(n):
                 im = composite(town, layers, pal, i, season, images, ("van" if pal == "day" else "sedan") if season == "summer" else None)
                 im.save(os.path.join(build, f"composite_{season}_{pal}_{LETTERS[i]}.png"))
+    # The December decorations, in fall and winter, by day and at dusk
+    if town["extras"]["christmas"]:
+        for season in ("fall", "winter"):
+            for pal in ("day", "dusk"):
+                for i in range(n):
+                    im = composite(town, layers, pal, i, season, images, None, christmas=True)
+                    im.save(os.path.join(build, f"composite_christmas_{season}_{pal}_{LETTERS[i]}.png"))
     # The README previews. The animals are shown in the last section.
     last = n - 1
     rnd = random.Random(3)
@@ -191,6 +204,13 @@ def write_all(town, layers, images, build, docs=None):
                            pets=pets if i == last else (), near_car="buggy" if i == last else "sports")))
     shots.append((f"preview_section_{LETTERS[last]}_winter_night.png", 640,
                   dict(pal="night", season="winter", hour=(22, 42), temp=26, cond="Clear", section=last, pets=pets, near_car="buggy")))
+    if town["extras"]["christmas"]:
+        # December: the first section at dusk early in the month, which is still
+        # fall, and the last section on a snowy night
+        shots.append(("preview_christmas_dusk.png", 640, dict(pal="dusk", season="fall", hour=(17, 24), temp=38, cond="Clear",
+                                                             section=0, christmas=True)))
+        shots.append(("preview_christmas_night.png", 640, dict(pal="night", season="winter", hour=(21, 15), temp=24, cond="Clear",
+                                                              section=last, pets=pets, near_car="buggy", christmas=True)))
     for name, width, opts in shots:
         im = preview(town, layers, images, **opts)
         im.resize((width, width * 9 // 16), Image.LANCZOS).save(os.path.join(build, name), optimize=True)

@@ -23,7 +23,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from riverside import art, scenery, buildings, layout, sprites, previews
-from riverside.art import P, SEASONS, season_palette, render
+from riverside.art import P, SEASONS, season_palette, christmas_palette, render
 from riverside.config import load, ConfigError
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -50,15 +50,33 @@ def town_section(town, i, p, season):
     return ("".join(buildings.draw(b, x, p, season) for b, x in section) + scenery.street(p, season, 11 + i)
             + buildings.sidewalk_shadows(section, p) + buildings.sidewalk_bikes(section, p, season, town["extras"]))
 
-def write_lamps(out):
+def christmas_seasons(town):
+    """The seasons that need a Christmas image of each town section: the
+    seasons December can fall in, and winter, because the ground shows snow
+    while it is snowing. MainScene.brs reads this list as christmasSeasons in
+    town_config.json."""
+    if not town["extras"]["christmas"]:
+        return []
+    if not town["extras"]["seasons"]:
+        return ["summer", "winter"]
+    # December 1 to 20 is fall and December 21 to 31 is winter. In the southern
+    # hemisphere they are spring and summer.
+    return ["fall", "winter"] if town["hemisphere"] == "north" else ["spring", "summer", "winter"]
+
+def write_lamps(town, out):
     """The street lamp images, one for each time of day, and one with snow on
-    the lantern for each time of day. MainScene.brs adds them to townStrip at
-    the x values in lamps in town_config.json."""
+    the lantern for each time of day. With extras.christmas on, each also has
+    a December image with a wreath on the post. MainScene.brs adds them to
+    townStrip at the x values in lamps in town_config.json."""
     left, top, w, h = buildings.LAMP_BOX
+    kinds = [("", lambda p: p)]
+    if town["extras"]["christmas"]:
+        kinds.append(("_christmas", christmas_palette))
     for pal in P:
-        for season, suffix in (("summer", ""), ("winter", "_winter")):
-            render(buildings.street_lamp(0, P[pal], season), f"{left} {top} {w} {h}", w, h,
-                   os.path.join(out, f"street_lamp{suffix}_{pal}.png"))
+        for name, palette in kinds:
+            for season, suffix in (("summer", ""), ("winter", "_winter")):
+                render(buildings.street_lamp(0, palette(P[pal]), season), f"{left} {top} {w} {h}", w, h,
+                       os.path.join(out, f"street_lamp{name}{suffix}_{pal}.png"))
 
 def layers(town):
     """Returns name -> drawing function(p, season) for every scenery layer."""
@@ -90,9 +108,14 @@ def write_images(town, out):
                 render(fn(season_palette(pal, season), season), vb, 1920, h, os.path.join(out, f"{name}_{season}_{pal}.png"))
             if len(seasons) < len(SEASONS):
                 render(fn(P[pal], "summer"), vb, 1920, h, os.path.join(out, f"{name}_{pal}.png"))
+            if name.startswith("town"):
+                # The December images, with the Christmas decorations
+                for season in christmas_seasons(town):
+                    render(fn(christmas_palette(season_palette(pal, season)), season), vb, 1920, h,
+                           os.path.join(out, f"{name}_christmas_{season}_{pal}.png"))
     sprites.write(out)
     if town["extras"]["street_lights"]:
-        write_lamps(out)
+        write_lamps(town, out)
 
 def write_icons(town, out, build_dir):
     im = previews.composite(town, layers(town), "day", 0, "summer")
@@ -116,7 +139,7 @@ def runtime_config(town, images):
         "sections": len(town["sections"]), "cars": town["cars"], "specialCars": town["special_cars"], "pets": pets,
         "parkedCarX": town["parked_car_x"], "radioLight": radio_light(town), "lamps": town["lamps"],
         "airplane": ex["airplane"], "fireflies": ex["fireflies"], "fallingLeaves": ex["falling_leaves"],
-        "seasons": ex["seasons"],
+        "seasons": ex["seasons"], "christmasSeasons": christmas_seasons(town),
     }
 
 def radio_light(town):

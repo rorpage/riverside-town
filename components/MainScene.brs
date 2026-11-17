@@ -84,6 +84,9 @@ sub init()
     ' Season to always show, for previewing: "spring", "summer", "fall", or "winter".
     ' Leave it as "" to choose the season from today's date.
     m.seasonOverride = ""
+    ' Set to "on" or "off" to always show or never show the Christmas
+    ' decorations, for previewing. Leave it as "" to show them in December.
+    m.christmasOverride = ""
     ' Layers that have a different image for some seasons. This must match
     ' SEASONAL in tools/generate_images.py. Every town section has an image
     ' for each season.
@@ -161,6 +164,7 @@ sub init()
     m.weather = invalid
     m.period = ""
     m.ground = ""
+    m.christmas = false
     m.season = ""
     m.sceneKey = ""
     m.precipKind = ""
@@ -215,7 +219,7 @@ function loadTownConfig() as object
     cfg = {
         lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north", driveOn: "right",
         sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [], lamps: [],
-        airplane: true, fireflies: true, fallingLeaves: true, seasons: true
+        airplane: true, fireflies: true, fallingLeaves: true, seasons: true, christmasSeasons: []
     }
     text = ReadAsciiFile("pkg:/components/town_config.json")
     data = invalid
@@ -352,6 +356,28 @@ function currentSeason() as string
     return season
 end function
 
+' True in December when the town has Christmas decorations (extras.christmas
+' in town.json). christmasSeasons in the settings lists the seasons that have
+' a Christmas image of each town section; it is empty when they are off.
+function christmasTime() as boolean
+    if m.config.christmasSeasons.Count() = 0 then return false
+    if m.christmasOverride <> "" then return m.christmasOverride = "on"
+    dt = CreateObject("roDateTime")
+    dt.ToLocalTime()
+    return dt.GetMonth() = 12
+end function
+
+' Returns the image for a town section. In December it is the Christmas image,
+' if there is one for the season the ground shows.
+function townUri(name as string, ground as string, period as string) as string
+    if m.christmas
+        for each s in m.config.christmasSeasons
+            if s = ground then return "pkg:/images/" + name + "_christmas_" + ground + "_" + period + ".png"
+        end for
+    end if
+    return layerUri(name, ground, period)
+end function
+
 ' Returns the image for a scenery layer. variant is the season to draw. A
 ' layer without an image for that season uses its summer image, which has no
 ' season in the file name.
@@ -374,12 +400,14 @@ sub applyScene()
     ground = season
     if m.precipKind = "snow" then ground = "winter"
     leaves = leafMonths()
-    key = period + "," + season + "," + ground + "," + m.precipKind + "," + m.cloudLevel + "," + leaves.ToStr()
+    christmas = christmasTime()
+    key = period + "," + season + "," + ground + "," + m.precipKind + "," + m.cloudLevel + "," + leaves.ToStr() + "," + christmas.ToStr()
     if key = m.sceneKey then return
     m.sceneKey = key
     m.period = period
     m.season = season
     m.ground = ground
+    m.christmas = christmas
 
     ' An overcast sky is gray, with no stars, sun, or moon (see the end of
     ' this sub).
@@ -405,7 +433,7 @@ sub applyScene()
     updateAnimals(period)
     updateLamps()
     for i = 0 to m.sections
-        m.townPosters[i].uri = layerUri(m.townNames[i MOD m.sections], ground, period)
+        m.townPosters[i].uri = townUri(m.townNames[i MOD m.sections], ground, period)
     end for
     updateSeasonFx(season, period, leaves)
     updatePlaneImage()
@@ -1022,10 +1050,12 @@ sub addLamp(strip as object, x as integer)
     m.lampPosters.Push(lamp)
 end sub
 
-' The lamps are lit at dusk and night, and have snow on top in winter
+' The lamps are lit at dusk and night, have snow on top in winter, and have
+' a wreath in December
 sub updateLamps()
     name = "street_lamp_"
-    if m.ground = "winter" then name = "street_lamp_winter_"
+    if m.christmas then name = name + "christmas_"
+    if m.ground = "winter" then name = name + "winter_"
     for each lamp in m.lampPosters
         lamp.uri = "pkg:/images/" + name + m.period + ".png"
     end for
