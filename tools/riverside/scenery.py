@@ -10,7 +10,7 @@ def sky(p, overcast=False):
     return (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{top}"/>'
             f'<stop offset="0.62" stop-color="{bottom}"/></linearGradient></defs><rect width="8" height="1080" fill="url(#g)"/>')
 
-# Cloud levels, from the fewest clouds to the most. MainScene.brs picks one
+# Cloud levels, from the fewest clouds to the most. components/scene/weather.brs picks one
 # from the cloud cover in the weather (see cloudLevel() there) and shows
 # clouds_<level>_<period>.png. "few" is also used before the first weather
 # request finishes.
@@ -246,7 +246,8 @@ def tower_place(spec):
 
 def radio_light(spec):
     """The center of the tower's blinking light, in screen coordinates, or None
-    if the station has no tower. MainScene.brs puts tower_light.png there."""
+    if the station has no tower. components/scene/scenery.brs puts
+    tower_light.png there."""
     if not spec or not spec.get("tower", True):
         return None
     left, top = tower_place(spec)

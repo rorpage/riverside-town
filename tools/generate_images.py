@@ -101,7 +101,8 @@ def street_layer(town, i, p, season):
 def christmas_seasons(town):
     """The seasons that need a Christmas image of each town section: the
     seasons December can fall in, and winter, because the ground shows snow
-    while it is snowing. MainScene.brs reads this list as christmasSeasons in
+    while it is snowing. components/scene/christmas.brs reads this list as
+    christmasSeasons in
     town_config.json."""
     if not town["extras"]["christmas"]:
         return []
@@ -114,7 +115,8 @@ def christmas_seasons(town):
 def write_lamps(town, out):
     """The street lamp images, one for each time of day, and one with snow on
     the lantern for each time of day. With extras.christmas on, each also has
-    a December image with a wreath on the post. MainScene.brs adds them to
+    a December image with a wreath on the post. components/scene/sidewalk.brs
+    adds them to
     townStrip at the x values in lamps in town_config.json."""
     left, top, w, h = buildings.LAMP_BOX
     kinds = [("", lambda p: p)]
@@ -246,7 +248,7 @@ def runtime_config(town, images):
     }
 
 def radio_light(town):
-    """Where MainScene.brs puts the blinking light on the radio tower: [x, y]
+    """Where components/scene/scenery.brs puts the blinking light on the radio tower: [x, y]
     in hills strip coordinates (the strip starts at screen y=CROPS["hills"]),
     or [] if there is no tower."""
     light = scenery.radio_light(town["radio_station"])

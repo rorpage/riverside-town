@@ -244,7 +244,9 @@ town.json                        The sample town
 build.sh                         Builds riverside-town.zip and installs it on a Roku
 source/main.brs                  Entry point (RunScreenSaver)
 components/MainScene.xml         Scene layout: layers, lanes, panel, animations
-components/MainScene.brs         Scene logic: parallax, cars, clock, weather, time of day
+components/MainScene.brs         init(), the settings, and small helpers for the scene
+components/scene/                The rest of the scene logic, one file for each part: scenery and time of day,
+                                 Christmas, weather, airplane, clock panel, cars, and sidewalk (animals and lamps)
 components/WeatherTask.xml       Task node definition for the weather request
 components/WeatherTask.brs       Calls the Open-Meteo API
 components/town_config.json      The town's settings for the screensaver, written by the generator

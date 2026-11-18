@@ -194,7 +194,7 @@ WARM_WHITE = "#FFF4D6"
 # The bulb colors for each style of lights. A building uses one style.
 LIGHT_STYLES = {"rainbow": BULBS, "white": [WARM_WHITE], "red_white": ["#E74C3C", WARM_WHITE]}
 # Each bulb is in one of three groups, picked from its position. Group 0 stays
-# on. Groups 1 and 2 blink: the town images draw them off, and MainScene.brs
+# on. Groups 1 and 2 blink: the town images draw them off, and components/scene/christmas.brs
 # turns them on and off at random with small images of the lit bulbs (see
 # write_blink() in generate_images.py).
 BLINK_GROUPS = 3

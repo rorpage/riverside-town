@@ -439,7 +439,7 @@ def gas_parking(x):
 
 def gas_draw(s, x, p, season):
     """A price sign, a canopy over one pump, and a small store. The parked car
-    is added by MainScene.brs, at the position from gas_parking()."""
+    is added by components/scene/cars.brs, at the position from gas_parking()."""
     A, B, W2, R, Wn = colors(p)
     price = "$" + s["price"]
     priceW = text_width(price, "oswald", 500, 22, 1)
@@ -807,7 +807,7 @@ def rack_bikes(x, p, season, start=0):
 # Old-fashioned street lights at the front of the sidewalk, about 480 pixels
 # apart (480 divides 1920, so the spacing stays about the same across section
 # edges). The lamps are not part of the town images: they are separate
-# posters that MainScene.brs adds to townStrip after the animals, so the
+# posters that components/scene/sidewalk.brs adds to townStrip after the animals, so the
 # animals walk behind them. lamp_spots() moves a lamp to the side when it
 # would cover a house number.
 LAMP_X = [240, 720, 1200, 1680]

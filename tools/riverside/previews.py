@@ -1,6 +1,6 @@
 """Preview images: full screen pictures of the town, made from the same
 drawings as the screensaver, with the cars, animals, and clock panel placed
-like MainScene.brs places them.
+like the scene code in components/ places them.
 
 composite() draws one town section with the scenery behind it. The files in
 the build folder are for checking the art. preview() draws a screen with the
@@ -16,7 +16,7 @@ import cairosvg
 
 LETTERS = "abcde"
 
-# Car sizes and wheel positions. These copy m.carDefs in components/MainScene.brs.
+# Car sizes and wheel positions. These copy allCars in components/MainScene.brs.
 CARS = {"sedan": (280, 104, [(62, 80), (218, 80)], 22, 102), "van": (310, 130, [(66, 104), (246, 104)], 24, 128),
         "jeep": (270, 140, [(68, 108), (214, 108)], 28, 136), "truck": (300, 130, [(70, 104), (238, 104)], 24, 128),
         "sports": (304, 104, [(64, 84), (234, 84)], 18, 102), "buggy": (250, 112, [(52, 84), (198, 84)], 26, 110),
@@ -24,9 +24,9 @@ CARS = {"sedan": (280, 104, [(62, 80), (218, 80)], 22, 102), "van": (310, 130, [
         "kitt": (300, 92, [(67, 69), (228, 69)], 18, 87), "ecto1": (360, 150, [(82, 124), (293, 124)], 18, 142),
         "delorean": (310, 112, [(76, 85), (245, 85)], 18, 103), "mcqueen": (300, 106, [(75, 71), (245, 71)], 28, 99),
         "mustang": (310, 96, [(71, 77), (243, 77)], 18, 95)}
-# Special cars have their own wheel image, like wheelUri() in MainScene.brs
+# Special cars have their own wheel image, like wheelUri() in components/scene/cars.brs
 SPECIAL = {"aston", "herbie", "kitt", "ecto1", "delorean", "mcqueen", "mustang"}
-PARK_SCALE = 0.78  # Copies parkCar() in MainScene.brs
+PARK_SCALE = 0.78  # Copies parkCar() in components/scene/cars.brs
 
 def car_sprite(images, name, left):
     w, h, wheels, r, bottom = CARS[name]
@@ -51,7 +51,7 @@ def parked(town, images, im, section, name):
 
 def lamps(town, section, p, season):
     """The street lamps in one town section, drawn last, in front of the
-    animals and the parked car, like MainScene.brs adds them."""
+    animals and the parked car, like components/scene/sidewalk.brs adds them."""
     xs = [x - section * 1920 for x in town["lamps"] if x // 1920 == section]
     return buildings.street_lamps(xs, p, "winter" if season == "winter" else "summer")
 
@@ -106,7 +106,8 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     the (x, y) of an airplane, or None. pets is a list of (animal, x), where
     animal is an entry of town["pets"]. clouds is a cloud level from
     scenery.CLOUD_LEVELS; with "overcast", the sky is gray, the stars are
-    hidden, and there is no sun or moon, like applyScene() in MainScene.brs.
+    hidden, and there is no sun or moon, like applyScene() in
+    components/scene/scenery.brs.
     With christmas, the town and the street lamps have their December
     decorations."""
     overcast = clouds == "overcast"
@@ -118,7 +119,7 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
         if pal == "dusk":
             stars.putalpha(stars.getchannel("A").point(lambda v: v * 0.35))
         sky_im.alpha_composite(stars, (0, 0))
-    # The sun or moon, placed like applyScene() in MainScene.brs
+    # The sun or moon, placed like applyScene() in components/scene/scenery.brs
     body, pos = ("moon.png", (150, 100)) if pal == "night" else ("sun.png", (150, 110) if pal == "day" else (180, 340))
     if not overcast:
         sky_im.alpha_composite(Image.open(os.path.join(images, body)).convert("RGBA"), pos)
@@ -144,7 +145,7 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
         im.alpha_composite(Image.open(os.path.join(images, f"plane_{pal}.png")).convert("RGBA").resize((56, 22), Image.LANCZOS), plane)
     for animal, px in pets:
         # Animal images are saved at the size they are shown. Some animals have
-        # a darker image for night, like in MainScene.brs.
+        # a darker image for night, like in components/scene/sidewalk.brs.
         name = animal["image"]
         if pal == "night" and os.path.exists(os.path.join(images, f"{name}_night.png")):
             name += "_night"
@@ -191,7 +192,7 @@ def write_all(town, layers, images, build, docs=None):
     pets = [(animal, 200 + k * 1560 // max(1, len(town["pets"]))) for k, animal in enumerate(town["pets"])]
     rnd.shuffle(pets)
     shots = [("preview.png", 1280, dict(pal="day", season="summer", hour=(10, 4), temp=84, cond="Clear", section=0, plane=(560, 262)))]
-    # The cloud level matches the weather text, like cloudLevel() in MainScene.brs
+    # The cloud level matches the weather text, like cloudLevel() in components/scene/weather.brs
     for season, temp, cond, fx, clouds in (("spring", 62, "Partly cloudy", None, "scattered"), ("summer", 84, "Clear", None, "few"),
                                            ("fall", 55, "Mostly clear", "leaves", "few"), ("winter", 28, "Overcast", None, "overcast")):
         shots.append((f"preview_{season}.png", 640, dict(pal="day", season=season, hour=(10, 4), temp=temp, cond=cond, fx=fx,
