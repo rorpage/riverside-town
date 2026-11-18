@@ -190,14 +190,27 @@ def flower_box(season, p, x, y, w=44):
 # lights on the buildings, garland on the gazebo and the columned hall, and
 # wreaths on the street lamps. The lights are lit at dusk and night.
 BULBS = ["#E74C3C", "#2ECC71", "#3D8BEB", "#F4C430", "#E67E22"]   # Red, green, blue, yellow, orange
+WARM_WHITE = "#FFF4D6"
+# The bulb colors for each style of lights. A building uses one style.
+LIGHT_STYLES = {"rainbow": BULBS, "white": [WARM_WHITE], "red_white": ["#E74C3C", WARM_WHITE]}
+# Each bulb is in one of three groups, picked from its position. Group 0 stays
+# on. Groups 1 and 2 blink: the town images draw them off, and MainScene.brs
+# turns them on and off at random with small images of the lit bulbs (see
+# write_blink() in generate_images.py).
+BLINK_GROUPS = 3
 GARLAND = "#2F6B3A"
 GARLAND_DARK = "#1E4A28"
 BERRY = "#C0392B"
 
-def christmas_palette(p):
+def christmas_palette(p, lit=(0, 1, 2)):
     """A copy of palette p that tells the drawings to add the Christmas
-    decorations."""
-    return dict(p, christmas=True)
+    decorations. lit lists the bulb groups that are on at dusk and night."""
+    return dict(p, christmas=True, lit=tuple(lit))
+
+def bulb_group(x, y):
+    """The blink group of the bulb at (x, y). The numbers mix the position up,
+    so bulbs next to each other are usually in different groups."""
+    return (((round(x * 10) * 73856093) ^ (round(y * 10) * 19349663)) >> 5) % BLINK_GROUPS
 
 def is_christmas(p):
     return p.get("christmas", False)
@@ -232,15 +245,19 @@ def scallops(x0, x1, y, sag=5, width=40):
     return swags(x0, x1, y, sag, max(1, round((x1 - x0) / width)))
 
 def christmas_lights(pts, p, spacing=11, start=0):
-    """A string of colored bulbs on a thin wire along the line through pts.
-    start picks the color of the first bulb, so strings next to each other do
-    not all begin with the same color. The bulbs glow at dusk and night."""
-    lit = is_dark(p)
+    """A string of bulbs on a thin wire along the line through pts, in the
+    building's style of lights (light_style in p, set by town_section() in
+    generate_images.py). start picks the color of the first bulb, so strings
+    next to each other do not all begin with the same color. At dusk and
+    night, the bulbs in the groups in p["lit"] glow and the others are off."""
+    dark = is_dark(p)
+    colors = LIGHT_STYLES[p.get("light_style", "rainbow")]
     wire = wall("#24332A", p)
     out = ('<polyline points="' + " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
            + f'" fill="none" stroke="{wire}" stroke-width="1.2" stroke-linejoin="round"/>')
     for i, (x, y) in enumerate(along(pts, spacing, spacing / 2)):
-        c = BULBS[(start + i) % len(BULBS)]
+        c = colors[(start + i) % len(colors)]
+        lit = dark and bulb_group(x, y) in p.get("lit", (0, 1, 2))
         if lit:
             out += f'<circle cx="{x:.1f}" cy="{y + 2:.1f}" r="5.5" fill="{c}" fill-opacity="0.35"/>'
         else:

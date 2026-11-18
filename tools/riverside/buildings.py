@@ -873,6 +873,9 @@ def street_lamps(xs, p, season):
     """The lamps at each x in xs, for the previews."""
     return "".join(street_lamp(x, p, season) for x in xs)
 
+# Building types with Christmas lights in December
+LIT = {"house", "shop", "church", "school", "columned_hall", "gas_station", "drive_through"}
+
 # Building types with walls down to the sidewalk, which get a shadow on it
 SOLID = {"house", "shop", "church", "school", "columned_hall"}
 

@@ -154,7 +154,7 @@ def near_b(p, season):
 TREES = [(60,692),(110,686),(170,680),(240,672),(300,668),(620,662),(680,664),(740,658),
          (1300,668),(1360,682),(1420,692),(1700,724),(1780,724),(1860,714)]
 
-# Kayaks pulled up on the grass beside the river, in every season but winter.
+# Kayaks pulled up on the grass beside the river, in spring and summer only.
 # There is only one river, on hills tile A, so all the kayaks are there. Each
 # is (center x, center y, angle in degrees, color, size). The ones higher up
 # the river are farther away, so they are smaller. The colors are day colors,
@@ -163,7 +163,7 @@ KAYAKS = [(676, 806, -14, "#D9452F", 1), (1172, 846, 22, "#F2B33D", 1), (1218, 8
           (1290, 798, -10, "#27AE60", 1), (822, 736, -6, "#8E44AD", 0.75), (788, 756, 8, "#F2B33D", 0.75),
           (1290, 714, 10, "#D9452F", 0.7), (884, 699, -4, "#2E86C1", 0.6)]
 def kayaks(p, season, places=KAYAKS):
-    if season == "winter":
+    if season not in ("spring", "summer"):
         return ""
     s = ""
     for cx, cy, angle, color, size in places:

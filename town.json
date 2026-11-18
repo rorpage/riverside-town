@@ -57,6 +57,7 @@
     "table_mountain": false,
     "bikes": true,
     "street_lights": true,
-    "christmas": true
+    "christmas": true,
+    "christmas_lights": "mixed"
   }
 }

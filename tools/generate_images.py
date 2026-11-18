@@ -18,12 +18,13 @@ import argparse
 import io
 import json
 import os
+import random
 import sys
-from PIL import Image
+from PIL import Image, ImageChops
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from riverside import art, scenery, buildings, layout, sprites, previews
-from riverside.art import P, SEASONS, season_palette, christmas_palette, render
+from riverside.art import P, SEASONS, LIGHT_STYLES, BLINK_GROUPS, season_palette, christmas_palette, render
 from riverside.config import load, ConfigError
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,9 +46,27 @@ def pet_size(images, pet):
     with Image.open(os.path.join(images, pet["image"] + ".png")) as im:
         return im.size
 
+def light_styles(town, i):
+    """The style of Christmas lights for each building in town section i. With
+    christmas_lights "mixed", each building with lights gets a style picked at
+    random, but never the same style as the building with lights before it.
+    The random numbers start from the section number, so a building has the
+    same style in every image."""
+    style = town["extras"]["christmas_lights"]
+    if style != "mixed":
+        return [style] * len(town["sections"][i])
+    rnd, prev, out = random.Random(i), None, []
+    for b, x in town["sections"][i]:
+        if b["type"] in buildings.LIT:
+            prev = rnd.choice([s for s in LIGHT_STYLES if s != prev])
+        out.append(prev)
+    return out
+
 def town_section(town, i, p, season):
     section = town["sections"][i]
-    return ("".join(buildings.draw(b, x, p, season) for b, x in section) + scenery.street(p, season, 11 + i)
+    styles = light_styles(town, i) if p.get("christmas") else [None] * len(section)
+    return ("".join(buildings.draw(b, x, dict(p, light_style=style) if style else p, season)
+                    for (b, x), style in zip(section, styles)) + scenery.street(p, season, 11 + i)
             + buildings.sidewalk_shadows(section, p) + buildings.sidewalk_bikes(section, p, season, town["extras"]))
 
 def christmas_seasons(town):
@@ -77,6 +96,56 @@ def write_lamps(town, out):
             for season, suffix in (("summer", ""), ("winter", "_winter")):
                 render(buildings.street_lamp(0, palette(P[pal]), season), f"{left} {top} {w} {h}", w, h,
                        os.path.join(out, f"street_lamp{name}{suffix}_{pal}.png"))
+
+def write_blink(town, out):
+    """The images that make the Christmas lights blink. For each building with
+    lights, there is one image for each blink group (1 and 2) that shows only
+    the lit bulbs of that group, cropped to the building. They are made by
+    drawing the town section with that group lit and keeping the pixels that
+    differ from the town image, so they line up with it exactly. There is an
+    image for each Christmas season, at dusk and at night:
+    blink_<n>_<group>_<season>_<period>.png. Returns [x, y, w, h] for each
+    building n, in townStrip coordinates, for christmasBlink in
+    town_config.json."""
+    seasons = christmas_seasons(town)
+    if not seasons:
+        return []
+    y0, h = CROPS["town"]
+    vb = f"0 {y0} 1920 {h}"
+    entries = []
+    for i, section in enumerate(town["sections"]):
+        fn = layers(town)[f"town_{LETTERS[i]}"]
+        lit = [(b, x) for b, x in section if b["type"] in buildings.LIT]
+        if not lit:
+            continue
+        # Each building's images may use the space up to halfway to the next
+        # building with lights, so no image holds bulbs from a neighbor.
+        edges = [0] + [(x0 + buildings.width(b0) + x1) / 2 for (b0, x0), (b1, x1) in zip(lit, lit[1:])] + [1920]
+        diffs = {}
+        for season in seasons:
+            for pal in ("dusk", "night"):
+                p = season_palette(pal, season)
+                base = Image.open(io.BytesIO(render(fn(christmas_palette(p, lit=(0,)), season), vb, 1920, h))).convert("RGBA")
+                for k in range(1, BLINK_GROUPS):
+                    on = Image.open(io.BytesIO(render(fn(christmas_palette(p, lit=(0, k)), season), vb, 1920, h))).convert("RGBA")
+                    r, g, bl, a = ImageChops.difference(on, base).split()
+                    mask = ImageChops.lighter(ImageChops.lighter(r, g), ImageChops.lighter(bl, a)).point(lambda v: 255 if v else 0)
+                    diffs[(season, pal, k)] = Image.composite(on, Image.new("RGBA", on.size), mask), mask
+        for j in range(len(lit)):
+            left, right = int(edges[j]), int(edges[j + 1])
+            box = None
+            for _, mask in diffs.values():
+                b = mask.crop((left, 0, right, h)).getbbox()
+                if b:
+                    b = (b[0] + left, b[1], b[2] + left, b[3])
+                    box = b if box is None else (min(box[0], b[0]), min(box[1], b[1]), max(box[2], b[2]), max(box[3], b[3]))
+            if box is None:
+                continue
+            n = len(entries)
+            for (season, pal, k), (im, _) in diffs.items():
+                im.crop(box).save(os.path.join(out, f"blink_{n}_{k}_{season}_{pal}.png"), optimize=True)
+            entries.append([i * 1920 + box[0], box[1], box[2] - box[0], box[3] - box[1]])
+    return entries
 
 def layers(town):
     """Returns name -> drawing function(p, season) for every scenery layer."""
@@ -109,10 +178,13 @@ def write_images(town, out):
             if len(seasons) < len(SEASONS):
                 render(fn(P[pal], "summer"), vb, 1920, h, os.path.join(out, f"{name}_{pal}.png"))
             if name.startswith("town"):
-                # The December images, with the Christmas decorations
+                # The December images, with the Christmas decorations. Only
+                # the bulbs in group 0 are lit; the others blink (see
+                # write_blink).
                 for season in christmas_seasons(town):
-                    render(fn(christmas_palette(season_palette(pal, season)), season), vb, 1920, h,
+                    render(fn(christmas_palette(season_palette(pal, season), lit=(0,)), season), vb, 1920, h,
                            os.path.join(out, f"{name}_christmas_{season}_{pal}.png"))
+    town["blink"] = write_blink(town, out)
     sprites.write(out)
     if town["extras"]["street_lights"]:
         write_lamps(town, out)
@@ -140,6 +212,7 @@ def runtime_config(town, images):
         "parkedCarX": town["parked_car_x"], "radioLight": radio_light(town), "lamps": town["lamps"],
         "airplane": ex["airplane"], "fireflies": ex["fireflies"], "fallingLeaves": ex["falling_leaves"],
         "seasons": ex["seasons"], "christmasSeasons": christmas_seasons(town),
+        "christmasBlink": town.get("blink", []),
     }
 
 def radio_light(town):
