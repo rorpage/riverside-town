@@ -62,11 +62,40 @@ def light_styles(town, i):
         out.append(prev)
     return out
 
+BLINK_SHARE = 0.25   # The share of the buildings with lights whose lights blink
+
+def blinking(town):
+    """The buildings whose Christmas lights blink, as a set of (section,
+    index in section). A quarter of the buildings with lights (at least one)
+    blink; the lights on the others stay on. They are spread along the
+    street: the buildings with lights are split into equal runs, and one
+    building in each run is picked at random. The random numbers always start
+    from the same value, so the same buildings blink in every image."""
+    lit = [(i, j) for i, section in enumerate(town["sections"]) for j, (b, x) in enumerate(section)
+           if b["type"] in buildings.LIT]
+    if not lit:
+        return set()
+    n = max(1, round(len(lit) * BLINK_SHARE))
+    rnd = random.Random(7)
+    return {lit[int(len(lit) * (k + rnd.random()) / n)] for k in range(n)}
+
 def town_section(town, i, p, season):
     section = town["sections"][i]
-    styles = light_styles(town, i) if p.get("christmas") else [None] * len(section)
-    return ("".join(buildings.draw(b, x, dict(p, light_style=style) if style else p, season)
-                    for (b, x), style in zip(section, styles)) + scenery.street(p, season, 11 + i)
+    if not p.get("christmas"):
+        return "".join(buildings.draw(b, x, p, season) for b, x in section) + street_layer(town, i, p, season)
+    styles, blinks = light_styles(town, i), blinking(town)
+    out = ""
+    for j, ((b, x), style) in enumerate(zip(section, styles)):
+        bp = dict(p, light_style=style)
+        if (i, j) not in blinks:
+            # The lights on this building do not blink, so every bulb is on
+            bp["lit"] = (0, 1, 2)
+        out += buildings.draw(b, x, bp, season)
+    return out + street_layer(town, i, p, season)
+
+def street_layer(town, i, p, season):
+    section = town["sections"][i]
+    return (scenery.street(p, season, 11 + i)
             + buildings.sidewalk_shadows(section, p) + buildings.sidewalk_bikes(section, p, season, town["extras"]))
 
 def christmas_seasons(town):
@@ -115,7 +144,8 @@ def write_blink(town, out):
     entries = []
     for i, section in enumerate(town["sections"]):
         fn = layers(town)[f"town_{LETTERS[i]}"]
-        lit = [(b, x) for b, x in section if b["type"] in buildings.LIT]
+        blinks = blinking(town)
+        lit = [(b, x) for j, (b, x) in enumerate(section) if (i, j) in blinks]
         if not lit:
             continue
         # Each building's images may use the space up to halfway to the next
