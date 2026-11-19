@@ -168,7 +168,7 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `extras.falling_leaves` | Falling leaves in October and November (April and May in the southern hemisphere) | `true` |
 | `extras.seasons` | Seasons from the date. When it is `false`, it is always summer, but snow still shows while it is snowing. | `true` |
 | `extras.table_mountain` | A flat-topped mountain in the shape of Table Mountain, in the center of the far mountains | `false` |
-| `extras.bikes` | Two bikes parked beside the radio station (not in winter). Bike racks have bikes either way. | `false` |
+| `extras.bikes` | Two bikes parked beside the radio station (not in winter). Bike racks have bikes either way, except in winter. | `false` |
 | `extras.street_lights` | Old-fashioned cast iron street lights along the sidewalk, about 480 pixels apart. A light moves to the side when it would cover a house number. Animals walk behind the lights. Their lanterns light up at dusk and night. | `false` |
 | `extras.christmas` | Christmas decorations in December: lights along the roofs of the buildings in town, a wreath on each street light, and garland on the gazebo, the town sign, and the columned hall. The lights glow at dusk and night. On about one building in four, most of the bulbs blink at random. | `true` |
 | `extras.christmas_lights` | The style of the Christmas lights: `"rainbow"`, `"white"`, `"red_white"`, or `"mixed"`, where each building gets one of the three styles, never the same style as the building with lights before it. | `"mixed"` |
@@ -199,7 +199,7 @@ These options work for most types:
 | `gas_station` | A price sign, a canopy over one pump, and a small store. A car is parked under the canopy. | `canopy_name` (default `"FUEL STOP"`), `store_name` (default `"MARKET"`), `store_sign_color`, `price` (for example `"3.19"`; a small 9 is added for the 9/10 of a cent) |
 | `drive_through` | A restaurant with its name on a colored roof and a drive-through window | `roof_color`, `sign_text_color` |
 | `gazebo` | An eight-sided gazebo on a brick base, with a shingled roof, a cupola, white posts and railings, and front steps. It is open inside, so the hills show between the posts. It has hanging flower baskets in spring and summer, leaf garlands, corn stalks, hay, and pumpkins in fall, and wreaths in winter. Strings of bulbs hang between the posts, with a lantern in the middle, and they are lit at dusk and night. | `name` (a town sign stands to its left, with this name), `small_line` (a small line on the sign, for example `"FOUNDED \u00b7 1779"`), `sign_color`, `color` (the brick base) |
-| `bike_rack` | A bike rack on the sidewalk with three bikes | none |
+| `bike_rack` | A bike rack on the sidewalk with three bikes (no bikes in winter or while snow is falling) | none |
 | `tree` | A tree | none |
 | `section_break` | Starts a new town section | none |
 

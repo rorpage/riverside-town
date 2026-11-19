@@ -791,17 +791,18 @@ def rack_width(s):
     return 176
 
 def rack_draw(s, x, p, season):
-    """A bike rack on the sidewalk with three bikes. The bikes stand in front of
-    the street drawing, so this draws only the rack; layer_bikes() adds the
-    bikes."""
+    """A bike rack on the sidewalk with three bikes, except in winter. The rack
+    and bikes stand in front of the street drawing, so this draws nothing;
+    sidewalk_bikes() draws them."""
     return ""
 
 def rack_bikes(x, p, season, start=0):
     metal = wall("#9CA6B1", p)
     out = "".join(f'<path d="M{x + 22 + i * 48},924 L{x + 22 + i * 48},893 A14,14 0 0 1 {x + 50 + i * 48},893 L{x + 50 + i * 48},924" fill="none" stroke="{metal}" stroke-width="3.5"/>' for i in range(3))
-    out += "".join(bicycle(x + i * 48, 926, BIKE_SCALE, BIKE_COLORS[(start + i) % len(BIKE_COLORS)], left=i % 2 == 1) for i in range(3))
-    if season == "winter":
-        out += f'<rect x="{x + 18}" y="876" width="132" height="5" rx="2" fill="{p["snow"]}"/>'
+    # No bikes in winter. The winter images are also used while snow is
+    # falling, so this covers any snow.
+    if season != "winter":
+        out += "".join(bicycle(x + i * 48, 926, BIKE_SCALE, BIKE_COLORS[(start + i) % len(BIKE_COLORS)], left=i % 2 == 1) for i in range(3))
     return out
 
 # Old-fashioned street lights at the front of the sidewalk, about 480 pixels
