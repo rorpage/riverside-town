@@ -3,6 +3,7 @@
 Errors are raised as ConfigError with a message that names the field, so a
 person editing town.json can find the mistake.
 """
+import ipaddress
 import json
 import os
 import urllib.parse
@@ -132,6 +133,31 @@ def lookup_zip(zip_code, country):
     raise ConfigError(f"Could not look up the coordinates for ZIP code {zip_code} ({'; '.join(problems)}). "
                       "Add \"lat\" and \"lon\" to \"location\" in town.json instead.")
 
+# Host names that are only on a home network, so http is allowed for them
+LOCAL_SUFFIXES = (".local", ".lan", ".home", ".home.arpa", ".internal")
+
+def check_external_url(url):
+    """Checks external_config_url and returns it. https works for any server.
+    http only works for a server on the home network: a private IP address,
+    a name with no dots (for example "nas"), or a name that ends in one of
+    LOCAL_SUFFIXES. Without https, anyone between the Roku and a server on
+    the internet could change the file."""
+    if not url:
+        return ""
+    parts = urllib.parse.urlsplit(url)
+    host = parts.hostname or ""
+    if parts.scheme not in ("http", "https") or not host:
+        raise ConfigError(f'external_config_url: "{url}" must start with https:// or http:// and include a server name.')
+    if parts.scheme == "http":
+        try:
+            local = ipaddress.ip_address(host).is_private
+        except ValueError:
+            local = "." not in host or host.endswith(LOCAL_SUFFIXES)
+        if not local:
+            raise ConfigError(f'external_config_url: "{url}" uses http for a server that is not on the home network. '
+                              "Use https, or the IP address of the server on your home network.")
+    return url
+
 def spread_houses(buildings, houses):
     """Places the houses from the "houses" list between the buildings, spread
     out as evenly as possible."""
@@ -168,6 +194,7 @@ def fill(data):
     town["cars"] = data.get("cars", CARS)
     town["special_cars"] = data.get("special_cars", [])
     town["extras"] = dict(EXTRAS, **data.get("extras", {}))
+    town["external_config_url"] = check_external_url(data.get("external_config_url", "").strip())
     # The radio station on the hill beside the river
     radio = data.get("radio_station")
     town["radio_station"] = None

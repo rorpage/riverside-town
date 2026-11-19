@@ -48,6 +48,7 @@
   ],
   "cars": ["sedan", "van", "jeep", "truck", "sports", "buggy"],
   "special_cars": [],
+  "external_config_url": "",
   "extras": {
     "airplane": true,
     "kayaks": true,

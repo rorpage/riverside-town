@@ -74,6 +74,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   - Thunderstorms: rain and lightning flashes at random times.
 
   Falling leaves and fireflies are hidden while rain or snow is falling. Leaves fall only in October and November (April and May in the southern hemisphere). Even then they do not fall all the time: they fall, fade out, stay hidden, then fade back in. Each of these lasts a random length of time.
+- An optional network settings file. Some settings, such as the airplane, the cars, and the units, can be changed from a JSON file on your home network or on the internet, without building the town again or installing it on the Roku again. See [Network settings file](#network-settings-file).
 - A clock and weather panel in the top-right corner. Every 5 minutes it fades out, moves a small amount within the corner, and fades back in, to protect TVs from burn-in. The sun and moon are in the top-left corner, so the panel never covers them.
 
 ## Make your own town
@@ -162,6 +163,7 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `pets` | Animals on the sidewalk, for example `{ "type": "cat", "color": "tabby", "size": "small" }`. Cats can be `"black"`, `"gray"` (dark gray with darker stripes, drawn a little darker at night so it shows against the sidewalk), `"tabby"`, `"white"`, or `"gray_white"` (gray with a white chest, muzzle, and paws). Dogs (`"dog"`) can be `"yellow_lab"`, `"black_lab"`, `"chocolate_lab"`, `"beagle"`, `"corgi"`, `"dalmatian"`, `"dachshund"`, or `"husky"`. Guinea pigs (`"guinea_pig"`) can be `"black_orange"` or `"white_orange"`. `size` is `"regular"` (the default) or `"small"`, which is 0.65 times as big. Up to 10. | none |
 | `cars` | Which cars drive by: `"sedan"`, `"van"`, `"jeep"`, `"truck"`, `"sports"`, and `"buggy"`. At least 2. | all six |
 | `special_cars` | Special cars from movies: `"aston"` (the silver Aston Martin DB5 from Goldfinger), `"herbie"` (Herbie, the Love Bug: a pearl white 1963 VW Beetle with the number 53 on the door), `"kitt"` (KITT from Knight Rider: a black 1982 Pontiac Trans Am with a red scanner light on the nose), `"ecto1"` (the Ecto-1 from Ghostbusters: a white and red 1959 Cadillac ambulance with equipment on the roof), `"delorean"` (the DeLorean time machine from the first Back to the Future movie), `"mcqueen"` (Lightning McQueen from Cars: a red race car with the number 95), and `"mustang"` (the dark gray 1969 Ford Mustang Mach 1 from John Wick). Each one first drives by 6 to 25 seconds after the screensaver starts, then about once every 20 seconds to 1 minute. Special cars never park at the gas station. | none |
+| `external_config_url` | The address of a [network settings file](#network-settings-file), for example `"http://192.168.1.50:8080/riverside.json"`. Use `https`, or `http` for a server on your home network (a private IP address such as `192.168.x.x` or `10.x.x.x`, a name with no dots, or a name that ends in `.local`, `.lan`, `.home`, `.home.arpa`, or `.internal`). | `""` (none) |
 | `extras.airplane` | The airplane | `true` |
 | `extras.kayaks` | The kayaks beside the river, in spring and summer | `true` |
 | `extras.fireflies` | Fireflies on summer nights | `true` |
@@ -236,6 +238,64 @@ If a font cannot draw a letter in a name, the build stops and names the letter.
 
 These fonts are from [Google Fonts](https://fonts.google.com/), under the SIL Open Font License. The license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
 
+## Network settings file
+
+`external_config_url` in `town.json` can point to a JSON file that changes some settings while the screensaver runs. Changing the file does not need a new build or a new install on the Roku.
+
+The settings are applied in three layers:
+
+1. The defaults in `loadTownConfig()` in `components/MainScene.brs`.
+2. `components/town_config.json` in the zip, made from `town.json`.
+3. The network settings file. Each value in it replaces the value from the zip.
+
+The rules:
+
+- A field that is not in the file keeps its value from the zip. Every new copy of the file is applied to the settings from the zip again, not to the settings from the copy before it. So when you remove a field from the file, that setting goes back to its value in the zip.
+- A list in the file (`cars` or `special_cars`) replaces the whole list from the zip.
+- A value with the wrong type, or a value that is not allowed, is skipped, and the value from the zip is used. The reason is printed in the [debug console](#debugging).
+- The screensaver starts with the settings from the zip, downloads the file, and applies it. After that it downloads the file again every `refresh_minutes`.
+
+The fields use the same names as in `town.json`. All of them are optional:
+
+```json
+{
+  "version": 1,
+  "refresh_minutes": 10,
+  "extras": { "airplane": false, "fireflies": true, "falling_leaves": true, "seasons": true },
+  "units": { "temperature": "C", "clock": "24h" },
+  "location": { "lat": 39.7684, "lon": -86.1581 },
+  "cars": ["sedan", "van", "jeep"],
+  "special_cars": ["herbie"]
+}
+```
+
+| Field | What it sets |
+|---|---|
+| `version` | The version of this file format. Use `1`. The screensaver does not use a file with a higher version. |
+| `refresh_minutes` | Minutes between downloads, from 1 to 1440. The default is 10. |
+| `extras.airplane`, `extras.fireflies`, `extras.falling_leaves`, `extras.seasons` | The same as in `town.json`: `true` or `false`. A plane that is already in the air finishes its flight. |
+| `units.temperature`, `units.clock` | The same as in `town.json`. A new temperature unit downloads the weather again. |
+| `location` | `lat` and `lon`, as numbers or as text. Both are needed. A ZIP code does not work here, because the coordinates for a ZIP code are looked up when the town is built. |
+| `cars` | Which of the six regular cars drive by. At least 2. A car that is turned off finishes its trip. |
+| `special_cars` | Which special cars drive by. All special cars are in every zip, so any of them can be turned on here. |
+
+Settings that change the images can only be set in `town.json`: the buildings, the sections, the radio station, the animals, the street lights, the hemisphere, the side of the road, the Christmas decorations, and the other extras. The car parked at the gas station is chosen when the screensaver starts, from the cars in the zip.
+
+### When the file cannot be downloaded
+
+The screensaver saves the last good copy of the file on the Roku. A good copy is one that downloads with response code 200 and is valid JSON.
+
+- When the server cannot be reached, or the file is not valid JSON, the screensaver keeps using the last good copy. This also works when the screensaver starts again, so a server that is down does not change what you see.
+- The last good copy is used for up to 7 days after it was downloaded (`m.externalKeepDays` in `components/MainScene.brs`). After that, the settings from the zip are used until the file can be downloaded again.
+- The saved copy is only used for the same address. If you change `external_config_url` in `town.json`, a copy from the old address is not used.
+- Files larger than 12,000 characters are used but not saved, because Roku gives each app only 16 KB of storage for this.
+
+To go back to the settings in the zip:
+
+- For some settings: remove those fields from the file. The change shows at the next download.
+- For all settings: delete the file, or replace its contents with `{}`. When the server answers that the file does not exist (response code 404 or 410), the screensaver also deletes the saved copy, so the zip settings stay in use even if the server is down later.
+- For good: remove `external_config_url` from `town.json`, then build and install the town again.
+
 ## Project layout
 
 ```
@@ -246,9 +306,11 @@ source/main.brs                  Entry point (RunScreenSaver)
 components/MainScene.xml         Scene layout: layers, lanes, panel, animations
 components/MainScene.brs         init(), the settings, and small helpers for the scene
 components/scene/                The rest of the scene logic, one file for each part: scenery and time of day,
-                                 Christmas, weather, airplane, clock panel, cars, and sidewalk (animals and lamps)
+                                 Christmas, weather, airplane, clock panel, cars, sidewalk (animals and lamps),
+                                 and the network settings file
 components/WeatherTask.xml       Task node definition for the weather request
 components/WeatherTask.brs       Calls the Open-Meteo API
+components/ExternalConfigTask.*  Downloads the network settings file and keeps the last good copy
 components/town_config.json      The town's settings for the screensaver, written by the generator
 images/                          All artwork as PNG files, written by the generator
 tools/generate_images.py         Draws every image in images/ from town.json
@@ -294,6 +356,8 @@ The settings that are not in `town.json` are at the top of `init()` in `componen
 | `m.planeSpeed` | The airplane's own speed at the distance of the far mountains, in pixels per second. The comment above it in `MainScene.brs` shows how it was worked out. |
 | `m.planeWaitMin`, `m.planeWaitMore` | Seconds between airplane flights: at least `m.planeWaitMin`, plus a random amount up to `m.planeWaitMore`. |
 | `m.leafOnMin`, `m.leafOnMore`, `m.leafOffMin`, `m.leafOffMore` | How long the fall leaves fall and how long they stop, in seconds: at least the `Min` value, plus a random amount up to the `More` value. The defaults are 25 to 70 seconds falling and 15 to 60 seconds stopped. |
+| `m.externalKeepDays` | Days to keep using the last good network settings file when it cannot be downloaded. The default is 7. |
+| `m.externalRefreshDefault` | Minutes between downloads of the network settings file when the file has no `refresh_minutes`. The default is 10. |
 | `m.infoSpots` | The positions the clock panel moves between. They are all in the top-right corner. |
 | `m.seasonOverride` | Set to `"spring"`, `"summer"`, `"fall"`, or `"winter"` to always show that season, for example to preview it. Leave it as `""` to choose the season from the date. |
 | `m.christmasOverride` | Set to `"on"` to always show the Christmas decorations, or `"off"` to never show them. Leave it as `""` to show them in December. It does nothing when `extras.christmas` is `false`, because the town then has no Christmas images. |
@@ -410,7 +474,7 @@ Connect to the screensaver's debug console with:
 telnet <roku-ip-address> 8087
 ```
 
-Screensavers use port 8087, not port 8085 like normal channels. Errors from the weather request are printed there with the prefix `WeatherTask:`. If `components/town_config.json` cannot be read, a message is printed with the prefix `MainScene:`, and the screensaver uses default settings.
+Screensavers use port 8087, not port 8085 like normal channels. Errors from the weather request are printed there with the prefix `WeatherTask:`. If `components/town_config.json` cannot be read, a message is printed with the prefix `MainScene:`, and the screensaver uses default settings. Messages about the network settings file start with `External settings:` or `ExternalConfigTask:`.
 
 ## Known limits
 

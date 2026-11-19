@@ -1031,6 +1031,11 @@
         ]
       }
     },
+    "external_config_url": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "The address of a JSON file with settings that can change without rebuilding the town, for example http://192.168.1.50:8080/riverside.json. Use https, or http for an address on the home network. Leave it empty for none."
+    },
     "special_cars": {
       "type": "array",
       "uniqueItems": true,
