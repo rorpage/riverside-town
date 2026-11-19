@@ -86,10 +86,12 @@ def banner_rope(pal, left):
     """The tow rope and the pole at the front of the banner, 84x64. For a
     plane flying right, the pole is at x=3 (on the front edge of the banner,
     from 2 pixels above it to 2 pixels below it) and the rope ends at x=84,
-    y=11, at the tail of the plane. components/scene/banner.brs places the
-    image from these points. left=True mirrors it for a plane flying left."""
+    y=32, at the tail of the plane. The rope is level, because the banner
+    flies straight behind the plane, with its center at the height of the
+    tail. components/scene/banner.brs places the image from these points.
+    left=True mirrors it for a plane flying left."""
     c = banner_colors(pal)
-    s = (f'<polyline points="84,11 24,32" fill="none" stroke="{c["rope"]}" stroke-width="2"/>'
+    s = (f'<polyline points="84,32 24,32" fill="none" stroke="{c["rope"]}" stroke-width="2"/>'
          f'<polyline points="3,4 24,32 3,60" fill="none" stroke="{c["rope"]}" stroke-width="1.5"/>'
          f'<line x1="3" y1="0" x2="3" y2="64" stroke="{c["rope"]}" stroke-width="4" stroke-linecap="round"/>')
     if left:

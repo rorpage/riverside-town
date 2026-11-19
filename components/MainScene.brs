@@ -13,6 +13,7 @@
 '   external.brs   the network settings file (external_config_url in town.json)
 '   messages.brs   the birthdays and messages to show today
 '   banner.brs     the banner plane, which tows today's birthdays and messages
+'   marquee.brs    the text on the theater marquees
 
 sub init()
     ' ---------- Settings ----------
@@ -141,6 +142,9 @@ sub init()
     m.bannerWaitMin = 120
     m.bannerWaitMore = 120
 
+    ' Seconds each text stays on a theater marquee before the next one
+    m.marqueeHold = 12
+
     ' Falling leaves in fall come and go. They fall for leafOnMin seconds plus up
     ' to leafOnMore, then stop for leafOffMin plus up to leafOffMore, and so on.
     ' Each change fades over 3 seconds.
@@ -226,6 +230,7 @@ sub init()
     startParallax()
     buildCars()
     parkCar()
+    buildMarquee()
     placeAnimals()
     buildLamps()
     updateClock()
@@ -254,7 +259,7 @@ function loadTownConfig() as object
         lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north", driveOn: "right",
         sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [], lamps: [],
         airplane: true, fireflies: true, fallingLeaves: true, seasons: true, christmasSeasons: [], christmasBlink: [],
-        externalConfigUrl: "", birthdays: [], messages: [],
+        externalConfigUrl: "", birthdays: [], messages: [], marquees: [],
         bannerColors: {
             day: { cloth: "0xF4F1E8FF", stripe: "0xC0392BFF", rope: "0x5B6770FF", text: "0x1F2A33FF" },
             dusk: { cloth: "0xF4F1E8FF", stripe: "0xC0392BFF", rope: "0x5B6770FF", text: "0x1F2A33FF" },
@@ -283,6 +288,20 @@ function loadTownConfig() as object
     cfg.sections = Int(cfg.sections)
     if cfg.sections < 1 then cfg.sections = 1
     return cfg
+end function
+
+' The width in pixels of text in font, on one line. It uses a label that is
+' in the scene but cannot be seen, because a label with a width of 0 is as
+' wide as its text.
+function measureText(text as string, font as object) as integer
+    if m.measureLabel = invalid
+        m.measureLabel = m.top.createChild("Label")
+        m.measureLabel.opacity = 0
+        m.measureLabel.translation = [0, -200]
+    end if
+    m.measureLabel.font = font
+    m.measureLabel.text = text
+    return Int(m.measureLabel.boundingRect().width)
 end function
 
 function makeTimer(seconds as float, callback as string) as object

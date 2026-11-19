@@ -11,6 +11,7 @@
   <script type="text/brightscript" uri="pkg:/components/scene/external.brs" />
   <script type="text/brightscript" uri="pkg:/components/scene/messages.brs" />
   <script type="text/brightscript" uri="pkg:/components/scene/banner.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/marquee.brs" />
   <children>
     <!-- Sky: an 8 px wide gradient image stretched across the screen to save memory -->
     <Poster id="sky" width="1920" height="1080" loadDisplayMode="scaleToFill" />

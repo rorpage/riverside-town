@@ -11,8 +11,9 @@
 ' order is the other way around, and the plane and the rope use their left
 ' images. The rope image is 84x64: its pole is 3 pixels from one end, on the
 ' front edge of the banner, and its other end is at the tail of the plane,
-' 12 pixels in from the back of the plane image (banner_rope() in
-' tools/riverside/sprites.py).
+' 12 pixels in from the back of the plane image and 36 pixels below its top
+' (banner_rope() in tools/riverside/sprites.py). The banner flies straight
+' behind the plane: its center is at the same height as the tail.
 
 sub startBanner()
     m.bannerPlane = m.top.findNode("bannerPlane")
@@ -83,12 +84,10 @@ end sub
 ' Sets the text and places the parts for the direction in m.bannerLeft.
 ' Returns the width of the whole group: the banner, the rope, and the plane.
 function layoutBanner(text as string) as integer
-    ' A label with a width of 0 is as wide as its text, so its bounding
-    ' rectangle gives the width of the text. The label then gets that width,
-    ' plus a little, so the text is never cut off with "...".
-    m.bannerLabel.width = 0
+    ' The label gets the width of the text, plus a little, so the text is
+    ' never cut off with "...".
     m.bannerLabel.text = text
-    textWidth = Int(m.bannerLabel.boundingRect().width)
+    textWidth = measureText(text, m.bannerLabel.font)
     if textWidth <= 0 then textWidth = Len(text) * 22
     m.bannerLabel.width = textWidth + 4
     bannerWidth = textWidth + 48
@@ -102,14 +101,15 @@ function layoutBanner(text as string) as integer
         ropeX = bannerWidth - 3
         planeX = ropeX + 84 - 12
     end if
-    ' The banner hangs 30 pixels below the top of the plane image. The red
+    ' The banner is 60 pixels tall, from 6 to 66 pixels below the top of the
+    ' plane image, so its center is level with the tail (y=36). The red
     ' stripes are 5 pixels tall, on the top and the bottom.
-    m.bannerStripe.translation = [bannerX, 30]
+    m.bannerStripe.translation = [bannerX, 6]
     m.bannerStripe.width = bannerWidth
-    m.bannerCloth.translation = [bannerX, 35]
+    m.bannerCloth.translation = [bannerX, 11]
     m.bannerCloth.width = bannerWidth
-    m.bannerLabel.translation = [bannerX + 22, 30]
-    m.bannerRope.translation = [ropeX, 28]
+    m.bannerLabel.translation = [bannerX + 22, 6]
+    m.bannerRope.translation = [ropeX, 4]
     m.bannerBody.translation = [planeX, 0]
     m.bannerPlaneX = planeX
     return bannerWidth + 237

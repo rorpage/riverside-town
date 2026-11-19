@@ -83,6 +83,12 @@ def layout(town):
     # The parked car goes at the first gas station, in strip coordinates
     town["parked_car_x"] = gas[0][0] * SECTION + buildings.gas_parking(gas[0][1]) if gas else -1
     town["sections"] = placed
+    # The text area on each theater marquee, in strip coordinates, with the
+    # theater's own text (see marquee_area() in buildings.py and
+    # components/scene/marquee.brs)
+    town["marquees"] = [dict(zip(("x", "y", "w", "h"), (i * SECTION + ax, ay, aw, ah)), text=b["text"])
+                        for i, s in enumerate(placed) for b, x in s if b["type"] == "theater"
+                        for ax, ay, aw, ah in [buildings.marquee_area(b, x)]]
     # The street lamps, in strip coordinates (see lamp_spots() in buildings.py)
     town["lamps"] = ([i * SECTION + x for i, s in enumerate(placed) for x in buildings.lamp_spots(s)]
                      if town["extras"]["street_lights"] else [])

@@ -53,6 +53,8 @@ DEFAULTS = {
     "gas_station": dict(canopy_name="FUEL STOP", store_name="MARKET", store_sign_color="#1F4E9C", price="2.05",
                         color="#E2E7EE", font="oswald", weight=600),
     "drive_through": dict(font="script", weight=700, color=WHITE, roof_color="#D62E3C"),
+    "theater": dict(width=360, font="oswald", weight=700, color="#B86B55", sign_color="#2B2F3A",
+                    trim_color="#C0392B", text="WELCOME"),
     "tree": dict(),
     "gazebo": dict(color="#A9553F", font="playfair", weight=700),
     "bike_rack": dict(),
@@ -70,6 +72,10 @@ EXTRAS = {"airplane": True, "kayaks": True, "fireflies": True, "falling_leaves":
           "table_mountain": False, "bikes": False, "street_lights": False, "christmas": True,
           "christmas_lights": "mixed"}
 RADIO = dict(color="#E4DCCD", font="racing", weight=400, letter_color="#D32F2F", tower=True)
+
+# The font the previews use for the text on a theater marquee. On the Roku,
+# the marquee uses the Roku's bold system font.
+MARQUEE_FONT = "oswald"
 
 # Text fields that are not drawn with the building's own font
 FIELD_FONTS = {("radio_station", "small_line"): "kaushan", ("radio_station", "power"): "oswald",
@@ -250,8 +256,15 @@ def fill(data):
             counts["school"] += 1
         elif kind == "church" and spec["style"] == "tower":
             spec.setdefault("color", "#D8CFC2")
-        if kind in ("shop", "church", "school", "columned_hall", "drive_through") and not spec.get("name"):
+        if kind in ("shop", "church", "school", "columned_hall", "drive_through", "theater") and not spec.get("name"):
             raise ConfigError(f"{where}: a {kind} needs a \"name\".")
+        if kind == "theater":
+            # The marquee shows its text in capital letters. The previews draw
+            # it with MARQUEE_FONT, so that font must be able to draw it.
+            spec["text"] = spec["text"].upper()
+            bad = check_text(spec["text"], MARQUEE_FONT)
+            if bad:
+                raise ConfigError(f"{where}: the marquee cannot show {' '.join(bad)} in \"{spec['text']}\".")
         for key in ("name", "number", "small_line", "store_name", "canopy_name", "power"):
             if spec.get(key):
                 font = FIELD_FONTS.get((kind, key), spec.get("font"))

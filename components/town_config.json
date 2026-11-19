@@ -138,6 +138,7 @@
   "externalConfigUrl": "",
   "birthdays": [],
   "messages": [],
+  "marquees": [],
   "bannerColors": {
     "day": {
       "cloth": "0xF4F1E8FF",
