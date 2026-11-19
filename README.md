@@ -66,6 +66,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 
   The dates are close to the equinoxes and solstices, which move by a day or so from year to year. In the southern hemisphere, the seasons are the other way around. Pine trees stay green all year. Some are plain triangles, and the others have one or two small notches cut into their sides, in four different patterns. There is one river, and in spring and summer, eight kayaks in different colors sit on the grass on both sides of it.
 - Christmas decorations for all of December (in both hemispheres): strings of lights along the roofs of the houses, shops, churches, school, columned hall, gas station, and drive-through restaurant, a wreath on each street light, and garland on the gazebo, the town sign, and the columned hall. The gazebo also gets a wreath on each front post. Each building's lights are rainbow colored, all white, or red and white. At dusk and night the lights glow. On about one building in four, spread along the street, two thirds of the bulbs blink on and off at random; the lights on the other buildings stay on. The pumpkins are put away in December. The radio station and the scenery behind the town do not change. `extras.christmas` in `town.json` turns them off.
+- The Upside Down for all of October, when `extras.upside_down` is on in `town.json` (it is off by default). The whole scene is a dim blue gray, at every time of day, with dark vines across the road and the sidewalk and up the walls, and thinner vines on the hills. The clouds are dark with a red glow under them. Gray specks float slowly up the screen. Every 7 seconds there is red lightning: the sky behind the mountains flashes red two to four times in a random pattern, with a red bolt in the clouds at a random place. The street lights are dark, with a vine around each post. There are no cars, animals, airplane, sun, moon, stars, fireflies, or falling leaves, and the radio tower light is off. The weather panel works as usual.
 - Weather effects from the current weather:
   - Clouds: the number of clouds follows the cloud cover from the weather, in percent. Below 25 percent there are a few clouds, from 25 percent there are more, from 50 percent there are many larger clouds, and from 85 percent the sky is overcast: a gray layer of cloud covers the top of the sky with no separate clouds under it, the sky is gray, and the stars, the sun, and the moon are hidden. The weather code also sets the fewest clouds that can show, so the sky matches the text in the panel: "Partly cloudy" shows at least the second level, fog and showers at least the third, and "Overcast", drizzle, rain, snow, and thunderstorms show an overcast sky.
   - Rain and drizzle: falling rain.
@@ -171,6 +172,7 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `extras.bikes` | Two bikes parked beside the radio station (not in winter). Bike racks have bikes either way, except in winter. | `false` |
 | `extras.street_lights` | Old-fashioned cast iron street lights along the sidewalk, about 480 pixels apart. A light moves to the side when it would cover a house number. Animals walk behind the lights. Their lanterns light up at dusk and night. | `false` |
 | `extras.christmas` | Christmas decorations in December: lights along the roofs of the buildings in town, a wreath on each street light, and garland on the gazebo, the town sign, and the columned hall. The lights glow at dusk and night. On about one building in four, most of the bulbs blink at random. | `true` |
+| `extras.upside_down` | The Upside Down for all of October: a dark town with vines, floating specks, and red lightning every 7 seconds, and no cars, animals, or airplane. See the list of features above. | `false` |
 | `extras.christmas_lights` | The style of the Christmas lights: `"rainbow"`, `"white"`, `"red_white"`, or `"mixed"`, where each building gets one of the three styles, never the same style as the building with lights before it. | `"mixed"` |
 
 ### Buildings
@@ -246,7 +248,8 @@ source/main.brs                  Entry point (RunScreenSaver)
 components/MainScene.xml         Scene layout: layers, lanes, panel, animations
 components/MainScene.brs         init(), the settings, and small helpers for the scene
 components/scene/                The rest of the scene logic, one file for each part: scenery and time of day,
-                                 Christmas, weather, airplane, clock panel, cars, and sidewalk (animals and lamps)
+                                 Christmas, weather, airplane, clock panel, cars, sidewalk (animals and lamps),
+                                 and the Upside Down in October
 components/WeatherTask.xml       Task node definition for the weather request
 components/WeatherTask.brs       Calls the Open-Meteo API
 components/town_config.json      The town's settings for the screensaver, written by the generator
@@ -297,6 +300,8 @@ The settings that are not in `town.json` are at the top of `init()` in `componen
 | `m.infoSpots` | The positions the clock panel moves between. They are all in the top-right corner. |
 | `m.seasonOverride` | Set to `"spring"`, `"summer"`, `"fall"`, or `"winter"` to always show that season, for example to preview it. Leave it as `""` to choose the season from the date. |
 | `m.christmasOverride` | Set to `"on"` to always show the Christmas decorations, or `"off"` to never show them. Leave it as `""` to show them in December. It does nothing when `extras.christmas` is `false`, because the town then has no Christmas images. |
+| `m.upsideOverride` | Set to `"on"` to always show the Upside Down, or `"off"` to never show it. Leave it as `""` to show it in October. It does nothing when `extras.upside_down` is `false`, because the town then has no Upside Down images. |
+| `m.upsideLightningEvery`, `m.upsideSkyMax`, `m.upsideFrontMax` | The Upside Down lightning: seconds between flashes, and the highest opacity of the red flash in the sky and of the weaker red flash over the whole scene. |
 | `m.seasonalLayers` | Which scenery layers have a different image for some seasons. It must match `SEASONAL` in `tools/generate_images.py`. |
 
 The panel's transparency is set by the `color` value on the `Rectangle` inside the `info` group in `components/MainScene.xml`. The last two characters are the opacity: `00` is fully clear and `FF` is fully solid.
@@ -322,7 +327,7 @@ The generator writes:
 - every PNG into `images/`, including the mirrored car images used by the far lane
 - `components/town_config.json`, the settings the screensaver reads: the coordinates, units, number of town sections, cars, animals, extras, and where the gas station is
 - the title into `manifest`
-- full-scene previews into `build/`, which git ignores: one for each town section, season, and day and night (`composite_<season>_<period>_<section>.png`). The summer previews include the parked car so its position can be checked. With `extras.christmas` on, there are also previews of the Christmas decorations in fall and winter, by day and at dusk (`composite_christmas_<season>_<period>_<section>.png`).
+- full-scene previews into `build/`, which git ignores: one for each town section, season, and day and night (`composite_<season>_<period>_<section>.png`). The summer previews include the parked car so its position can be checked. With `extras.christmas` on, there are also previews of the Christmas decorations in fall and winter, by day and at dusk (`composite_christmas_<season>_<period>_<section>.png`). With `extras.upside_down` on, there is also a preview of the Upside Down for each section (`preview_upside_<section>.png`) and one during a lightning flash (`preview_upside_lightning.png`).
 - the preview images for this README into `docs/`, when `--docs docs` is given
 
 Where each part of the drawing is:
@@ -336,6 +341,7 @@ Where each part of the drawing is:
 | `tools/riverside/config.py` | Reads and checks `town.json`, and fills in defaults |
 | `tools/riverside/sprites.py` | The cars, animals, airplane, sun, moon, stars, and weather effects |
 | `tools/riverside/movie_cars.py` | The special cars from movies and their wheels |
+| `tools/riverside/upside_down.py` | The Upside Down: the color grade, the vines, the sky and clouds, the lightning bolts, and the floating specks |
 | `tools/riverside/previews.py` | The preview images |
 
 Notes on the image sizes:

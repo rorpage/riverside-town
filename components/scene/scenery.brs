@@ -117,6 +117,8 @@ end function
 ' layer without an image for that season uses its summer image, which has no
 ' season in the file name.
 function layerUri(name as string, variant as string, period as string) as string
+    ' The Upside Down has one image for each layer
+    if m.upside then return "pkg:/images/" + name + "_upside.png"
     seasons = m.seasonalLayers[name]
     if seasons <> invalid
         for each s in seasons
@@ -136,13 +138,16 @@ sub applyScene()
     if m.precipKind = "snow" then ground = "winter"
     leaves = leafMonths()
     christmas = christmasTime()
-    key = period + "," + season + "," + ground + "," + m.precipKind + "," + m.cloudLevel + "," + leaves.ToStr() + "," + christmas.ToStr()
+    upside = upsideDownTime()
+    key = period + "," + season + "," + ground + "," + m.precipKind + "," + m.cloudLevel + "," + leaves.ToStr() + "," + christmas.ToStr() + "," + upside.ToStr()
     if key = m.sceneKey then return
     m.sceneKey = key
     m.period = period
     m.season = season
     m.ground = ground
     m.christmas = christmas
+    changed = upside <> m.upside
+    m.upside = upside
 
     ' An overcast sky is gray, with no stars, sun, or moon (see the end of
     ' this sub).
@@ -153,6 +158,10 @@ sub applyScene()
         m.sky.uri = "pkg:/images/sky_" + period + ".png"
     end if
     cloudUri = "pkg:/images/clouds_" + m.cloudLevel + "_" + period + ".png"
+    if upside
+        m.sky.uri = "pkg:/images/sky_upside.png"
+        cloudUri = "pkg:/images/clouds_upside.png"
+    end if
     m.top.findNode("clouds1").uri = cloudUri
     m.top.findNode("clouds2").uri = cloudUri
     for each name in ["far", "near", "hills"]
@@ -164,7 +173,12 @@ sub applyScene()
     m.top.findNode("nearB").uri = layerUri("near_b", ground, period)
     m.top.findNode("hillsB").uri = layerUri("hills_b", ground, period)
     m.top.findNode("hillsC").uri = layerUri("hills_c", ground, period)
-    updateTowerLight(period)
+    if upside
+        ' The radio tower light is off in the Upside Down
+        updateTowerLight("day")
+    else
+        updateTowerLight(period)
+    end if
     updateAnimals(period)
     updateLamps()
     for i = 0 to m.sections
@@ -192,10 +206,11 @@ sub applyScene()
         m.sun.translation = [150, 100]
     end if
     m.sun.opacity = 1
-    if overcast
+    if overcast or upside
         m.stars.opacity = 0
         m.sun.opacity = 0
     end if
+    if changed then updateUpsideDown()
 end sub
 
 sub onPeriodTick()
@@ -221,7 +236,7 @@ end function
 ' and starts them at random times.
 sub updateSeasonFx(season as string, period as string, leaves as boolean)
     fx = ""
-    if m.precipKind = "" and m.config.fallingLeaves
+    if m.precipKind = "" and m.config.fallingLeaves and not m.upside
         if season = "fall" and leaves then fx = "leaves"
     end if
     m.seasonFxAnim.control = "stop"
@@ -241,7 +256,7 @@ sub updateSeasonFx(season as string, period as string, leaves as boolean)
         scheduleLeaves()
     end if
 
-    flies = m.config.fireflies and season = "summer" and period = "night" and m.precipKind = ""
+    flies = m.config.fireflies and season = "summer" and period = "night" and m.precipKind = "" and not m.upside
     m.fireflies.visible = flies
     if flies
         m.firefliesAnim.control = "start"

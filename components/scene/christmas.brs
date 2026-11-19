@@ -17,7 +17,7 @@ end function
 ' Returns the image for a town section. In December it is the Christmas image,
 ' if there is one for the season the ground shows.
 function townUri(name as string, ground as string, period as string) as string
-    if m.christmas
+    if m.christmas and not m.upside
         for each s in m.config.christmasSeasons
             if s = ground then return "pkg:/images/" + name + "_christmas_" + ground + "_" + period + ".png"
         end for

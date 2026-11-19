@@ -23,7 +23,7 @@ import sys
 from PIL import Image, ImageChops
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from riverside import art, scenery, buildings, layout, sprites, previews
+from riverside import art, scenery, buildings, layout, sprites, previews, upside_down
 from riverside.art import P, SEASONS, LIGHT_STYLES, BLINK_GROUPS, season_palette, christmas_palette, render
 from riverside.config import load, ConfigError
 
@@ -179,6 +179,47 @@ def write_blink(town, out):
             entries.append([i * 1920 + box[0], box[1], box[2] - box[0], box[3] - box[1]])
     return entries
 
+# Layers that get an Upside Down image. The town sections are added from the
+# number of sections. Every layer is drawn as on a fall day, then graded.
+UPSIDE_LAYERS = ["far", "far_b", "near", "near_b", "hills", "hills_b", "hills_c"]
+
+def upside_image(town, name):
+    """One layer of the Upside Down, as a PIL image of its crop."""
+    y, h = CROPS[name.split("_")[0] if name.startswith("town") else name]
+    vb = f"0 {y} 1920 {h}"
+    p = season_palette("day", "fall")
+    base = Image.open(io.BytesIO(render(layers(town)[name](p, "fall"), vb, 1920, h))).convert("RGBA")
+    if name.startswith("town"):
+        vines = upside_down.town_vines(31 + LETTERS.index(name[-1]))
+    elif name.startswith("hills"):
+        vines = upside_down.hills_vines({"hills": 51, "hills_b": 52, "hills_c": 53}[name])
+    else:
+        return upside_down.grade(base)
+    return upside_down.with_vines(base, vines, vb, 1920, h)
+
+def write_upside(town, out):
+    """The Upside Down images for October (extras.upside_down). See
+    tools/riverside/upside_down.py."""
+    names = UPSIDE_LAYERS + [f"town_{LETTERS[i]}" for i in range(len(town["sections"]))]
+    for name in names:
+        upside_image(town, name).save(os.path.join(out, f"{name}_upside.png"), optimize=True)
+    render(upside_down.sky(), "0 0 8 1080", 8, 1080, os.path.join(out, "sky_upside.png"))
+    y, h = CROPS["clouds"]
+    render(upside_down.clouds(), f"0 {y} 1920 {h}", 1920, h, os.path.join(out, "clouds_upside.png"))
+    bw, bh = upside_down.BOLT_SIZE
+    for n in range(upside_down.BOLTS):
+        render(upside_down.bolt(n + 1), f"0 0 {bw} {bh}", bw, bh, os.path.join(out, f"bolt_{n}.png"))
+    sw, sh = upside_down.SPORES_SIZE
+    render(upside_down.spores(5, 70, 1.0, 2.2), f"0 0 {sw} {sh}", sw, sh, os.path.join(out, "spores_a.png"))
+    render(upside_down.spores(9, 26, 2.4, 4.5), f"0 0 {sw} {sh}", sw, sh, os.path.join(out, "spores_b.png"))
+    if town["extras"]["street_lights"]:
+        left, top, w, h = buildings.LAMP_BOX
+        vb = f"{left} {top} {w} {h}"
+        lamp = Image.open(io.BytesIO(render(buildings.street_lamp(0, P["day"], "summer"), vb, w, h))).convert("RGBA")
+        lamp = upside_down.grade(lamp)
+        lamp.alpha_composite(Image.open(io.BytesIO(render(upside_down.lamp_vine(0), vb, w, h))).convert("RGBA"))
+        lamp.save(os.path.join(out, "street_lamp_upside.png"), optimize=True)
+
 def layers(town):
     """Returns name -> drawing function(p, season) for every scenery layer."""
     ex = town["extras"]
@@ -220,6 +261,8 @@ def write_images(town, out):
     sprites.write(out)
     if town["extras"]["street_lights"]:
         write_lamps(town, out)
+    if town["extras"]["upside_down"]:
+        write_upside(town, out)
 
 def write_icons(town, out, build_dir):
     im = previews.composite(town, layers(town), "day", 0, "summer")
@@ -244,7 +287,7 @@ def runtime_config(town, images):
         "parkedCarX": town["parked_car_x"], "radioLight": radio_light(town), "lamps": town["lamps"],
         "airplane": ex["airplane"], "fireflies": ex["fireflies"], "fallingLeaves": ex["falling_leaves"],
         "seasons": ex["seasons"], "christmasSeasons": christmas_seasons(town),
-        "christmasBlink": town.get("blink", []),
+        "christmasBlink": town.get("blink", []), "upsideDown": ex["upside_down"],
     }
 
 def radio_light(town):

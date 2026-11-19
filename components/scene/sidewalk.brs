@@ -39,6 +39,7 @@ sub addAnimal(strip as object, a as object, x as integer, feetY as integer)
     pet.width = a.w
     pet.height = a.h
     pet.translation = [x, feetY - a.h]
+    m.upsideHidden.Push(pet)
     if a.DoesExist("night")
         if a.night = true
             m.nightAnimals.Push({ poster: pet, image: a.image })
@@ -80,8 +81,15 @@ sub addLamp(strip as object, x as integer)
 end sub
 
 ' The lamps are lit at dusk and night, have snow on top in winter, and have
-' a wreath in December
+' a wreath in December. In the Upside Down they are dark, with a vine around
+' the post.
 sub updateLamps()
+    if m.upside
+        for each lamp in m.lampPosters
+            lamp.uri = "pkg:/images/street_lamp_upside.png"
+        end for
+        return
+    end if
     name = "street_lamp_"
     if m.christmas then name = name + "christmas_"
     if m.ground = "winter" then name = name + "winter_"

@@ -8,6 +8,7 @@
   <script type="text/brightscript" uri="pkg:/components/scene/panel.brs" />
   <script type="text/brightscript" uri="pkg:/components/scene/cars.brs" />
   <script type="text/brightscript" uri="pkg:/components/scene/sidewalk.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/upsidedown.brs" />
   <children>
     <!-- Sky: an 8 px wide gradient image stretched across the screen to save memory -->
     <Poster id="sky" width="1920" height="1080" loadDisplayMode="scaleToFill" />
@@ -21,6 +22,10 @@
         <Poster id="clouds2" width="1920" height="255" translation="[1920,0]" />
       </Group>
     </Group>
+    <!-- The Upside Down in October (components/scene/upsidedown.brs): a red flash in the
+         sky and a lightning bolt in the clouds, both behind the mountains -->
+    <Rectangle id="upsideSkyFlash" width="1920" height="760" color="0xD62834FF" opacity="0" />
+    <Poster id="upsideBolt" width="420" height="320" opacity="0" />
     <Group translation="[0,295]">
       <Group id="farStrip">
         <!-- Two different far tiles: A (with Table Mountain), B, then A again. -->
@@ -88,11 +93,26 @@
       </Group>
     </Group>
 
+    <!-- Specks that float up the screen in the Upside Down. Each image is half size and
+         shown at full size. Two copies stacked vertically slide up by 1080 px and repeat. -->
+    <Group id="spores" visible="false">
+      <Group id="sporesStripA">
+        <Poster width="1920" height="1080" uri="pkg:/images/spores_a.png" />
+        <Poster width="1920" height="1080" translation="[0,1080]" uri="pkg:/images/spores_a.png" />
+      </Group>
+      <Group id="sporesStripB">
+        <Poster width="1920" height="1080" uri="pkg:/images/spores_b.png" />
+        <Poster width="1920" height="1080" translation="[0,1080]" uri="pkg:/images/spores_b.png" />
+      </Group>
+    </Group>
+
     <!-- Fog: an 8 px wide gradient stretched across the screen, like the sky -->
     <Poster id="fog" width="1920" height="1080" loadDisplayMode="scaleToFill" uri="pkg:/images/fog.png" visible="false" />
 
     <!-- Lightning flash during thunderstorms -->
     <Rectangle id="flash" width="1920" height="1080" color="0xFFFFFFFF" opacity="0" />
+    <!-- A weak red flash over everything, with the Upside Down lightning -->
+    <Rectangle id="upsideFlash" width="1920" height="1080" color="0xD62834FF" opacity="0" />
 
     <!-- Clock and weather panel -->
     <Group id="info" translation="[1260,60]">
@@ -152,6 +172,18 @@
     </Animation>
     <Animation id="flashAnim" repeat="false" easeFunction="linear" duration="0.7">
       <FloatFieldInterpolator key="[0.0, 0.08, 0.18, 0.3, 1.0]" keyValue="[0.0, 0.55, 0.1, 0.4, 0.0]" fieldToInterp="flash.opacity" />
+    </Animation>
+    <Animation id="sporesAnimA" repeat="true" easeFunction="linear" duration="90">
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[0,-1080]]" fieldToInterp="sporesStripA.translation" />
+    </Animation>
+    <Animation id="sporesAnimB" repeat="true" easeFunction="linear" duration="55">
+      <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[0,-1080]]" fieldToInterp="sporesStripB.translation" />
+    </Animation>
+    <!-- The Upside Down lightning. upsidedown.brs sets new keys for each flash. -->
+    <Animation id="upsideFlashAnim" repeat="false" easeFunction="linear" duration="2.2">
+      <FloatFieldInterpolator id="upsideSkyKeys" key="[0.0, 1.0]" keyValue="[0.0, 0.0]" fieldToInterp="upsideSkyFlash.opacity" />
+      <FloatFieldInterpolator id="upsideBoltKeys" key="[0.0, 1.0]" keyValue="[0.0, 0.0]" fieldToInterp="upsideBolt.opacity" />
+      <FloatFieldInterpolator id="upsideFrontKeys" key="[0.0, 1.0]" keyValue="[0.0, 0.0]" fieldToInterp="upsideFlash.opacity" />
     </Animation>
 
     <WeatherTask id="weatherTask" />

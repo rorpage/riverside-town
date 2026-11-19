@@ -4,7 +4,7 @@
 
 ' Starts a flight, or waits again if the weather is bad for flying.
 sub onPlaneTimer()
-    if m.precipKind <> "" or m.fog.visible or m.storm
+    if m.precipKind <> "" or m.fog.visible or m.storm or m.upside
         schedulePlane()
         return
     end if

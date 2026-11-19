@@ -66,7 +66,7 @@ PETS = {"cat": ["black", "gray", "tabby", "white", "gray_white"], "guinea_pig": 
 PET_IMAGE = {"cat": "cat", "guinea_pig": "guinea", "dog": "dog"}   # The first part of each image name
 EXTRAS = {"airplane": True, "kayaks": True, "fireflies": True, "falling_leaves": True, "seasons": True,
           "table_mountain": False, "bikes": False, "street_lights": False, "christmas": True,
-          "christmas_lights": "mixed"}
+          "christmas_lights": "mixed", "upside_down": False}
 RADIO = dict(color="#E4DCCD", font="racing", weight=400, letter_color="#D32F2F", tower=True)
 
 # Text fields that are not drawn with the building's own font

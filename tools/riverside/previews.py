@@ -167,6 +167,46 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     im.alpha_composite(Image.open(io.BytesIO(render(panel(clock, temp_text(town, temp), cond, 1260), "0 0 1920 1080", 1920, 1080))).convert("RGBA"))
     return im.convert("RGB")
 
+# The red flashes at the top of a lightning flash: one in the sky, behind the
+# mountains, and a weaker one in front of everything. These copy the
+# upsideSkyFlash and upsideFlash rectangles in components/MainScene.xml and
+# the highest values in onUpsideLightning() in components/scene/upsidedown.brs.
+UPSIDE_SKY_FLASH = ((214, 40, 52), 0.45, 760)   # color, opacity, height
+UPSIDE_FLASH = ((214, 40, 52), 0.08)
+
+def preview_upside(town, images, section, hour, temp, cond, bolt=None):
+    """One screen of the Upside Down in October, made from its images like
+    applyScene() and components/scene/upsidedown.brs show them: no cars,
+    animals, airplane, sun, or moon. bolt is (n, x, y) for lightning bolt n
+    at (x, y) during a flash, or None."""
+    def img(name):
+        return Image.open(os.path.join(images, name)).convert("RGBA")
+    im = img("sky_upside.png").resize((1920, 1080))
+    im.alpha_composite(img("clouds_upside.png"), (0, 90))
+    if bolt:
+        color, op, h = UPSIDE_SKY_FLASH
+        im.alpha_composite(Image.new("RGBA", (1920, h), color + (round(255 * op),)))
+        n, bx, by = bolt
+        im.alpha_composite(img(f"bolt_{n}.png"), (bx, by))
+    odd = section % 2
+    im.alpha_composite(img(f"far{'_b' if odd else ''}_upside.png"), (0, 295))
+    im.alpha_composite(img(f"near{'_b' if odd else ''}_upside.png"), (0, 400))
+    im.alpha_composite(img(f"hills{['', '_b', '_c'][section % 3]}_upside.png"), (0, 420))
+    im.alpha_composite(img(f"town_{LETTERS[section]}_upside.png"), (0, 550))
+    if town["extras"]["street_lights"]:
+        lamp = img("street_lamp_upside.png")
+        for x in town["lamps"]:
+            if x // 1920 == section:
+                im.alpha_composite(lamp, (x % 1920 - 36, 772))
+    for name in ("spores_a.png", "spores_b.png"):
+        im.alpha_composite(img(name).resize((1920, 1080), Image.LANCZOS))
+    if bolt:
+        color, op = UPSIDE_FLASH
+        im.alpha_composite(Image.new("RGBA", (1920, 1080), color + (round(255 * op),)))
+    clock = clock_text(town, *hour)
+    im.alpha_composite(Image.open(io.BytesIO(render(panel(clock, temp_text(town, temp), cond, 1260), "0 0 1920 1080", 1920, 1080))).convert("RGBA"))
+    return im.convert("RGB")
+
 def write_all(town, layers, images, build, docs=None):
     os.makedirs(build, exist_ok=True)
     for f in os.listdir(build):
@@ -212,6 +252,13 @@ def write_all(town, layers, images, build, docs=None):
                                                              section=0, christmas=True)))
         shots.append(("preview_christmas_night.png", 640, dict(pal="night", season="winter", hour=(21, 15), temp=24, cond="Clear",
                                                               section=last, pets=pets, near_car="buggy", christmas=True)))
+    if town["extras"]["upside_down"]:
+        # October. These are written to the build folder only, because the
+        # sample town does not turn this on.
+        for i in range(n):
+            preview_upside(town, images, i, (21, 7), 52, "Clear").save(os.path.join(build, f"preview_upside_{LETTERS[i]}.png"))
+        preview_upside(town, images, 0, (21, 7), 52, "Clear", bolt=(0, 640, 120)).save(
+            os.path.join(build, "preview_upside_lightning.png"))
     for name, width, opts in shots:
         im = preview(town, layers, images, **opts)
         im.resize((width, width * 9 // 16), Image.LANCZOS).save(os.path.join(build, name), optimize=True)

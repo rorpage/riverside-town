@@ -212,6 +212,7 @@ sub addParkedCar(d as object, facingLeft as boolean, centerX as integer, id as s
     car.id = id
     car.scale = [s, s]
     car.translation = [centerX - d.w * s / 2, groundY - d.bottom * s]
+    m.upsideHidden.Push(car)
 
     suffix = ""
     if facingLeft then suffix = "_left"

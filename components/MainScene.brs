@@ -10,6 +10,7 @@
 '   panel.brs      the clock and weather panel
 '   cars.brs       the cars on the street and the car parked at the gas station
 '   sidewalk.brs   the animals and the street lamps
+'   upsidedown.brs the Upside Down in October
 
 sub init()
     ' ---------- Settings ----------
@@ -98,6 +99,17 @@ sub init()
     ' Set to "on" or "off" to always show or never show the Christmas
     ' decorations, for previewing. Leave it as "" to show them in December.
     m.christmasOverride = ""
+    ' Set to "on" or "off" to always show or never show the Upside Down, for
+    ' previewing. Leave it as "" to show it in October.
+    m.upsideOverride = ""
+    ' The Upside Down lightning: seconds between flashes, and the highest
+    ' opacity of the red flash in the sky and of the red flash over everything
+    m.upsideLightningEvery = 7
+    m.upsideSkyMax = 0.45
+    m.upsideFrontMax = 0.08
+    ' Nodes that are hidden in the Upside Down: the parked car and the animals
+    ' (see addParkedCar and addAnimal)
+    m.upsideHidden = []
     ' Layers that have a different image for some seasons. This must match
     ' SEASONAL in tools/generate_images.py. Every town section has an image
     ' for each season.
@@ -176,6 +188,7 @@ sub init()
     m.period = ""
     m.ground = ""
     m.christmas = false
+    m.upside = false
     m.season = ""
     m.sceneKey = ""
     m.precipKind = ""
@@ -199,6 +212,7 @@ sub init()
     if m.config.airplane then m.planeTimer.control = "start"
 
     ' ---------- Start ----------
+    buildUpsideDown()
     buildTown()
     buildBlink()
     buildTowerLight()
@@ -208,6 +222,7 @@ sub init()
     parkCar()
     placeAnimals()
     buildLamps()
+    updateUpsideDown()
     updateClock()
 
     m.weatherTask = m.top.findNode("weatherTask")
@@ -229,7 +244,8 @@ function loadTownConfig() as object
     cfg = {
         lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north", driveOn: "right",
         sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [], lamps: [],
-        airplane: true, fireflies: true, fallingLeaves: true, seasons: true, christmasSeasons: [], christmasBlink: []
+        airplane: true, fireflies: true, fallingLeaves: true, seasons: true, christmasSeasons: [], christmasBlink: [],
+        upsideDown: false
     }
     text = ReadAsciiFile("pkg:/components/town_config.json")
     data = invalid
