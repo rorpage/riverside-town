@@ -65,7 +65,7 @@ def to_image(content, vb, w, h):
 # thin posts, run along the roof lines with loops and tendrils hanging down,
 # and grow along the bottom of the walls as thick roots. More roots cross the
 # road. Every vine is a smooth curve that gets thinner toward its ends, with a
-# dark outline, a highlight on its upper side, and a soft shadow on the wall.
+# dark outline and a highlight on its upper side. Vines have no shadows.
 
 def smooth(pts, n=3):
     """Rounds the corners of a line (Chaikin's method)."""
@@ -96,11 +96,10 @@ def ribbon(pts, width, fill, opacity=1, dx=0, dy=0):
     op = f' fill-opacity="{opacity}"' if opacity < 1 else ""
     return f'<path d="{d}" fill="{fill}"{op}/>'
 
-def strand(pts, width, shadow=True):
-    """One vine along pts with width function width(t): a shadow, a dark
+def strand(pts, width):
+    """One vine along pts with width function width(t): a dark
     outline, the body, and a highlight on its upper left side."""
-    out = ribbon(pts, lambda t: width(t) + 1, "#000000", 0.28, 3, 3) if shadow else ""
-    return (out + ribbon(pts, lambda t: width(t) + 2.2, VINE_DARK) + ribbon(pts, width, VINE)
+    return (ribbon(pts, lambda t: width(t) + 2.2, VINE_DARK) + ribbon(pts, width, VINE)
             + ribbon(pts, lambda t: width(t) * 0.22, VINE_LIGHT, 0.45, -1, -1))
 
 def lumpy(rnd, wmax, ends="tip"):
@@ -346,7 +345,7 @@ def hills_layer(base, seed, y0):
         xa = rnd.uniform(X_MIN, X_MAX - 300)
         xb = min(X_MAX, xa + rnd.uniform(200, 420))
         out += strand(wander(rnd, xa, rnd.uniform(790, 900), xb, rnd.uniform(790, 900), 14, 2),
-                      lumpy(rnd, rnd.uniform(4, 7), "both"), shadow=False)
+                      lumpy(rnd, rnd.uniform(4, 7), "both"))
     return with_vines(base, out, f"0 {y0} 1920 {base.height}", 1920, base.height)
 
 def goo(rnd, n, ymin, ymax):
