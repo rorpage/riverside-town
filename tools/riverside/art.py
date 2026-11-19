@@ -1,5 +1,6 @@
 """Shared drawing helpers: palettes, colors, fonts, text, and small details
 used by the scenery and the buildings."""
+import math
 import os
 import cairosvg
 from fontTools.ttLib import TTFont
@@ -168,8 +169,10 @@ def snow_ridge(season, p, *pts):
     d = " ".join(f"{x},{y}" for x, y in pts)
     return f'<polyline points="{d}" fill="none" stroke="{p["snow"]}" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>'
 
-def pumpkins(season, x, y=900):
-    if season != "fall":
+def pumpkins(season, p, x, y=900):
+    """Two pumpkins in fall. They are put away in December, when the town has
+    its Christmas decorations."""
+    if season != "fall" or is_christmas(p):
         return ""
     return (f'<ellipse cx="{x}" cy="{y - 8}" rx="11" ry="8" fill="#D9822B"/><rect x="{x - 1}" y="{y - 19}" width="3" height="5" fill="#4A5528"/>'
             f'<ellipse cx="{x + 18}" cy="{y - 6}" rx="8" ry="6" fill="#E8913A"/><rect x="{x + 17}" y="{y - 15}" width="3" height="4" fill="#4A5528"/>')
@@ -181,6 +184,115 @@ def flower_box(season, p, x, y, w=44):
     for i, c in enumerate(["#F2B8C6", "#F6C46A", "#E8703F", "#F8FAFC", "#F2B8C6", "#F6C46A"]):
         s += f'<circle cx="{x + 4 + i * (w - 8) / 5:.0f}" cy="{y - 2}" r="4" fill="{c}"/>'
     return s
+
+# ---------- Christmas ----------
+# In December, town images drawn with christmas_palette() have Christmas
+# lights on the buildings, garland on the gazebo and the columned hall, and
+# wreaths on the street lamps. The lights are lit at dusk and night.
+BULBS = ["#E74C3C", "#2ECC71", "#3D8BEB", "#F4C430", "#E67E22"]   # Red, green, blue, yellow, orange
+WARM_WHITE = "#FFF4D6"
+# The bulb colors for each style of lights. A building uses one style.
+LIGHT_STYLES = {"rainbow": BULBS, "white": [WARM_WHITE], "red_white": ["#E74C3C", WARM_WHITE]}
+# Each bulb is in one of three groups, picked from its position. Group 0 stays
+# on. Groups 1 and 2 blink: the town images draw them off, and components/scene/christmas.brs
+# turns them on and off at random with small images of the lit bulbs (see
+# write_blink() in generate_images.py).
+BLINK_GROUPS = 3
+GARLAND = "#2F6B3A"
+GARLAND_DARK = "#1E4A28"
+BERRY = "#C0392B"
+
+def christmas_palette(p, lit=(0, 1, 2)):
+    """A copy of palette p that tells the drawings to add the Christmas
+    decorations. lit lists the bulb groups that are on at dusk and night."""
+    return dict(p, christmas=True, lit=tuple(lit))
+
+def bulb_group(x, y):
+    """The blink group of the bulb at (x, y). The numbers mix the position up,
+    so bulbs next to each other are usually in different groups."""
+    return (((round(x * 10) * 73856093) ^ (round(y * 10) * 19349663)) >> 5) % BLINK_GROUPS
+
+def is_christmas(p):
+    return p.get("christmas", False)
+
+def along(pts, spacing, offset=0):
+    """Points every spacing pixels along the line through pts, starting offset
+    pixels from the first point."""
+    out, d = [], offset
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        seg = ((x1 - x0) ** 2 + (y1 - y0) ** 2) ** 0.5
+        while d <= seg:
+            t = d / seg if seg else 0
+            out.append((x0 + (x1 - x0) * t, y0 + (y1 - y0) * t))
+            d += spacing
+        d -= seg
+    return out
+
+def swags(x0, x1, y, sag, n):
+    """The points of n swags that hang between x0 and x1, each one fixed at y
+    at both ends and sag pixels lower in the middle."""
+    pts = []
+    for i in range(n):
+        a = x0 + (x1 - x0) * i / n
+        b = x0 + (x1 - x0) * (i + 1) / n
+        for k in range(8 if i < n - 1 else 9):
+            t = k / 8
+            pts.append((a + (b - a) * t, y + 4 * sag * t * (1 - t)))
+    return pts
+
+def scallops(x0, x1, y, sag=5, width=40):
+    """Swags about width pixels wide between x0 and x1."""
+    return swags(x0, x1, y, sag, max(1, round((x1 - x0) / width)))
+
+def christmas_lights(pts, p, spacing=11, start=0):
+    """A string of bulbs on a thin wire along the line through pts, in the
+    building's style of lights (light_style in p, set by town_section() in
+    generate_images.py). start picks the color of the first bulb, so strings
+    next to each other do not all begin with the same color. At dusk and
+    night, the bulbs in the groups in p["lit"] glow and the others are off."""
+    dark = is_dark(p)
+    colors = LIGHT_STYLES[p.get("light_style", "rainbow")]
+    wire = wall("#24332A", p)
+    out = ('<polyline points="' + " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+           + f'" fill="none" stroke="{wire}" stroke-width="1.2" stroke-linejoin="round"/>')
+    for i, (x, y) in enumerate(along(pts, spacing, spacing / 2)):
+        c = colors[(start + i) % len(colors)]
+        lit = dark and bulb_group(x, y) in p.get("lit", (0, 1, 2))
+        if lit:
+            out += f'<circle cx="{x:.1f}" cy="{y + 2:.1f}" r="5.5" fill="{c}" fill-opacity="0.35"/>'
+        else:
+            c = wall(c, p)
+        out += f'<ellipse cx="{x:.1f}" cy="{y + 2:.1f}" rx="2" ry="2.7" fill="{c}"/>'
+    return out
+
+def garland(pts, p, width=7):
+    """A rope of evergreen garland along the line through pts, with red
+    berries."""
+    d = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+    out = (f'<polyline points="{d}" fill="none" stroke="{wall(GARLAND, p)}" stroke-width="{width}" stroke-linecap="round" stroke-linejoin="round"/>'
+           f'<polyline points="{d}" fill="none" stroke="{wall(GARLAND_DARK, p)}" stroke-width="{width - 2}" stroke-dasharray="2 3" stroke-linejoin="round"/>')
+    for i, (x, y) in enumerate(along(pts, 13, 6)):
+        out += f'<circle cx="{x + (1.5 if i % 2 else -1.5):.1f}" cy="{y + (1 if i % 2 else -1):.1f}" r="1.6" fill="{wall(BERRY, p)}"/>'
+    return out
+
+def bow(x, y, p, size=1.0):
+    """A red bow with its knot at (x, y) and two short tails below it."""
+    k = size
+    c = wall(BERRY, p)
+    return (f'<polygon points="{x},{y} {x - 7 * k:.1f},{y - 4 * k:.1f} {x - 7 * k:.1f},{y + 4 * k:.1f}" fill="{c}"/>'
+            f'<polygon points="{x},{y} {x + 7 * k:.1f},{y - 4 * k:.1f} {x + 7 * k:.1f},{y + 4 * k:.1f}" fill="{c}"/>'
+            f'<polygon points="{x - 1 * k:.1f},{y} {x - 5 * k:.1f},{y + 9 * k:.1f} {x - 2 * k:.1f},{y + 8 * k:.1f}" fill="{c}"/>'
+            f'<polygon points="{x + 1 * k:.1f},{y} {x + 5 * k:.1f},{y + 9 * k:.1f} {x + 2 * k:.1f},{y + 8 * k:.1f}" fill="{c}"/>'
+            f'<circle cx="{x}" cy="{y}" r="{2 * k:.1f}" fill="{wall("#962D22", p)}"/>')
+
+def wreath(cx, cy, r, p, width=5):
+    """A round evergreen wreath with red berries and a red bow at the bottom."""
+    out = (f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{wall(GARLAND, p)}" stroke-width="{width}"/>'
+           f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{wall(GARLAND_DARK, p)}" stroke-width="{width - 2}" stroke-dasharray="2 2.5"/>')
+    for a in (40, 100, 160, 220, 320):
+        rad = math.radians(a)
+        out += f'<circle cx="{cx + r * math.cos(rad):.1f}" cy="{cy - r * math.sin(rad):.1f}" r="1.5" fill="{wall(BERRY, p)}"/>'
+    return out + bow(cx, cy + r, p, max(0.5, r / 12))
 
 def round_tree(x, ground, h, r, p, season):
     """A tree with a round top. x is the trunk center, ground is the bottom of

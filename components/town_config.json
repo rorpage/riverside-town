@@ -92,5 +92,47 @@
   "airplane": true,
   "fireflies": true,
   "fallingLeaves": true,
-  "seasons": true
+  "seasons": true,
+  "christmasSeasons": [
+    "fall",
+    "winter"
+  ],
+  "christmasBlink": [
+    [
+      261,
+      100,
+      171,
+      16
+    ],
+    [
+      1196,
+      100,
+      215,
+      16
+    ],
+    [
+      3868,
+      119,
+      152,
+      66
+    ],
+    [
+      4073,
+      160,
+      204,
+      16
+    ],
+    [
+      5519,
+      100,
+      204,
+      16
+    ],
+    [
+      6453,
+      129,
+      169,
+      66
+    ]
+  ]
 }

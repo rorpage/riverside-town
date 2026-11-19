@@ -11,7 +11,7 @@ into place with shift(). Their ORIGIN value is the left edge of that drawing.
 import math
 from .art import (ACCENT, ICON, WHITE, DARK, wall, text, text_width, fit_size, sign, shift, arch,
                   snow_flat, snow_ridge, pumpkins, flower_box, round_tree, is_dark, skewed, bicycle,
-                  shadow, shadow_opacity)
+                  shadow, shadow_opacity, is_christmas, christmas_lights, scallops, swags, garland, bow, wreath)
 
 def colors(p):
     return p["houseA"], p["houseB"], p["wall2"], p["roof"], p["window"]
@@ -45,7 +45,14 @@ def house_draw(s, x, p, season):
             + shadow([(doorX + 4, 826), (doorX + 42, 826), (doorX + 46, 834), (doorX + 10, 834)], p)
             + text(str(s["number"]), s["font"], s["weight"], fit_size(str(s["number"]), s["font"], s["weight"], 14, 38, 1),
                    doorX + 20, 822, WHITE, 1)
-            + pumpkins(season, doorX + 50))
+            + pumpkins(season, p, doorX + 50)
+            + house_christmas(hx, w, y, peak, p))
+
+def house_christmas(hx, w, y, peak, p):
+    """Christmas lights along both edges of a house roof."""
+    if not is_christmas(p):
+        return ""
+    return christmas_lights([(hx - 8, y), (hx + w // 2, peak), (hx + w + 8, y)], p, start=w // 10)
 
 # ---------- shop ----------
 def shop_width(s):
@@ -236,6 +243,10 @@ def shop_draw(s, x, p, season):
         out += window_lettering(lines if isinstance(lines, list) else str(lines).split("\n"), wx, wy, ww, wh)
     if s.get("awning", "plain") != "none":
         out += awning_shadow(p, x, w)
+    if is_christmas(p):
+        # Lights in small swags along the top of the roof edge, so they stay
+        # clear of the sign
+        out += christmas_lights(scallops(x - 4, x + w + 4, top + 1, 5), p, start=w // 10)
     return out
 
 # ---------- church ----------
@@ -267,7 +278,10 @@ def church_draw(s, x, p, season):
             out += (arch(wx, 806, 36, 66, BLUE) + f'<rect x="{wx+12}" y="826" width="12" height="46" fill="{RED}"/>'
                     f'<circle cx="{wx+18}" cy="822" r="7" fill="{GOLD}"/>'
                     f'<g stroke="{R}" stroke-width="2"><line x1="{wx}" y1="846" x2="{wx+36}" y2="846"/><line x1="{wx}" y1="860" x2="{wx+36}" y2="860"/></g>')
-        out += f'<rect x="60" y="892" width="120" height="8" fill="{p["curb"]}"/>' + pumpkins(season, 160)
+        out += f'<rect x="60" y="892" width="120" height="8" fill="{p["curb"]}"/>' + pumpkins(season, p, 160)
+        if is_christmas(p):
+            out += (christmas_lights([(156, 762), (300, 692), (440, 762)], p)
+                    + christmas_lights([(62, 692), (120, 590), (178, 692)], p, start=2))
     else:
         # A stone church with a square bell tower and pointed windows
         ORIGIN = 502
@@ -283,6 +297,9 @@ def church_draw(s, x, p, season):
         for wx in (590, 646, 702):
             out += (f'<path d="M{wx},874 L{wx},816 L{wx + 13},798 L{wx + 26},816 L{wx + 26},874 Z" fill="{BLUE}"/>'
                     f'<rect x="{wx + 11}" y="812" width="4" height="62" fill="{GOLD}"/><rect x="{wx}" y="842" width="26" height="3" fill="{R}"/>')
+        if is_christmas(p):
+            out += (christmas_lights([(558, 742), (661, 690), (764, 742)], p)
+                    + christmas_lights([(502, 642), (540, 596), (578, 642)], p, start=2))
     return shift(out, x - ORIGIN)
 
 # ---------- school ----------
@@ -320,6 +337,12 @@ def school_draw(s, x, p, season):
         out += (f'<rect x="{cx - 14}" y="620" width="28" height="30" fill="{white}"/>'
                 f'<path d="M{cx - 8},650 L{cx - 8},634 A8,8 0 0 1 {cx + 8},634 L{cx + 8},650 Z" fill="{R}"/>'
                 f'<polygon points="{cx - 18},622 {cx},600 {cx + 18},622" fill="{R}"/>' + snow_ridge(season, p, (cx - 16, 620), (cx, 603), (cx + 16, 620)))
+    if is_christmas(p):
+        # Lights under the roof edge on each side of the entrance, and along
+        # the gable over the entrance
+        out += (christmas_lights(scallops(x - 2, ex0, 712, 5), p)
+                + christmas_lights(scallops(ex1, x + w + 2, 712, 5), p, start=3)
+                + christmas_lights([(ex0 - 6, 672), (cx, gable_top), (ex1 + 6, 672)], p, start=1))
     return out
 
 # ---------- columned hall ----------
@@ -369,7 +392,11 @@ def hall_draw(s, x, p, season):
                     f'<rect x="{cx-15}" y="732" width="30" height="8" fill="{W2}"/><rect x="{cx-15}" y="868" width="30" height="8" fill="{W2}"/>')
         for wx in (1356, 1428, 1572, 1644):
             out += arch(wx - 15, 760, 30, 80, Wn)
-        out += arch(1478, 796, 44, 80, R) + pumpkins(season, 1540)
+        out += arch(1478, 796, 44, 80, R) + pumpkins(season, p, 1540)
+        if is_christmas(p):
+            out += (hall_garland([1320, 1392, 1464, 1536, 1608, 1680], 744, p)
+                    + christmas_lights([(1262, 712), (1456, 680)], p) + christmas_lights([(1544, 680), (1738, 712)], p, start=2)
+                    + christmas_lights([(1448, 602), (1552, 602)], p, start=4))
     else:
         ORIGIN = 1490
         out = (f'<rect x="1490" y="888" width="410" height="12" fill="{p["curb"]}"/><rect x="1500" y="876" width="390" height="12" fill="{W2}"/>'
@@ -385,8 +412,19 @@ def hall_draw(s, x, p, season):
                     f'<rect x="{cx - 14}" y="750" width="28" height="7" fill="{W2}"/><rect x="{cx - 14}" y="869" width="28" height="7" fill="{W2}"/>')
         for wx in (1577, 1639, 1751, 1813):
             out += arch(wx - 13, 776, 26, 74, Wn)
-        out += arch(1676, 806, 38, 70, R) + pumpkins(season, 1630, 876)
+        out += arch(1676, 806, 38, 70, R) + pumpkins(season, p, 1630, 876)
+        if is_christmas(p):
+            out += (hall_garland([1546, 1608, 1670, 1720, 1782, 1844], 758, p)
+                    + christmas_lights([(1498, 728), (1695, 684), (1892, 728)], p))
     return shift(out, x - ORIGIN)
+
+def hall_garland(columns, y, p):
+    """Garland in swags between the tops of the columns, with a bow on each
+    column."""
+    out = ""
+    for a, b in zip(columns, columns[1:]):
+        out += garland(swags(a, b, y, 10, 1), p, 6)
+    return out + "".join(bow(cx, y, p, 0.8) for cx in columns)
 
 # ---------- gas station ----------
 GAS_ORIGIN = 448
@@ -401,7 +439,7 @@ def gas_parking(x):
 
 def gas_draw(s, x, p, season):
     """A price sign, a canopy over one pump, and a small store. The parked car
-    is added by MainScene.brs, at the position from gas_parking()."""
+    is added by components/scene/cars.brs, at the position from gas_parking()."""
     A, B, W2, R, Wn = colors(p)
     price = "$" + s["price"]
     priceW = text_width(price, "oswald", 500, 22, 1)
@@ -425,6 +463,9 @@ def gas_draw(s, x, p, season):
             + snow_flat(season, p, 976, 770, 208)
             + sign(1006, 792, 148, 36, s.get("store_sign_color", ACCENT), s["store_name"], s["font"], s["weight"], 22, 818, 2) +
             f'<rect x="996" y="842" width="96" height="50" fill="{Wn}"/><rect x="1110" y="836" width="46" height="64" fill="{R}"/>')
+    if is_christmas(p):
+        out += (christmas_lights(scallops(520, 960, 774, 6), p)
+                + christmas_lights(scallops(976, 1184, 771, 5), p, start=2))
     return shift(out, x - GAS_ORIGIN)
 
 # ---------- drive-through restaurant ----------
@@ -449,6 +490,8 @@ def drive_draw(s, x, p, season):
            + snow_flat(season, p, 1002, 798, 36) +
            f'<rect x="1054" y="770" width="4" height="130" fill="{R}"/><polygon points="1046,766 1094,766 1094,786 1046,786" fill="{RED}"/>'
            + text("DRIVE THRU", "oswald", 600, 9, 1070, 780, WHITE, 0.5))
+    if is_christmas(p):
+        out += christmas_lights(scallops(778, 1046, 754, 6), p, start=1)
     return shift(out, x - ORIGIN)
 
 # ---------- tree ----------
@@ -581,7 +624,7 @@ def radio_draw(s, x, p, season):
     if s.get("small_line"):
         tsize = fit_size(s["small_line"], "kaushan", 400, 15, 200)
         out += text(s["small_line"], "kaushan", 400, tsize, x + 240, 793, R)
-    return out + pumpkins(season, x + 104, 900)
+    return out + pumpkins(season, p, x + 104, 900)
 
 # ---------- gazebo ----------
 GAZEBO_SCALE = 0.8   # The gazebo is drawn smaller than its first design
@@ -616,7 +659,7 @@ def town_sign(s, x, p, season):
     return (f'<defs><clipPath id="lattice{x}"><rect x="{x + 15}" y="840" width="110" height="46"/></clipPath></defs>'
             + out.replace('<g stroke="', f'<g clip-path="url(#lattice{x})" stroke="', 1)
             + f'<rect x="{x + 15}" y="840" width="110" height="46" fill="none" stroke="{white}" stroke-width="2"/>'
-            + pumpkins(season, x + 50))
+            + pumpkins(season, p, x + 50) + sign_christmas(x, p))
 
 def gazebo_draw(s, x, p, season):
     """An eight-sided gazebo on a brick base, with a shingled roof, a small
@@ -665,8 +708,11 @@ def gazebo_draw(s, x, p, season):
             f'<rect x="{x + 112}" y="654" width="38" height="5" fill="{white}"/>'
             + snow_ridge(season, p, (x - 6, 747), (x + 66, 696), (x + 196, 696), (x + 268, 747))
             + snow_ridge(season, p, (x + 98, 671), (x + 112, 656), (x + 150, 656), (x + 164, 671)))
-    # Decorations for each season
-    if season == "fall":
+    # Decorations for each season. In December, the Christmas decorations
+    # take the place of the others.
+    if is_christmas(p):
+        out += gazebo_christmas(x, p, posts)
+    elif season == "fall":
         for a, b in zip(posts, posts[1:]):
             if a == 97:
                 continue
@@ -675,7 +721,7 @@ def gazebo_draw(s, x, p, season):
         for cx in posts:
             out += f'<path d="M{x + cx},856 L{x + cx - 6},800 M{x + cx},856 L{x + cx + 6},804 M{x + cx},856 L{x + cx},796" stroke="#C9A55B" stroke-width="2.5"/>'
         out += (f'<rect x="{x + 18}" y="884" width="40" height="16" rx="3" fill="#D9B45B"/><rect x="{x + 204}" y="884" width="40" height="16" rx="3" fill="#D9B45B"/>'
-                + pumpkins(season, x + 30, 884) + pumpkins(season, x + 186) + pumpkins(season, x + 222, 884))
+                + pumpkins(season, p, x + 30, 884) + pumpkins(season, p, x + 186) + pumpkins(season, p, x + 222, 884))
     elif season == "winter":
         for cx in posts:
             out += (f'<circle cx="{x + cx}" cy="790" r="9" fill="none" stroke="#2F5D3A" stroke-width="5"/>'
@@ -688,6 +734,24 @@ def gazebo_draw(s, x, p, season):
                     f'<circle cx="{x + cx}" cy="776" r="7" fill="#5E8B6B"/>'
                     + "".join(f'<circle cx="{x + cx + dx}" cy="{774 + dy}" r="2.4" fill="{c}"/>' for (dx, dy), c in zip(((-4, 0), (3, -2), (0, 4), (5, 3)), flowers * 2)))
     return out + gazebo_lights(x, p, posts)
+
+def gazebo_christmas(x, p, posts):
+    """Garland in swags along the eave with a bow at each front post, garland
+    along the top of the railings, and a wreath on each front post."""
+    out = ""
+    for a, b in zip(posts, posts[1:]):
+        out += garland(swags(x + a, x + b, 760, 9, 1), p)
+    for x0, x1 in ((x + 24, x + 97), (x + 165, x + 238)):
+        out += garland([(x0, 829), (x1, 829)], p, 6)
+    for cx in posts:
+        out += wreath(x + cx, 800, 9, p) + bow(x + cx, 760, p)
+    return out
+
+def sign_christmas(x, p):
+    """Garland along the top of the town sign, with a bow in the middle."""
+    if not is_christmas(p):
+        return ""
+    return garland(swags(x + 4, x + 136, 768, 5, 2), p, 6) + bow(x + 70, 772, p)
 
 def gazebo_lights(x, p, posts):
     """Strings of bulbs hung between the posts under the roof, and a lantern
@@ -743,7 +807,7 @@ def rack_bikes(x, p, season, start=0):
 # Old-fashioned street lights at the front of the sidewalk, about 480 pixels
 # apart (480 divides 1920, so the spacing stays about the same across section
 # edges). The lamps are not part of the town images: they are separate
-# posters that MainScene.brs adds to townStrip after the animals, so the
+# posters that components/scene/sidewalk.brs adds to townStrip after the animals, so the
 # animals walk behind them. lamp_spots() moves a lamp to the side when it
 # would cover a house number.
 LAMP_X = [240, 720, 1200, 1680]
@@ -800,11 +864,17 @@ def street_lamp(x, p, season):
             f'<circle cx="{x}" cy="785" r="3" fill="{iron}"/>')
     if season == "winter":
         out += f'<path d="M{x - 12},796 L{x + 12},796 L{x + 5},789 L{x - 5},789 Z" fill="{p["snow"]}"/>'
+    if is_christmas(p):
+        # A wreath on the post in December
+        out += wreath(x, 848, 10, p)
     return out
 
 def street_lamps(xs, p, season):
     """The lamps at each x in xs, for the previews."""
     return "".join(street_lamp(x, p, season) for x in xs)
+
+# Building types with Christmas lights in December
+LIT = {"house", "shop", "church", "school", "columned_hall", "gas_station", "drive_through"}
 
 # Building types with walls down to the sidewalk, which get a shadow on it
 SOLID = {"house", "shop", "church", "school", "columned_hall"}

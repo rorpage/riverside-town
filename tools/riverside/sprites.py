@@ -1,5 +1,5 @@
 """Small images that are not scenery: the sun, moon, and stars, the weather
-effects, the airplane, the cars, and the animals. MainScene.brs places them."""
+effects, the airplane, the cars, and the animals. The scene code in components/ places them."""
 import os
 import random
 from PIL import Image, ImageOps
@@ -85,7 +85,7 @@ def write(out):
 
     def save_pet(content, w, h, name, night=False):
         """Saves an animal at both sizes. With night on, the files end in
-        _night (for example, cat_gray_small_night.png); MainScene.brs shows
+        _night (for example, cat_gray_small_night.png); components/scene/sidewalk.brs shows
         them at night in place of the day images."""
         for suffix, k in (("", PET_SCALE), ("_small", PET_SCALE * SMALL_PET)):
             save(content, f"0 0 {w} {h}", round(w * k), round(h * k), f"{name}{suffix}{'_night' if night else ''}.png")
@@ -261,7 +261,7 @@ def write(out):
     # images are drawn in movie_cars.py, not mirrored here.
     movie_cars.draw(save)
 
-    # Animals that sit or stand on the sidewalk. MainScene.brs places them at
+    # Animals that sit or stand on the sidewalk. components/scene/sidewalk.brs places them at
     # random spots when the screensaver starts. They are drawn larger than they
     # are shown (0.7 times the image size, and 0.75 times that for a small
     # animal) so their edges stay smooth. They are shown a little larger than

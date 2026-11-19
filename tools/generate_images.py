@@ -18,12 +18,13 @@ import argparse
 import io
 import json
 import os
+import random
 import sys
-from PIL import Image
+from PIL import Image, ImageChops
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from riverside import art, scenery, buildings, layout, sprites, previews
-from riverside.art import P, SEASONS, season_palette, render
+from riverside.art import P, SEASONS, LIGHT_STYLES, BLINK_GROUPS, season_palette, christmas_palette, render
 from riverside.config import load, ConfigError
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,20 +46,138 @@ def pet_size(images, pet):
     with Image.open(os.path.join(images, pet["image"] + ".png")) as im:
         return im.size
 
+def light_styles(town, i):
+    """The style of Christmas lights for each building in town section i. With
+    christmas_lights "mixed", each building with lights gets a style picked at
+    random, but never the same style as the building with lights before it.
+    The random numbers start from the section number, so a building has the
+    same style in every image."""
+    style = town["extras"]["christmas_lights"]
+    if style != "mixed":
+        return [style] * len(town["sections"][i])
+    rnd, prev, out = random.Random(i), None, []
+    for b, x in town["sections"][i]:
+        if b["type"] in buildings.LIT:
+            prev = rnd.choice([s for s in LIGHT_STYLES if s != prev])
+        out.append(prev)
+    return out
+
+BLINK_SHARE = 0.25   # The share of the buildings with lights whose lights blink
+
+def blinking(town):
+    """The buildings whose Christmas lights blink, as a set of (section,
+    index in section). A quarter of the buildings with lights (at least one)
+    blink; the lights on the others stay on. They are spread along the
+    street: the buildings with lights are split into equal runs, and one
+    building in each run is picked at random. The random numbers always start
+    from the same value, so the same buildings blink in every image."""
+    lit = [(i, j) for i, section in enumerate(town["sections"]) for j, (b, x) in enumerate(section)
+           if b["type"] in buildings.LIT]
+    if not lit:
+        return set()
+    n = max(1, round(len(lit) * BLINK_SHARE))
+    rnd = random.Random(7)
+    return {lit[int(len(lit) * (k + rnd.random()) / n)] for k in range(n)}
+
 def town_section(town, i, p, season):
     section = town["sections"][i]
-    return ("".join(buildings.draw(b, x, p, season) for b, x in section) + scenery.street(p, season, 11 + i)
+    if not p.get("christmas"):
+        return "".join(buildings.draw(b, x, p, season) for b, x in section) + street_layer(town, i, p, season)
+    styles, blinks = light_styles(town, i), blinking(town)
+    out = ""
+    for j, ((b, x), style) in enumerate(zip(section, styles)):
+        bp = dict(p, light_style=style)
+        if (i, j) not in blinks:
+            # The lights on this building do not blink, so every bulb is on
+            bp["lit"] = (0, 1, 2)
+        out += buildings.draw(b, x, bp, season)
+    return out + street_layer(town, i, p, season)
+
+def street_layer(town, i, p, season):
+    section = town["sections"][i]
+    return (scenery.street(p, season, 11 + i)
             + buildings.sidewalk_shadows(section, p) + buildings.sidewalk_bikes(section, p, season, town["extras"]))
 
-def write_lamps(out):
+def christmas_seasons(town):
+    """The seasons that need a Christmas image of each town section: the
+    seasons December can fall in, and winter, because the ground shows snow
+    while it is snowing. components/scene/christmas.brs reads this list as
+    christmasSeasons in
+    town_config.json."""
+    if not town["extras"]["christmas"]:
+        return []
+    if not town["extras"]["seasons"]:
+        return ["summer", "winter"]
+    # December 1 to 20 is fall and December 21 to 31 is winter. In the southern
+    # hemisphere they are spring and summer.
+    return ["fall", "winter"] if town["hemisphere"] == "north" else ["spring", "summer", "winter"]
+
+def write_lamps(town, out):
     """The street lamp images, one for each time of day, and one with snow on
-    the lantern for each time of day. MainScene.brs adds them to townStrip at
-    the x values in lamps in town_config.json."""
+    the lantern for each time of day. With extras.christmas on, each also has
+    a December image with a wreath on the post. components/scene/sidewalk.brs
+    adds them to
+    townStrip at the x values in lamps in town_config.json."""
     left, top, w, h = buildings.LAMP_BOX
+    kinds = [("", lambda p: p)]
+    if town["extras"]["christmas"]:
+        kinds.append(("_christmas", christmas_palette))
     for pal in P:
-        for season, suffix in (("summer", ""), ("winter", "_winter")):
-            render(buildings.street_lamp(0, P[pal], season), f"{left} {top} {w} {h}", w, h,
-                   os.path.join(out, f"street_lamp{suffix}_{pal}.png"))
+        for name, palette in kinds:
+            for season, suffix in (("summer", ""), ("winter", "_winter")):
+                render(buildings.street_lamp(0, palette(P[pal]), season), f"{left} {top} {w} {h}", w, h,
+                       os.path.join(out, f"street_lamp{name}{suffix}_{pal}.png"))
+
+def write_blink(town, out):
+    """The images that make the Christmas lights blink. For each building with
+    lights, there is one image for each blink group (1 and 2) that shows only
+    the lit bulbs of that group, cropped to the building. They are made by
+    drawing the town section with that group lit and keeping the pixels that
+    differ from the town image, so they line up with it exactly. There is an
+    image for each Christmas season, at dusk and at night:
+    blink_<n>_<group>_<season>_<period>.png. Returns [x, y, w, h] for each
+    building n, in townStrip coordinates, for christmasBlink in
+    town_config.json."""
+    seasons = christmas_seasons(town)
+    if not seasons:
+        return []
+    y0, h = CROPS["town"]
+    vb = f"0 {y0} 1920 {h}"
+    entries = []
+    for i, section in enumerate(town["sections"]):
+        fn = layers(town)[f"town_{LETTERS[i]}"]
+        blinks = blinking(town)
+        lit = [(b, x) for j, (b, x) in enumerate(section) if (i, j) in blinks]
+        if not lit:
+            continue
+        # Each building's images may use the space up to halfway to the next
+        # building with lights, so no image holds bulbs from a neighbor.
+        edges = [0] + [(x0 + buildings.width(b0) + x1) / 2 for (b0, x0), (b1, x1) in zip(lit, lit[1:])] + [1920]
+        diffs = {}
+        for season in seasons:
+            for pal in ("dusk", "night"):
+                p = season_palette(pal, season)
+                base = Image.open(io.BytesIO(render(fn(christmas_palette(p, lit=(0,)), season), vb, 1920, h))).convert("RGBA")
+                for k in range(1, BLINK_GROUPS):
+                    on = Image.open(io.BytesIO(render(fn(christmas_palette(p, lit=(0, k)), season), vb, 1920, h))).convert("RGBA")
+                    r, g, bl, a = ImageChops.difference(on, base).split()
+                    mask = ImageChops.lighter(ImageChops.lighter(r, g), ImageChops.lighter(bl, a)).point(lambda v: 255 if v else 0)
+                    diffs[(season, pal, k)] = Image.composite(on, Image.new("RGBA", on.size), mask), mask
+        for j in range(len(lit)):
+            left, right = int(edges[j]), int(edges[j + 1])
+            box = None
+            for _, mask in diffs.values():
+                b = mask.crop((left, 0, right, h)).getbbox()
+                if b:
+                    b = (b[0] + left, b[1], b[2] + left, b[3])
+                    box = b if box is None else (min(box[0], b[0]), min(box[1], b[1]), max(box[2], b[2]), max(box[3], b[3]))
+            if box is None:
+                continue
+            n = len(entries)
+            for (season, pal, k), (im, _) in diffs.items():
+                im.crop(box).save(os.path.join(out, f"blink_{n}_{k}_{season}_{pal}.png"), optimize=True)
+            entries.append([i * 1920 + box[0], box[1], box[2] - box[0], box[3] - box[1]])
+    return entries
 
 def layers(town):
     """Returns name -> drawing function(p, season) for every scenery layer."""
@@ -90,9 +209,17 @@ def write_images(town, out):
                 render(fn(season_palette(pal, season), season), vb, 1920, h, os.path.join(out, f"{name}_{season}_{pal}.png"))
             if len(seasons) < len(SEASONS):
                 render(fn(P[pal], "summer"), vb, 1920, h, os.path.join(out, f"{name}_{pal}.png"))
+            if name.startswith("town"):
+                # The December images, with the Christmas decorations. Only
+                # the bulbs in group 0 are lit; the others blink (see
+                # write_blink).
+                for season in christmas_seasons(town):
+                    render(fn(christmas_palette(season_palette(pal, season), lit=(0,)), season), vb, 1920, h,
+                           os.path.join(out, f"{name}_christmas_{season}_{pal}.png"))
+    town["blink"] = write_blink(town, out)
     sprites.write(out)
     if town["extras"]["street_lights"]:
-        write_lamps(out)
+        write_lamps(town, out)
 
 def write_icons(town, out, build_dir):
     im = previews.composite(town, layers(town), "day", 0, "summer")
@@ -116,11 +243,12 @@ def runtime_config(town, images):
         "sections": len(town["sections"]), "cars": town["cars"], "specialCars": town["special_cars"], "pets": pets,
         "parkedCarX": town["parked_car_x"], "radioLight": radio_light(town), "lamps": town["lamps"],
         "airplane": ex["airplane"], "fireflies": ex["fireflies"], "fallingLeaves": ex["falling_leaves"],
-        "seasons": ex["seasons"],
+        "seasons": ex["seasons"], "christmasSeasons": christmas_seasons(town),
+        "christmasBlink": town.get("blink", []),
     }
 
 def radio_light(town):
-    """Where MainScene.brs puts the blinking light on the radio tower: [x, y]
+    """Where components/scene/scenery.brs puts the blinking light on the radio tower: [x, y]
     in hills strip coordinates (the strip starts at screen y=CROPS["hills"]),
     or [] if there is no tower."""
     light = scenery.radio_light(town["radio_station"])

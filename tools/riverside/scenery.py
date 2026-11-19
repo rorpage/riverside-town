@@ -10,7 +10,7 @@ def sky(p, overcast=False):
     return (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{top}"/>'
             f'<stop offset="0.62" stop-color="{bottom}"/></linearGradient></defs><rect width="8" height="1080" fill="url(#g)"/>')
 
-# Cloud levels, from the fewest clouds to the most. MainScene.brs picks one
+# Cloud levels, from the fewest clouds to the most. components/scene/weather.brs picks one
 # from the cloud cover in the weather (see cloudLevel() there) and shows
 # clouds_<level>_<period>.png. "few" is also used before the first weather
 # request finishes.
@@ -154,7 +154,7 @@ def near_b(p, season):
 TREES = [(60,692),(110,686),(170,680),(240,672),(300,668),(620,662),(680,664),(740,658),
          (1300,668),(1360,682),(1420,692),(1700,724),(1780,724),(1860,714)]
 
-# Kayaks pulled up on the grass beside the river, in every season but winter.
+# Kayaks pulled up on the grass beside the river, in spring and summer only.
 # There is only one river, on hills tile A, so all the kayaks are there. Each
 # is (center x, center y, angle in degrees, color, size). The ones higher up
 # the river are farther away, so they are smaller. The colors are day colors,
@@ -163,7 +163,7 @@ KAYAKS = [(676, 806, -14, "#D9452F", 1), (1172, 846, 22, "#F2B33D", 1), (1218, 8
           (1290, 798, -10, "#27AE60", 1), (822, 736, -6, "#8E44AD", 0.75), (788, 756, 8, "#F2B33D", 0.75),
           (1290, 714, 10, "#D9452F", 0.7), (884, 699, -4, "#2E86C1", 0.6)]
 def kayaks(p, season, places=KAYAKS):
-    if season == "winter":
+    if season not in ("spring", "summer"):
         return ""
     s = ""
     for cx, cy, angle, color, size in places:
@@ -246,7 +246,8 @@ def tower_place(spec):
 
 def radio_light(spec):
     """The center of the tower's blinking light, in screen coordinates, or None
-    if the station has no tower. MainScene.brs puts tower_light.png there."""
+    if the station has no tower. components/scene/scenery.brs puts
+    tower_light.png there."""
     if not spec or not spec.get("tower", True):
         return None
     left, top = tower_place(spec)

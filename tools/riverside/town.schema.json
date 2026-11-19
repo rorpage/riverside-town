@@ -1074,6 +1074,14 @@
         },
         "street_lights": {
           "type": "boolean"
+        },
+        "christmas": {
+          "type": "boolean",
+          "description": "In December, Christmas lights on the buildings, wreaths on the street lights, and garland on the gazebo and the columned hall"
+        },
+        "christmas_lights": {
+          "enum": ["mixed", "rainbow", "white", "red_white"],
+          "description": "The style of the Christmas lights: one style for every building, or mixed, where each building gets one of the styles"
         }
       }
     }

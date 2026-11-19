@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <component name="MainScene" extends="Scene">
   <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/scenery.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/christmas.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/weather.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/airplane.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/panel.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/cars.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/sidewalk.brs" />
   <children>
     <!-- Sky: an 8 px wide gradient image stretched across the screen to save memory -->
     <Poster id="sky" width="1920" height="1080" loadDisplayMode="scaleToFill" />

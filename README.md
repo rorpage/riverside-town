@@ -20,6 +20,12 @@ You can make your own town. The houses, shops, and other buildings, their names,
 |---|---|---|
 | ![The town on a summer day](docs/preview_day.png) | ![The town at dusk, with lit windows](docs/preview_dusk.png) | ![The town at night, with stars, the moon, and fireflies](docs/preview_night.png) |
 
+## December
+
+| Early December, at dusk | A snowy night in December |
+|---|---|
+| ![The town at dusk in early December, still fall, with Christmas lights along the roofs and wreaths on the street lights](docs/preview_christmas_dusk.png) | ![Section D on a winter night in December, with lit Christmas lights on the roofs, wreaths on the street lights, and garland and wreaths on the gazebo and the town sign](docs/preview_christmas_night.png) |
+
 ## The sample town
 
 The `town.json` in this repository describes a sample town with four sections.
@@ -58,7 +64,8 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   | Fall | September 22 to December 20 | Gold hills, orange and red trees, pumpkins by doors, leaves on the sidewalk, falling leaves |
   | Winter | December 21 to March 19 | Snow on the hills, mountains, roofs, sidewalk, and pine trees, bare trees, a frozen river |
 
-  The dates are close to the equinoxes and solstices, which move by a day or so from year to year. In the southern hemisphere, the seasons are the other way around. Pine trees stay green all year. Some are plain triangles, and the others have one or two small notches cut into their sides, in four different patterns. There is one river, and in every season but winter, eight kayaks in different colors sit on the grass on both sides of it.
+  The dates are close to the equinoxes and solstices, which move by a day or so from year to year. In the southern hemisphere, the seasons are the other way around. Pine trees stay green all year. Some are plain triangles, and the others have one or two small notches cut into their sides, in four different patterns. There is one river, and in spring and summer, eight kayaks in different colors sit on the grass on both sides of it.
+- Christmas decorations for all of December (in both hemispheres): strings of lights along the roofs of the houses, shops, churches, school, columned hall, gas station, and drive-through restaurant, a wreath on each street light, and garland on the gazebo, the town sign, and the columned hall. The gazebo also gets a wreath on each front post. Each building's lights are rainbow colored, all white, or red and white. At dusk and night the lights glow. On about one building in four, spread along the street, two thirds of the bulbs blink on and off at random; the lights on the other buildings stay on. The pumpkins are put away in December. The radio station and the scenery behind the town do not change. `extras.christmas` in `town.json` turns them off.
 - Weather effects from the current weather:
   - Clouds: the number of clouds follows the cloud cover from the weather, in percent. Below 25 percent there are a few clouds, from 25 percent there are more, from 50 percent there are many larger clouds, and from 85 percent the sky is overcast: a gray layer of cloud covers the top of the sky with no separate clouds under it, the sky is gray, and the stars, the sun, and the moon are hidden. The weather code also sets the fewest clouds that can show, so the sky matches the text in the panel: "Partly cloudy" shows at least the second level, fog and showers at least the third, and "Overcast", drizzle, rain, snow, and thunderstorms show an overcast sky.
   - Rain and drizzle: falling rain.
@@ -156,13 +163,15 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `cars` | Which cars drive by: `"sedan"`, `"van"`, `"jeep"`, `"truck"`, `"sports"`, and `"buggy"`. At least 2. | all six |
 | `special_cars` | Special cars from movies: `"aston"` (the silver Aston Martin DB5 from Goldfinger), `"herbie"` (Herbie, the Love Bug: a pearl white 1963 VW Beetle with the number 53 on the door), `"kitt"` (KITT from Knight Rider: a black 1982 Pontiac Trans Am with a red scanner light on the nose), `"ecto1"` (the Ecto-1 from Ghostbusters: a white and red 1959 Cadillac ambulance with equipment on the roof), `"delorean"` (the DeLorean time machine from the first Back to the Future movie), `"mcqueen"` (Lightning McQueen from Cars: a red race car with the number 95), and `"mustang"` (the dark gray 1969 Ford Mustang Mach 1 from John Wick). Each one first drives by 6 to 25 seconds after the screensaver starts, then about once every 20 seconds to 1 minute. Special cars never park at the gas station. | none |
 | `extras.airplane` | The airplane | `true` |
-| `extras.kayaks` | The kayaks beside the river | `true` |
+| `extras.kayaks` | The kayaks beside the river, in spring and summer | `true` |
 | `extras.fireflies` | Fireflies on summer nights | `true` |
 | `extras.falling_leaves` | Falling leaves in October and November (April and May in the southern hemisphere) | `true` |
 | `extras.seasons` | Seasons from the date. When it is `false`, it is always summer, but snow still shows while it is snowing. | `true` |
 | `extras.table_mountain` | A flat-topped mountain in the shape of Table Mountain, in the center of the far mountains | `false` |
 | `extras.bikes` | Two bikes parked beside the radio station (not in winter). Bike racks have bikes either way. | `false` |
 | `extras.street_lights` | Old-fashioned cast iron street lights along the sidewalk, about 480 pixels apart. A light moves to the side when it would cover a house number. Animals walk behind the lights. Their lanterns light up at dusk and night. | `false` |
+| `extras.christmas` | Christmas decorations in December: lights along the roofs of the buildings in town, a wreath on each street light, and garland on the gazebo, the town sign, and the columned hall. The lights glow at dusk and night. On about one building in four, most of the bulbs blink at random. | `true` |
+| `extras.christmas_lights` | The style of the Christmas lights: `"rainbow"`, `"white"`, `"red_white"`, or `"mixed"`, where each building gets one of the three styles, never the same style as the building with lights before it. | `"mixed"` |
 
 ### Buildings
 
@@ -235,7 +244,9 @@ town.json                        The sample town
 build.sh                         Builds riverside-town.zip and installs it on a Roku
 source/main.brs                  Entry point (RunScreenSaver)
 components/MainScene.xml         Scene layout: layers, lanes, panel, animations
-components/MainScene.brs         Scene logic: parallax, cars, clock, weather, time of day
+components/MainScene.brs         init(), the settings, and small helpers for the scene
+components/scene/                The rest of the scene logic, one file for each part: scenery and time of day,
+                                 Christmas, weather, airplane, clock panel, cars, and sidewalk (animals and lamps)
 components/WeatherTask.xml       Task node definition for the weather request
 components/WeatherTask.brs       Calls the Open-Meteo API
 components/town_config.json      The town's settings for the screensaver, written by the generator
@@ -285,6 +296,7 @@ The settings that are not in `town.json` are at the top of `init()` in `componen
 | `m.leafOnMin`, `m.leafOnMore`, `m.leafOffMin`, `m.leafOffMore` | How long the fall leaves fall and how long they stop, in seconds: at least the `Min` value, plus a random amount up to the `More` value. The defaults are 25 to 70 seconds falling and 15 to 60 seconds stopped. |
 | `m.infoSpots` | The positions the clock panel moves between. They are all in the top-right corner. |
 | `m.seasonOverride` | Set to `"spring"`, `"summer"`, `"fall"`, or `"winter"` to always show that season, for example to preview it. Leave it as `""` to choose the season from the date. |
+| `m.christmasOverride` | Set to `"on"` to always show the Christmas decorations, or `"off"` to never show them. Leave it as `""` to show them in December. It does nothing when `extras.christmas` is `false`, because the town then has no Christmas images. |
 | `m.seasonalLayers` | Which scenery layers have a different image for some seasons. It must match `SEASONAL` in `tools/generate_images.py`. |
 
 The panel's transparency is set by the `color` value on the `Rectangle` inside the `info` group in `components/MainScene.xml`. The last two characters are the opacity: `00` is fully clear and `FF` is fully solid.
@@ -310,7 +322,7 @@ The generator writes:
 - every PNG into `images/`, including the mirrored car images used by the far lane
 - `components/town_config.json`, the settings the screensaver reads: the coordinates, units, number of town sections, cars, animals, extras, and where the gas station is
 - the title into `manifest`
-- full-scene previews into `build/`, which git ignores: one for each town section, season, and day and night (`composite_<season>_<period>_<section>.png`). The summer previews include the parked car so its position can be checked.
+- full-scene previews into `build/`, which git ignores: one for each town section, season, and day and night (`composite_<season>_<period>_<section>.png`). The summer previews include the parked car so its position can be checked. With `extras.christmas` on, there are also previews of the Christmas decorations in fall and winter, by day and at dusk (`composite_christmas_<season>_<period>_<section>.png`).
 - the preview images for this README into `docs/`, when `--docs docs` is given
 
 Where each part of the drawing is:

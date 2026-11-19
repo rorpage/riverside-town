@@ -287,7 +287,7 @@ def mustang():
          f'<rect x="686" y="182" width="62" height="10" rx="5" fill="{CHROME}"/>')
     return ref("mustang", s), ref("mustang", s, True)
 
-# Wheel images, 64 by 64 like wheel.png. MainScene.brs shows each at the
+# Wheel images, 64 by 64 like wheel.png. components/scene/cars.brs shows each at the
 # car's wheel size.
 def spokes(n, r1, r2, color, width, start=0):
     import math
