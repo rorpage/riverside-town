@@ -3,7 +3,7 @@ effects, the airplane, the cars, and the animals. The scene code in components/ 
 import os
 import random
 from PIL import Image, ImageOps
-from .art import P, ACCENT, CAR_GLASS, DARK, render
+from .art import P, ACCENT, CAR_GLASS, DARK, banner_colors, render
 from . import movie_cars
 
 DARK_EYE = "#1F2A33"
@@ -78,6 +78,23 @@ def dog(body, dark, ears="floppy", leg=9, length=1.0, tail="up", size=1.0, spots
     k = 2 * size
     w, h = round(48 * k), round((19 + leg + 5.5) * k)
     return f'<g transform="scale({k}) translate(0,5)">{s}</g>', w, h
+
+# The banner plane is this many times the size of the small plane (56x22)
+BANNER_PLANE_SCALE = 3
+
+def banner_rope(pal, left):
+    """The tow rope and the pole at the front of the banner, 84x64. For a
+    plane flying right, the pole is at x=3 (on the front edge of the banner,
+    from 2 pixels above it to 2 pixels below it) and the rope ends at x=84,
+    y=11, at the tail of the plane. components/scene/banner.brs places the
+    image from these points. left=True mirrors it for a plane flying left."""
+    c = banner_colors(pal)
+    s = (f'<polyline points="84,11 24,32" fill="none" stroke="{c["rope"]}" stroke-width="2"/>'
+         f'<polyline points="3,4 24,32 3,60" fill="none" stroke="{c["rope"]}" stroke-width="1.5"/>'
+         f'<line x1="3" y1="0" x2="3" y2="64" stroke="{c["rope"]}" stroke-width="4" stroke-linecap="round"/>')
+    if left:
+        s = f'<g transform="translate(84,0) scale(-1,1)">{s}</g>'
+    return s
 
 def write(out):
     def save(content, vb, w, h, name):
@@ -161,10 +178,24 @@ def write(out):
     for pal in P:
         save(cessna(pal, False), "0 0 112 44", 112, 44, f"plane_{pal}.png")
         save(cessna(pal, True), "0 0 112 44", 112, 44, f"plane_left_{pal}.png")
-    save('<circle cx="8" cy="8" r="7" fill="#FFFFFF" fill-opacity="0.35"/><circle cx="8" cy="8" r="3" fill="#FFFFFF"/>', "0 0 16 16", 16, 16, "plane_strobe.png")
+    strobe = '<circle cx="8" cy="8" r="7" fill="#FFFFFF" fill-opacity="0.35"/><circle cx="8" cy="8" r="3" fill="#FFFFFF"/>'
+    save(strobe, "0 0 16 16", 16, 16, "plane_strobe.png")
     # A larger, brighter flash for night, shown at 16x16 instead of 8x8
-    save('<circle cx="16" cy="16" r="15" fill="#FFFFFF" fill-opacity="0.18"/><circle cx="16" cy="16" r="9" fill="#FFFFFF" fill-opacity="0.4"/>'
-         '<circle cx="16" cy="16" r="4.5" fill="#FFFFFF"/>', "0 0 32 32", 32, 32, "plane_strobe_night.png")
+    strobe_night = ('<circle cx="16" cy="16" r="15" fill="#FFFFFF" fill-opacity="0.18"/><circle cx="16" cy="16" r="9" fill="#FFFFFF" fill-opacity="0.4"/>'
+                    '<circle cx="16" cy="16" r="4.5" fill="#FFFFFF"/>')
+    save(strobe_night, "0 0 32 32", 32, 32, "plane_strobe_night.png")
+
+    # The banner plane: the same Cessna and strobe, BANNER_PLANE_SCALE times the
+    # size the small plane is shown, saved at the size it is shown. It tows a
+    # banner with the birthdays and messages (components/scene/banner.brs).
+    bw, bh = round(56 * BANNER_PLANE_SCALE), round(22 * BANNER_PLANE_SCALE)
+    for pal in P:
+        save(cessna(pal, False), "0 0 112 44", bw, bh, f"plane_big_{pal}.png")
+        save(cessna(pal, True), "0 0 112 44", bw, bh, f"plane_big_left_{pal}.png")
+        save(banner_rope(pal, False), "0 0 84 64", 84, 64, f"banner_rope_{pal}.png")
+        save(banner_rope(pal, True), "0 0 84 64", 84, 64, f"banner_rope_left_{pal}.png")
+    save(strobe, "0 0 16 16", round(8 * BANNER_PLANE_SCALE), round(8 * BANNER_PLANE_SCALE), "plane_strobe_big.png")
+    save(strobe_night, "0 0 32 32", round(16 * BANNER_PLANE_SCALE), round(16 * BANNER_PLANE_SCALE), "plane_strobe_big_night.png")
     # The blinking red light on top of the radio tower, shown at 24x24
     save('<circle cx="24" cy="24" r="22" fill="#E74C3C" fill-opacity="0.18"/><circle cx="24" cy="24" r="13" fill="#E74C3C" fill-opacity="0.4"/>'
          '<circle cx="24" cy="24" r="6" fill="#FF6B5B"/>', "0 0 48 48", 48, 48, "tower_light.png")

@@ -74,6 +74,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   - Thunderstorms: rain and lightning flashes at random times.
 
   Falling leaves and fireflies are hidden while rain or snow is falling. Leaves fall only in October and November (April and May in the southern hemisphere). Even then they do not fall all the time: they fall, fade out, stay hidden, then fade back in. Each of these lasts a random length of time.
+- A banner plane for birthdays and messages. On a day with a birthday or a message, a larger copy of the airplane tows a banner with the text across the sky every 2 to 4 minutes. With more than one text, each flight shows the next one. It flies at the distance of the near mountains and takes about 20 to 30 seconds to cross the screen. Like the small airplane, it has its wingtip and tail lights at dusk and night, and it does not fly in rain, snow, fog, or thunderstorms. It flies even when `extras.airplane` is `false`.
 - An optional network settings file. Some settings, such as the airplane, the cars, and the units, can be changed from a JSON file on your home network or on the internet, without building the town again or installing it on the Roku again. See [Network settings file](#network-settings-file).
 - A clock and weather panel in the top-right corner. Every 5 minutes it fades out, moves a small amount within the corner, and fades back in, to protect TVs from burn-in. The sun and moon are in the top-left corner, so the panel never covers them.
 
@@ -319,7 +320,9 @@ To go back to the settings in the zip:
 
 `birthdays` and `messages` can be set in `town.json`, in the network settings file, or both. The screensaver works out today's texts from the Roku's date and time zone, birthdays first, then messages, in the order they are listed.
 
-The banner the airplane tows and the marquee sign that show these texts are not built yet. Until they are, today's texts are printed in the [debug console](#debugging) with the prefix `Messages today:` when the screensaver starts and after each download of the network settings file.
+Texts with `"where": "banner"` or `"both"` are shown on the banner plane. The first flight is 15 to 45 seconds after the screensaver starts, and the next ones are 2 to 4 minutes apart. The banner gets wider to fit the text. A new birthday or message from the network settings file shows on the next flight.
+
+The marquee sign is not built yet. Today's texts are also printed in the [debug console](#debugging) with the prefix `Messages today:` when the screensaver starts and after each download of the network settings file.
 
 ## Project layout
 
@@ -332,7 +335,7 @@ components/MainScene.xml         Scene layout: layers, lanes, panel, animations
 components/MainScene.brs         init(), the settings, and small helpers for the scene
 components/scene/                The rest of the scene logic, one file for each part: scenery and time of day,
                                  Christmas, weather, airplane, clock panel, cars, sidewalk (animals and lamps),
-                                 the network settings file, and today's birthdays and messages
+                                 the network settings file, today's birthdays and messages, and the banner plane
 components/WeatherTask.xml       Task node definition for the weather request
 components/WeatherTask.brs       Calls the Open-Meteo API
 components/ExternalConfigTask.*  Downloads the network settings file and keeps the last good copy
@@ -383,6 +386,8 @@ The settings that are not in `town.json` are at the top of `init()` in `componen
 | `allCars` | Each car's image size, wheel positions, wheel radius, and `ground` speed in pixels per second. `m.carDefs` holds the ones `town.json` turns on. |
 | `m.planeSpeed` | The airplane's own speed at the distance of the far mountains, in pixels per second. The comment above it in `MainScene.brs` shows how it was worked out. |
 | `m.planeWaitMin`, `m.planeWaitMore` | Seconds between airplane flights: at least `m.planeWaitMin`, plus a random amount up to `m.planeWaitMore`. |
+| `m.bannerSpeed` | The banner plane's own speed at the distance of the near mountains, in pixels per second. The comment above it in `MainScene.brs` shows how it was worked out. |
+| `m.bannerFirstMin`, `m.bannerFirstMore`, `m.bannerWaitMin`, `m.bannerWaitMore` | Seconds before the first banner flight (15 to 45 by default) and between flights (120 to 240 by default): at least the `Min` value, plus a random amount up to the `More` value. |
 | `m.leafOnMin`, `m.leafOnMore`, `m.leafOffMin`, `m.leafOffMore` | How long the fall leaves fall and how long they stop, in seconds: at least the `Min` value, plus a random amount up to the `More` value. The defaults are 25 to 70 seconds falling and 15 to 60 seconds stopped. |
 | `m.externalKeepDays` | Days to keep using the last good network settings file when it cannot be downloaded. The default is 7. |
 | `m.externalRefreshDefault` | Minutes between downloads of the network settings file when the file has no `refresh_minutes`. The default is 10. |

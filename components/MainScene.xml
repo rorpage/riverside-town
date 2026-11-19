@@ -10,6 +10,7 @@
   <script type="text/brightscript" uri="pkg:/components/scene/sidewalk.brs" />
   <script type="text/brightscript" uri="pkg:/components/scene/external.brs" />
   <script type="text/brightscript" uri="pkg:/components/scene/messages.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/banner.brs" />
   <children>
     <!-- Sky: an 8 px wide gradient image stretched across the screen to save memory -->
     <Poster id="sky" width="1920" height="1080" loadDisplayMode="scaleToFill" />
@@ -44,6 +45,20 @@
         <Poster id="nearB" width="1920" height="360" translation="[1920,0]" />
         <Poster id="near2" width="1920" height="360" translation="[3840,0]" />
       </Group>
+    </Group>
+    <!-- The banner plane: a larger copy of the airplane that tows a banner with
+         today's birthdays and messages. It flies at the distance of the near
+         mountains, so it is drawn after them and before the hills.
+         components/scene/banner.brs places the parts for each flight. -->
+    <Group id="bannerPlane" visible="false">
+      <Rectangle id="bannerStripe" height="60" />
+      <Rectangle id="bannerCloth" height="50" />
+      <Label id="bannerLabel" height="60" vertAlign="center">
+        <Font role="font" uri="font:BoldSystemFontFile" size="36" />
+      </Label>
+      <Poster id="bannerRope" width="84" height="64" />
+      <Poster id="bannerBody" width="168" height="66" />
+      <Poster id="bannerStrobe" width="24" height="24" uri="pkg:/images/plane_strobe_big.png" opacity="0" />
     </Group>
     <!-- The hills image starts at y=420, above the hills, so the tower behind the
          radio station on the hill fits. There are three hills tiles: A (with the radio
@@ -151,6 +166,12 @@
     </Animation>
     <Animation id="strobeAnim" repeat="true" easeFunction="linear" duration="1.4">
       <FloatFieldInterpolator key="[0.0, 0.05, 0.1, 1.0]" keyValue="[1.0, 1.0, 0.0, 0.0]" fieldToInterp="planeStrobe.opacity" />
+    </Animation>
+    <Animation id="bannerAnim" repeat="false" easeFunction="linear">
+      <Vector2DFieldInterpolator id="bannerMove" key="[0.0, 1.0]" fieldToInterp="bannerPlane.translation" />
+    </Animation>
+    <Animation id="bannerStrobeAnim" repeat="true" easeFunction="linear" duration="1.4">
+      <FloatFieldInterpolator key="[0.0, 0.05, 0.1, 1.0]" keyValue="[1.0, 1.0, 0.0, 0.0]" fieldToInterp="bannerStrobe.opacity" />
     </Animation>
     <Animation id="flashAnim" repeat="false" easeFunction="linear" duration="0.7">
       <FloatFieldInterpolator key="[0.0, 0.08, 0.18, 0.3, 1.0]" keyValue="[0.0, 0.55, 0.1, 0.4, 0.0]" fieldToInterp="flash.opacity" />

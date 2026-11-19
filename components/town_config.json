@@ -137,5 +137,25 @@
   ],
   "externalConfigUrl": "",
   "birthdays": [],
-  "messages": []
+  "messages": [],
+  "bannerColors": {
+    "day": {
+      "cloth": "0xF4F1E8FF",
+      "stripe": "0xC0392BFF",
+      "rope": "0x5B6770FF",
+      "text": "0x1F2A33FF"
+    },
+    "dusk": {
+      "cloth": "0xDFD9D2FF",
+      "stripe": "0xB03327FF",
+      "rope": "0x535D65FF",
+      "text": "0x1F2A33FF"
+    },
+    "night": {
+      "cloth": "0x5A6367FF",
+      "stripe": "0x461713FF",
+      "rope": "0x212A32FF",
+      "text": "0x1F2A33FF"
+    }
+  }
 }

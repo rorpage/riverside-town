@@ -173,6 +173,7 @@ sub applyScene()
     updateBlink()
     updateSeasonFx(season, period, leaves)
     updatePlaneImage()
+    updateBannerImage()
     if period = "night"
         m.fog.opacity = 0.6
     else

@@ -64,6 +64,16 @@ def wall(day, p):
     ratio = [n / d for n, d in zip(hex_rgb(p["houseA"]), hex_rgb(P["day"]["houseA"]))]
     return "#" + "".join(f"{min(255, round(c * r)):02X}" for c, r in zip(hex_rgb(day), ratio))
 
+# The banner the large airplane tows (components/scene/banner.brs). These are
+# day colors; banner_colors() darkens them for dusk and night like wall().
+# The text color stays dark in every period.
+BANNER = {"cloth": "#F4F1E8", "stripe": "#C0392B", "rope": "#5B6770", "text": "#1F2A33"}
+
+def banner_colors(pal):
+    """The banner colors for the period pal, as #RRGGBB."""
+    p = P[pal]
+    return {key: color if key == "text" else wall(color, p) for key, color in BANNER.items()}
+
 # ---------- Fonts and text ----------
 # The fonts are stored in tools/fonts under the SIL Open Font License. Most are
 # variable fonts (one file covers a range of weights); for the ones with one

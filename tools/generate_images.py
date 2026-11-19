@@ -247,6 +247,7 @@ def runtime_config(town, images):
         "christmasBlink": town.get("blink", []),
         "externalConfigUrl": town["external_config_url"],
         "birthdays": town["birthdays"], "messages": town["messages"],
+        "bannerColors": {pal: {k: "0x" + c[1:] + "FF" for k, c in art.banner_colors(pal).items()} for pal in art.P},
     }
 
 def radio_light(town):

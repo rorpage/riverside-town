@@ -12,6 +12,7 @@
 '   sidewalk.brs   the animals and the street lamps
 '   external.brs   the network settings file (external_config_url in town.json)
 '   messages.brs   the birthdays and messages to show today
+'   banner.brs     the banner plane, which tows today's birthdays and messages
 
 sub init()
     ' ---------- Settings ----------
@@ -124,6 +125,22 @@ sub init()
     m.planeWaitMin = 45
     m.planeWaitMore = 120
 
+    ' The banner plane: a Cessna 3 times the size of the small airplane, that
+    ' tows a banner with today's birthdays and messages. It flies at the
+    ' distance of the near mountains, so the camera adds or takes away
+    ' m.layerSpeeds.near. Planes that tow banners fly slowly, so its own speed
+    ' is about 2 times the sedan's (300): 2 * 300 * 12 / 55 is about 131. A
+    ' banner then takes about 20 to 30 seconds to cross the screen.
+    m.bannerSpeed = 131
+    ' Seconds before the first flight: at least bannerFirstMin, plus up to
+    ' bannerFirstMore. Seconds between flights: at least bannerWaitMin, plus up
+    ' to bannerWaitMore. With no text for today, it checks again after the
+    ' same wait.
+    m.bannerFirstMin = 15
+    m.bannerFirstMore = 30
+    m.bannerWaitMin = 120
+    m.bannerWaitMore = 120
+
     ' Falling leaves in fall come and go. They fall for leafOnMin seconds plus up
     ' to leafOnMore, then stop for leafOffMin plus up to leafOffMore, and so on.
     ' Each change fades over 3 seconds.
@@ -226,6 +243,7 @@ sub init()
     makeTimer(300, "onMoveInfo")
 
     printMessages()
+    startBanner()
     startExternalConfig()
 end sub
 
@@ -236,7 +254,12 @@ function loadTownConfig() as object
         lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north", driveOn: "right",
         sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [], lamps: [],
         airplane: true, fireflies: true, fallingLeaves: true, seasons: true, christmasSeasons: [], christmasBlink: [],
-        externalConfigUrl: "", birthdays: [], messages: []
+        externalConfigUrl: "", birthdays: [], messages: [],
+        bannerColors: {
+            day: { cloth: "0xF4F1E8FF", stripe: "0xC0392BFF", rope: "0x5B6770FF", text: "0x1F2A33FF" },
+            dusk: { cloth: "0xF4F1E8FF", stripe: "0xC0392BFF", rope: "0x5B6770FF", text: "0x1F2A33FF" },
+            night: { cloth: "0xF4F1E8FF", stripe: "0xC0392BFF", rope: "0x5B6770FF", text: "0x1F2A33FF" }
+        }
     }
     text = ReadAsciiFile("pkg:/components/town_config.json")
     data = invalid
