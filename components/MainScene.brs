@@ -100,8 +100,22 @@ sub init()
     ' decorations, for previewing. Leave it as "" to show them in December.
     m.christmasOverride = ""
     ' Set to "on" or "off" to always show or never show the Upside Down, for
-    ' previewing. Leave it as "" to show it in October.
+    ' previewing. Set to "switch" to switch back and forth in any month. Leave
+    ' it as "" to switch back and forth in October.
     m.upsideOverride = ""
+    ' In October the scene switches between the normal town and the Upside
+    ' Down. Seconds in the normal town: at least upsideOffMin, plus up to
+    ' upsideOffMore. Seconds in the Upside Down: at least upsideOnMin, plus up
+    ' to upsideOnMore. The first switch comes upsideFirstMin seconds after the
+    ' screensaver starts, plus up to upsideFirstMore.
+    m.upsideOffMin = 180
+    m.upsideOffMore = 420
+    m.upsideOnMin = 120
+    m.upsideOnMore = 180
+    m.upsideFirstMin = 30
+    m.upsideFirstMore = 60
+    ' True while the scene is in the Upside Down part of the switching
+    m.upsideIn = false
     ' The Upside Down lightning: seconds between flashes, and the highest
     ' opacity of the red flash in the sky and of the red flash over everything
     m.upsideLightningEvery = 7

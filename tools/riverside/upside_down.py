@@ -1,26 +1,27 @@
 """The Upside Down: a dark October version of the town (extras.upside_down).
 
 Each scenery layer and town section is drawn as it is on a fall day, then
-color graded to a dim blue gray (grade()), and dark vines are drawn over the
-ground and the walls (vines()). The vines are masked to the shape of the
-layer, so they stop at the roof lines and the tops of the hills. There is
-one image for each layer, <layer>_upside.png, used at every time of day.
+color graded to a dim blue gray (grade()), and dark vines are drawn over it
+(town_layer() and hills_layer()). The vines on the town are placed from the
+outline of each building (building_vines()). There is one image for each
+layer, <layer>_upside.png, used at every time of day.
 
 The other images:
 - sky_upside.png: a dark sky with a red glow near the horizon
 - clouds_upside.png: a dark storm deck with a red glow under the clouds
 - bolt_<n>.png: red lightning bolts that flash in the clouds
 - spores_a.png, spores_b.png: specks that float up the screen
-- street_lamp_upside.png: a dark lamp post with a vine around it
+- street_lamp_upside.png: a dark lamp post with a vine wound around it
 
-components/scene/upsidedown.brs shows them in October.
+components/scene/upsidedown.brs switches to them at random times in October.
 """
 import io
 import math
 import random
-from PIL import Image, ImageChops, ImageEnhance
+from PIL import Image, ImageChops, ImageEnhance, ImageFilter
 from .art import render, hex_rgb as rgb
 from .scenery import puff, wrap
+from . import buildings
 
 # The grade: how much color is kept, how bright the result is, and the tint
 # it is multiplied by
@@ -29,9 +30,9 @@ BRIGHTNESS = 0.62
 TINT = (150, 168, 200)
 
 # Vine colors. They are not graded.
-VINE = "#0F0A0C"
-VINE_EDGE = "#2E2024"
-VINE_VEIN = "#4E2A31"
+VINE = "#1B1215"
+VINE_DARK = "#0A0608"
+VINE_LIGHT = "#4A3036"
 GOO = "#1E1418"
 
 SKY_TOP = "#0B1017"
@@ -59,30 +60,26 @@ def to_image(content, vb, w, h):
     return Image.open(io.BytesIO(render(content, vb, w, h))).convert("RGBA")
 
 # ---------- Vines ----------
-def vine_points(rnd, x, y, angle, length, ymin, ymax, step=4.0):
-    """Points along a vine that starts at (x, y) and grows in the direction
-    angle (in radians). The amount it turns changes slowly, so it bends in
-    smooth curves. It turns back at the tile edges and at ymin and ymax."""
-    pts, a, turn = [(x, y)], angle, rnd.uniform(-0.03, 0.03)
-    for _ in range(int(length / step)):
-        turn = min(max(turn + rnd.uniform(-0.012, 0.012), -0.045), 0.045)
-        # Bend, but keep the general direction
-        a += turn
-        a = a * 0.96 + angle * 0.04
-        x += math.cos(a) * step
-        y += math.sin(a) * step
-        if x < X_MIN or x > X_MAX:
-            a = angle = math.pi - a
-            x = min(max(x, X_MIN), X_MAX)
-        if y < ymin or y > ymax:
-            a = angle = -a
-            turn = -turn
-            y = min(max(y, ymin), ymax)
-        pts.append((x, y))
+# The vines are placed from the outline of each building, which is read from
+# the rendered image: they wrap around the corners of the walls and around
+# thin posts, run along the roof lines with loops and tendrils hanging down,
+# and grow along the bottom of the walls as thick roots. More roots cross the
+# road. Every vine is a smooth curve that gets thinner toward its ends, with a
+# dark outline, a highlight on its upper side, and a soft shadow on the wall.
+
+def smooth(pts, n=3):
+    """Rounds the corners of a line (Chaikin's method)."""
+    for _ in range(n):
+        out = [pts[0]]
+        for (ax, ay), (bx, by) in zip(pts, pts[1:]):
+            out += [(ax * 0.75 + bx * 0.25, ay * 0.75 + by * 0.25), (ax * 0.25 + bx * 0.75, ay * 0.25 + by * 0.75)]
+        out.append(pts[-1])
+        pts = out
     return pts
 
-def ribbon(pts, w0, w1, fill, opacity=1):
-    """A filled shape along pts that narrows from width w0 to width w1."""
+def ribbon(pts, width, fill, opacity=1, dx=0, dy=0):
+    """A filled shape along pts. width(t) is the width at t, from 0 at the
+    first point to 1 at the last."""
     n = len(pts)
     if n < 2:
         return ""
@@ -90,81 +87,284 @@ def ribbon(pts, w0, w1, fill, opacity=1):
     for i, (x, y) in enumerate(pts):
         ax, ay = pts[max(i - 1, 0)]
         bx, by = pts[min(i + 1, n - 1)]
-        dx, dy = bx - ax, by - ay
-        d = math.hypot(dx, dy) or 1
-        nx, ny = -dy / d, dx / d
-        # Narrow quickly near the tip
-        t = i / (n - 1)
-        w = (w1 + (w0 - w1) * (1 - t) ** 0.8) / 2
-        left.append((x + nx * w, y + ny * w))
-        right.append((x - nx * w, y - ny * w))
+        d = math.hypot(bx - ax, by - ay) or 1
+        nx, ny = -(by - ay) / d, (bx - ax) / d
+        w = width(i / (n - 1)) / 2
+        left.append((x + nx * w + dx, y + ny * w + dy))
+        right.append((x - nx * w + dx, y - ny * w + dy))
     d = "M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in left + right[::-1]) + " Z"
     op = f' fill-opacity="{opacity}"' if opacity < 1 else ""
     return f'<path d="{d}" fill="{fill}"{op}/>'
 
-def vine(rnd, x, y, angle, length, w0, ymin, ymax, depth=1):
-    """One vine with a few side shoots. The shoots have their own shoots, down
-    to depth levels."""
-    pts = vine_points(rnd, x, y, angle, length, ymin, ymax)
-    # A lighter edge, a dark body, and a faint shine along the top side
-    shine = [(px - w0 * 0.12, py - w0 * 0.12) for px, py in pts]
-    # A round end where the vine starts
-    x0, y0 = pts[0]
-    out = (f'<circle cx="{x0:.1f}" cy="{y0:.1f}" r="{w0 / 2 + 1.25:.1f}" fill="{VINE_EDGE}"/>'
-           + ribbon(pts, w0 + 2.5, 1.5, VINE_EDGE) + f'<circle cx="{x0:.1f}" cy="{y0:.1f}" r="{w0 / 2:.1f}" fill="{VINE}"/>'
-           + ribbon(pts, w0, 0.8, VINE)
-           + ribbon(shine[: len(pts) * 3 // 4], w0 * 0.25, 0.3, VINE_VEIN, 0.7))
-    if depth > 0:
-        for _ in range(rnd.randint(1, 2)):
-            i = rnd.randint(len(pts) // 4, max(len(pts) // 4, len(pts) * 3 // 4))
-            if i < 1 or i >= len(pts):
-                continue
-            (ax, ay), (bx, by) = pts[i - 1], pts[i]
-            a = math.atan2(by - ay, bx - ax) + rnd.choice((-1, 1)) * rnd.uniform(0.4, 0.9)
-            w = w0 * (1 - i / len(pts)) ** 0.8 * 0.7
-            if w > 2:
-                out += vine(rnd, bx, by, a, length * rnd.uniform(0.35, 0.6), w, ymin, ymax, depth - 1)
+def strand(pts, width, shadow=True):
+    """One vine along pts with width function width(t): a shadow, a dark
+    outline, the body, and a highlight on its upper left side."""
+    out = ribbon(pts, lambda t: width(t) + 1, "#000000", 0.28, 3, 3) if shadow else ""
+    return (out + ribbon(pts, lambda t: width(t) + 2.2, VINE_DARK) + ribbon(pts, width, VINE)
+            + ribbon(pts, lambda t: width(t) * 0.22, VINE_LIGHT, 0.45, -1, -1))
+
+def lumpy(rnd, wmax, ends="tip"):
+    """A width function. "tip" is thickest at the start and thin at the end;
+    "both" is thin at both ends. The width changes a little along the vine, so
+    it does not look like a tube."""
+    k1, k2, ph1, ph2 = rnd.uniform(9, 15), rnd.uniform(23, 31), rnd.uniform(0, 6), rnd.uniform(0, 6)
+    def w(t):
+        shape = (1 - t) ** 0.75 if ends == "tip" else math.sin(math.pi * t) ** 0.55
+        return max(0.8, wmax * shape * (1 + 0.1 * math.sin(k1 * t + ph1) + 0.06 * math.sin(k2 * t + ph2)))
+    return w
+
+def curl(x, y, a, r, side):
+    """Points of a small spiral at the tip of a tendril, starting at (x, y)
+    in the direction a."""
+    pts = []
+    turn = a - side * math.pi / 2
+    cx, cy = x - math.cos(turn) * r, y - math.sin(turn) * r
+    for i in range(1, 22):
+        t = i / 21
+        ang = turn + side * t * math.pi * 1.6
+        rr = r * (1 - 0.65 * t)
+        pts.append((cx + math.cos(ang) * rr, cy + math.sin(ang) * rr))
+    return pts
+
+def tendril(rnd, x, y, length, w):
+    """A tendril that hangs down from (x, y), swaying a little, with a curl
+    at its tip."""
+    side, sway, ph = rnd.choice((-1, 1)), rnd.uniform(4, 10), rnd.uniform(0, 6)
+    pts = [(x + sway * math.sin(ph + t / 18) - sway * math.sin(ph), y + t) for t in range(0, int(length), 4)]
+    if len(pts) < 2:
+        return ""
+    (ax, ay), (bx, by) = pts[-2], pts[-1]
+    pts += curl(bx, by, math.atan2(by - ay, bx - ax), rnd.uniform(3, 6), side)
+    return strand(pts, lumpy(rnd, w))
+
+def loop(rnd, xa, ya, xb, yb, w):
+    """A vine that hangs in a loop between two points on a roof line."""
+    sag = rnd.uniform(12, 28)
+    pts = []
+    for i in range(25):
+        t = i / 24
+        pts.append((xa + (xb - xa) * t, ya + (yb - ya) * t + sag * math.sin(math.pi * t)))
+    return strand(pts, lumpy(rnd, w, "both"))
+
+def wander(rnd, x0, y0, x1, y1, amp, waves):
+    """A smooth line from (x0, y0) to (x1, y1) that bends from side to side."""
+    ph1, ph2 = rnd.uniform(0, 6), rnd.uniform(0, 6)
+    length = math.hypot(x1 - x0, y1 - y0) or 1
+    nx, ny = -(y1 - y0) / length, (x1 - x0) / length
+    pts = []
+    n = max(8, int(length / 6))
+    for i in range(n + 1):
+        t = i / n
+        off = amp * (math.sin(waves * math.pi * t + ph1) * 0.7 + math.sin(waves * 2.3 * math.pi * t + ph2) * 0.3)
+        off *= math.sin(math.pi * t) ** 0.5
+        pts.append((min(max(x0 + (x1 - x0) * t + nx * off, X_MIN), X_MAX), y0 + (y1 - y0) * t + ny * off))
+    return pts
+
+def wrap_arcs(rnd, cx, ybot, ytop, reach, pitch, w, back=None):
+    """A vine wound around something upright at x = cx, from ybot up to ytop.
+    The front half of each turn is drawn; it reaches reach pixels to each
+    side. With back set to a color, the back half of each turn is drawn too,
+    in that color, as a separate string (returned second), for drawing
+    behind a post."""
+    front, behind = "", ""
+    s, k = 0.0, 0
+    width = lumpy(rnd, w)
+    total = ybot - ytop
+    while s < total:
+        pts = []
+        for i in range(13):
+            t = i / 12
+            ph = math.pi * t
+            pts.append((cx - reach * math.cos(ph) * (1 if k % 2 == 0 else -1), ybot - s - pitch / 2 * t))
+        ww = width(min(1, s / total))
+        arc = lambda t, ww=ww: ww * (0.55 + 0.45 * math.sin(math.pi * t))
+        if k % 2 == 0:
+            front += strand(pts, arc)
+        elif back:
+            behind += ribbon(pts, lambda t, ww=ww: ww * 0.8, back)
+        s += pitch / 2
+        k += 1
+    return front, behind
+
+def corner_wrap(rnd, edge, side, ybot, ytop, w):
+    """A vine that winds around the corner of a wall at x = edge. side is 1
+    for a left corner (the wall is to the right) and -1 for a right corner.
+    Each turn shows as a long curve on the front of the wall, then the vine
+    goes around the corner out of sight for a short distance."""
+    out, y = "", ybot
+    width = lumpy(rnd, w)
+    while y - 30 > ytop:
+        h = min(rnd.uniform(55, 95), y - ytop)
+        reach = rnd.uniform(14, 26)
+        lean = rnd.uniform(-0.25, 0.25)
+        pts = []
+        for i in range(17):
+            t = i / 16
+            pts.append((edge + side * (reach * math.sin(math.pi * t) + 2), y - h * (t + lean * math.sin(2 * math.pi * t) / 6)))
+        ww = width((ybot - y) / max(1, ybot - ytop))
+        out += strand(pts, lambda t, ww=ww: ww * (0.5 + 0.5 * math.sin(math.pi * t) ** 0.5))
+        y -= h + rnd.uniform(8, 16)
     return out
+
+def branched(rnd, pts, w, shoots):
+    """A vine along pts, thin at both ends, with side shoots that end in thin
+    tips, some with a curl."""
+    out = strand(pts, lumpy(rnd, w, "both"))
+    for _ in range(shoots):
+        i = rnd.randint(len(pts) // 5, len(pts) * 4 // 5)
+        (ax, ay), (bx, by) = pts[i - 1], pts[i]
+        a = math.atan2(by - ay, bx - ax) + rnd.choice((-1, 1)) * rnd.uniform(0.35, 0.8)
+        length = rnd.uniform(50, 150)
+        sp = wander(rnd, bx, by, bx + math.cos(a) * length, by + math.sin(a) * length, 6, 1.5)
+        if rnd.random() < 0.5:
+            (cx, cy), (dx, dy) = sp[-2], sp[-1]
+            sp += curl(dx, dy, math.atan2(dy - cy, dx - cx), rnd.uniform(3, 5), rnd.choice((-1, 1)))
+        out += strand(sp, lumpy(rnd, w * rnd.uniform(0.35, 0.55)))
+    return out
+
+def opaque(im):
+    return im.getchannel("A").point(lambda v: 255 if v > 128 else 0)
+
+def column_top(mask, x):
+    """The highest opaque pixel in column x of the mask, or None."""
+    box = mask.crop((x, 0, x + 1, mask.height)).getbbox()
+    return box[1] if box else None
+
+def runs(mask, y, x0, x1):
+    """The opaque runs of pixels in row y between x0 and x1, as (start, end)."""
+    row = [mask.getpixel((x, y)) for x in range(max(0, x0), min(mask.width, x1))]
+    out, start = [], None
+    for i, v in enumerate(row + [0]):
+        if v and start is None:
+            start = i
+        elif not v and start is not None:
+            out.append((x0 + start, x0 + i))
+            start = None
+    return out
+
+# Building types whose walls go down to the sidewalk. The others (the gas
+# station, the drive-through, and the gazebo) get vines on their roof line and
+# wrapped around their posts.
+WALLED = {"house", "shop", "church", "school", "columned_hall"}
+SKIP = {"tree", "bike_rack"}
+
+def building_vines(rnd, mask, top_y, b, x0, w):
+    """The vines on one building. mask is the opaque pixels of the town
+    section image, which starts at screen y = top_y."""
+    out = ""
+    x1 = x0 + w
+    def top(x):
+        t = column_top(mask, int(min(max(x, 0), mask.width - 1)))
+        return None if t is None else t + top_y
+    walls = runs(mask, 880 - top_y, x0, x1)
+    if b["type"] in WALLED and walls:
+        left, right = walls[0][0], walls[-1][1] - 1
+        # A thick root along the bottom of the wall
+        out += strand(wander(rnd, max(X_MIN, left - 30), rnd.uniform(924, 934), min(X_MAX, right + 30),
+                             rnd.uniform(924, 934), 5, 3), lumpy(rnd, rnd.uniform(10, 15), "both"))
+        # Vines climb one corner, and sometimes both
+        corners = [(1, left), (-1, right)]
+        rnd.shuffle(corners)
+        if rnd.random() < 0.6:
+            corners = corners[:1]
+        for side, edge in corners:
+            eave = top(edge + side * 6)
+            if eave is None:
+                continue
+            # A thin stem climbs the corner, and a thick vine winds around it,
+            # up to the eave
+            out += strand(wander(rnd, edge + side * 3, 932, edge + side * 5, eave + 6, 3, 2), lumpy(rnd, 4))
+            out += corner_wrap(rnd, edge, side, 930, eave + 8, rnd.uniform(8, 11))
+            # Then it runs along the roof line toward the middle
+            run = w * rnd.uniform(0.35, 0.7)
+            line, x, last = [], edge + side * 6, eave
+            while abs(x - edge) < run:
+                t = top(x)
+                if t is None or abs(t - last) > 16:
+                    break
+                line.append((x, t + 5))
+                last, x = t, x + side * 6
+            if len(line) > 3:
+                line = smooth(line, 2)
+                out += strand(line, lumpy(rnd, rnd.uniform(6, 9)))
+                # Loops and tendrils hang from it
+                i = rnd.randint(2, 6)
+                while i < len(line) - 4:
+                    lx, ly = line[i]
+                    if rnd.random() < 0.35 and i + 20 < len(line):
+                        out += loop(rnd, lx, ly, line[i + 20][0], line[i + 20][1], rnd.uniform(4, 6))
+                        i += 20
+                    else:
+                        if rnd.random() < 0.6:
+                            out += tendril(rnd, lx, ly, rnd.uniform(14, 55), rnd.uniform(2.5, 4))
+                        i += rnd.randint(10, 26)
+        # One vine climbs across the wall on a wide building
+        if right - left > 180:
+            xa = rnd.uniform(left + 40, right - 40)
+            ya = top(xa)
+            if ya is not None:
+                xb = min(max(xa + rnd.uniform(-90, 90), left + 20), right - 20)
+                out += strand(wander(rnd, xa, 930, xb, max(ya + 30, 700), 18, 2.5), lumpy(rnd, rnd.uniform(7, 10)))
+    elif b["type"] not in SKIP:
+        # A vine climbs from the sidewalk, and tendrils hang from the roof line
+        xa = rnd.uniform(x0 + 10, x1 - 10)
+        t = top(xa)
+        if t is not None and t < 880:
+            out += strand(wander(rnd, xa, 932, xa + rnd.uniform(-30, 30), t + 20, 10, 2), lumpy(rnd, rnd.uniform(6, 8)))
+        xs = sorted(rnd.uniform(x0 + 10, x1 - 10) for _ in range(max(2, w // 70)))
+        for x in xs:
+            t = top(x)
+            if t is not None and t < 880:
+                out += tendril(rnd, x, t + 4, rnd.uniform(20, 60), rnd.uniform(3, 5))
+    return out
+
+def town_layer(base, section, seed, y0):
+    """One town section in the Upside Down. base is its image, which starts
+    at screen y = y0; section is its list of (building, x)."""
+    rnd = random.Random(seed)
+    mask = opaque(base)
+    out = goo(rnd, 10, 905, 1070)
+    # Roots across the road, thin at both ends
+    # One root in each fifth of the section, so they do not bunch together
+    for k in range(5):
+        xa = 130 + k * 340 + rnd.uniform(-40, 60)
+        xb = xa + rnd.uniform(260, 420)
+        if rnd.random() < 0.5:
+            xa, xb = xb, xa
+        pts = wander(rnd, xa, rnd.uniform(960, 1060), xb, rnd.uniform(960, 1060), rnd.uniform(8, 22), rnd.uniform(1, 2.5))
+        out += branched(rnd, pts, rnd.uniform(11, 18), rnd.randint(1, 3))
+    for b, x in section:
+        out += building_vines(rnd, mask, y0, b, x, buildings.width(b))
+    return with_vines(base, out, f"0 {y0} 1920 {base.height}", 1920, base.height)
+
+def hills_layer(base, seed, y0):
+    """A hills tile in the Upside Down: thinner vines across the hills,
+    because they are farther away."""
+    rnd = random.Random(seed)
+    out = ""
+    for _ in range(10):
+        xa = rnd.uniform(X_MIN, X_MAX - 300)
+        xb = min(X_MAX, xa + rnd.uniform(200, 420))
+        out += strand(wander(rnd, xa, rnd.uniform(790, 900), xb, rnd.uniform(790, 900), 14, 2),
+                      lumpy(rnd, rnd.uniform(4, 7), "both"), shadow=False)
+    return with_vines(base, out, f"0 {y0} 1920 {base.height}", 1920, base.height)
 
 def goo(rnd, n, ymin, ymax):
     """Dark patches on the ground."""
     out = ""
     for _ in range(n):
-        x, y = rnd.uniform(X_MIN + 40, X_MAX - 40), rnd.uniform(ymin, ymax)
-        out += (f'<ellipse cx="{x:.0f}" cy="{y:.0f}" rx="{rnd.uniform(30, 90):.0f}" ry="{rnd.uniform(5, 14):.0f}" '
-                f'fill="{GOO}" fill-opacity="{rnd.uniform(0.35, 0.6):.2f}"/>')
-    return out
-
-def town_vines(seed):
-    """Vines for one town section: patches and vines along the road and the
-    sidewalk, and vines that climb the walls from the sidewalk."""
-    rnd = random.Random(seed)
-    out = goo(rnd, 16, 905, 1070)
-    for _ in range(11):
-        # Along the road and the sidewalk
-        out += vine(rnd, rnd.uniform(X_MIN, X_MAX), rnd.uniform(915, 1072), rnd.choice((0, math.pi)) + rnd.uniform(-0.15, 0.15),
-                    rnd.uniform(300, 640), rnd.uniform(14, 24), 905, 1078)
-    for _ in range(14):
-        # Up the walls, from the sidewalk. The mask stops them at the roof lines.
-        out += vine(rnd, rnd.uniform(X_MIN, X_MAX), rnd.uniform(928, 945), -math.pi / 2 + rnd.uniform(-0.5, 0.5),
-                    rnd.uniform(160, 360), rnd.uniform(11, 18), 560, 1000)
-    return out
-
-def hills_vines(seed):
-    """Thinner vines across the hills, because they are farther away."""
-    rnd = random.Random(seed)
-    out = ""
-    for _ in range(16):
-        out += vine(rnd, rnd.uniform(X_MIN, X_MAX), rnd.uniform(760, 905), rnd.choice((0, math.pi)) + rnd.uniform(-0.3, 0.3),
-                    rnd.uniform(200, 420), rnd.uniform(5, 8), 700, 908)
+        x, y = rnd.uniform(X_MIN + 90, X_MAX - 90), rnd.uniform(ymin, ymax)
+        out += (f'<ellipse cx="{x:.0f}" cy="{y:.0f}" rx="{rnd.uniform(30, 80):.0f}" ry="{rnd.uniform(5, 12):.0f}" '
+                f'fill="{GOO}" fill-opacity="{rnd.uniform(0.3, 0.5):.2f}"/>')
     return out
 
 def with_vines(base, vines_svg, vb, w, h):
-    """base graded, with the vines drawn over it only where base is not
-    clear."""
+    """base graded, with the vines drawn over it. The vines may reach a few
+    pixels past the edge of what base shows, but no farther."""
     out = grade(base)
     v = to_image(vines_svg, vb, w, h)
-    v.putalpha(ImageChops.multiply(v.getchannel("A"), base.getchannel("A")))
+    reach = opaque(base).filter(ImageFilter.MaxFilter(9))
+    v.putalpha(ImageChops.multiply(v.getchannel("A"), reach))
     out.alpha_composite(v)
     return out
 
@@ -245,12 +445,11 @@ def spores(seed, n, rmin, rmax):
                 out += f'<circle cx="{x:.1f}" cy="{y + dy:.1f}" r="{r:.1f}" fill="url(#s)" opacity="{op:.2f}"/>'
     return out
 
-def lamp_vine(x):
-    """A vine that winds up a street lamp post (see street_lamp() in
-    buildings.py)."""
-    pts = []
-    for i in range(60):
-        t = i / 59
-        y = 934 - t * 118
-        pts.append((x + math.sin(t * math.pi * 5) * 5, y))
-    return ribbon(pts, 5, 1.5, VINE_EDGE) + ribbon(pts, 3.6, 1, VINE)
+def lamp_vines(x):
+    """A vine wound around a street lamp post (see street_lamp() in
+    buildings.py). Returns the part behind the post and the part in front of
+    it."""
+    rnd = random.Random(4)
+    front, back = wrap_arcs(rnd, x, 932, 830, 6, 22, 4.5, back=VINE_DARK)
+    tip = tendril(rnd, x + 4, 828, 26, 2.5)
+    return back, front + tip

@@ -190,12 +190,11 @@ def upside_image(town, name):
     p = season_palette("day", "fall")
     base = Image.open(io.BytesIO(render(layers(town)[name](p, "fall"), vb, 1920, h))).convert("RGBA")
     if name.startswith("town"):
-        vines = upside_down.town_vines(31 + LETTERS.index(name[-1]))
-    elif name.startswith("hills"):
-        vines = upside_down.hills_vines({"hills": 51, "hills_b": 52, "hills_c": 53}[name])
-    else:
-        return upside_down.grade(base)
-    return upside_down.with_vines(base, vines, vb, 1920, h)
+        i = LETTERS.index(name[-1])
+        return upside_down.town_layer(base, town["sections"][i], 31 + i, y)
+    if name.startswith("hills"):
+        return upside_down.hills_layer(base, {"hills": 51, "hills_b": 52, "hills_c": 53}[name], y)
+    return upside_down.grade(base)
 
 def write_upside(town, out):
     """The Upside Down images for October (extras.upside_down). See
@@ -215,9 +214,14 @@ def write_upside(town, out):
     if town["extras"]["street_lights"]:
         left, top, w, h = buildings.LAMP_BOX
         vb = f"{left} {top} {w} {h}"
+        back, front = upside_down.lamp_vines(0)
         lamp = Image.open(io.BytesIO(render(buildings.street_lamp(0, P["day"], "summer"), vb, w, h))).convert("RGBA")
         lamp = upside_down.grade(lamp)
-        lamp.alpha_composite(Image.open(io.BytesIO(render(upside_down.lamp_vine(0), vb, w, h))).convert("RGBA"))
+        # The back of the vine is behind the post, and the front is in front of it
+        out_im = Image.open(io.BytesIO(render(back, vb, w, h))).convert("RGBA")
+        out_im.alpha_composite(lamp)
+        out_im.alpha_composite(Image.open(io.BytesIO(render(front, vb, w, h))).convert("RGBA"))
+        lamp = out_im
         lamp.save(os.path.join(out, "street_lamp_upside.png"), optimize=True)
 
 def layers(town):

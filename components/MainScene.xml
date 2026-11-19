@@ -113,6 +113,8 @@
     <Rectangle id="flash" width="1920" height="1080" color="0xFFFFFFFF" opacity="0" />
     <!-- A weak red flash over everything, with the Upside Down lightning -->
     <Rectangle id="upsideFlash" width="1920" height="1080" color="0xD62834FF" opacity="0" />
+    <!-- Covers the scene while it switches to or from the Upside Down. The clock panel stays in front. -->
+    <Rectangle id="upsideCover" width="1920" height="1080" color="0x05070AFF" opacity="0" />
 
     <!-- Clock and weather panel -->
     <Group id="info" translation="[1260,60]">
@@ -178,6 +180,10 @@
     </Animation>
     <Animation id="sporesAnimB" repeat="true" easeFunction="linear" duration="55">
       <Vector2DFieldInterpolator key="[0.0, 1.0]" keyValue="[[0,0],[0,-1080]]" fieldToInterp="sporesStripB.translation" />
+    </Animation>
+    <!-- Fades the cover in, holds it while the images change, and fades it out -->
+    <Animation id="upsideCoverAnim" repeat="false" easeFunction="linear" duration="2.4">
+      <FloatFieldInterpolator key="[0.0, 0.4, 0.6, 1.0]" keyValue="[0.0, 1.0, 1.0, 0.0]" fieldToInterp="upsideCover.opacity" />
     </Animation>
     <!-- The Upside Down lightning. upsidedown.brs sets new keys for each flash. -->
     <Animation id="upsideFlashAnim" repeat="false" easeFunction="linear" duration="2.2">

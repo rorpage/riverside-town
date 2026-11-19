@@ -1,15 +1,23 @@
 ' The Upside Down in October (extras.upside_down in town.json): a dark
 ' version of the town with vines, specks that float up the screen, and red
 ' lightning every 7 seconds. There are no cars, animals, or airplane, and no
-' sun, moon, or stars.
+' sun, moon, or stars. In October the scene switches between the normal town
+' and the Upside Down at random times (see onUpsideSwitch).
 ' These subs run in the scope of MainScene (see MainScene.xml), so they
 ' share m with MainScene.brs.
 
-' True in October when the town has the Upside Down images (upsideDown in
-' the settings). m.upsideOverride can force it on or off.
+' True while the Upside Down shows: in October (or with m.upsideOverride set
+' to "switch"), during the Upside Down part of the switching. m.upsideOverride
+' set to "on" or "off" shows it always or never.
 function upsideDownTime() as boolean
     if not m.config.upsideDown then return false
-    if m.upsideOverride <> "" then return m.upsideOverride = "on"
+    if m.upsideOverride = "on" or m.upsideOverride = "off" then return m.upsideOverride = "on"
+    return upsideMonth() and m.upsideIn
+end function
+
+' True in October, or always with m.upsideOverride set to "switch"
+function upsideMonth() as boolean
+    if m.upsideOverride = "switch" then return true
     dt = CreateObject("roDateTime")
     dt.ToLocalTime()
     return dt.GetMonth() = 10
@@ -30,6 +38,49 @@ sub buildUpsideDown()
     m.upsideTimer.duration = m.upsideLightningEvery
     m.upsideTimer.repeat = true
     m.upsideTimer.observeField("fire", "onUpsideLightning")
+
+    ' The switching between the normal town and the Upside Down
+    m.upsideCoverAnim = m.top.findNode("upsideCoverAnim")
+    m.upsideSwitchTimer = m.top.createChild("Timer")
+    m.upsideSwitchTimer.repeat = false
+    m.upsideSwitchTimer.observeField("fire", "onUpsideSwitch")
+    ' Changes the images when the cover hides the scene, halfway through the cover animation
+    m.upsideMidTimer = m.top.createChild("Timer")
+    m.upsideMidTimer.repeat = false
+    m.upsideMidTimer.duration = m.upsideCoverAnim.duration / 2
+    m.upsideMidTimer.observeField("fire", "onUpsideSwitchMiddle")
+    if m.config.upsideDown
+        m.upsideSwitchTimer.duration = m.upsideFirstMin + Rnd(m.upsideFirstMore)
+        m.upsideSwitchTimer.control = "start"
+    end if
+end sub
+
+' Switches between the normal town and the Upside Down. Outside October it
+' only waits and checks again. The cover fades in over the whole scene, the
+' images change while it hides the scene, and it fades out.
+sub onUpsideSwitch()
+    if not upsideMonth()
+        m.upsideIn = false
+        scheduleUpsideSwitch()
+        return
+    end if
+    m.upsideCoverAnim.control = "start"
+    m.upsideMidTimer.control = "start"
+end sub
+
+sub onUpsideSwitchMiddle()
+    m.upsideIn = not m.upsideIn
+    applyScene()
+    scheduleUpsideSwitch()
+end sub
+
+sub scheduleUpsideSwitch()
+    if m.upsideIn
+        m.upsideSwitchTimer.duration = m.upsideOnMin + Rnd(m.upsideOnMore)
+    else
+        m.upsideSwitchTimer.duration = m.upsideOffMin + Rnd(m.upsideOffMore)
+    end if
+    m.upsideSwitchTimer.control = "start"
 end sub
 
 ' Shows or hides everything that changes in the Upside Down. applyScene()
@@ -46,6 +97,8 @@ sub updateUpsideDown()
         m.sporesAnimA.control = "start"
         m.sporesAnimB.control = "start"
         m.upsideTimer.control = "start"
+        ' A first flash as the Upside Down appears
+        onUpsideLightning()
         ' A flight that already started ends now (see onPlaneState)
         if m.plane.visible then m.planeAnim.control = "stop"
     else
