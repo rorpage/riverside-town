@@ -105,11 +105,15 @@ sub applyExternal(data as object)
     if not sameList(old.cars, cfg.cars) or not sameList(old.specialCars, cfg.specialCars) then applyCars()
     if old.airplane <> cfg.airplane then applyAirplane()
     if old.fireflies <> cfg.fireflies or old.fallingLeaves <> cfg.fallingLeaves or old.seasons <> cfg.seasons then applyScene()
+    ' The banner and the marquee read the texts with currentMessages() when
+    ' they need them, so new birthdays and messages need no update here.
+    printMessages()
 end sub
 
 ' Reads the settings that the network file can change and returns them with
 ' the names that m.config uses. A value with the wrong type or an unknown
-' value is left out, so the value from the zip is used. Settings that change
+' value is left out, so the value from the zip is used. In the birthdays
+' and messages lists, only the entries with a mistake are left out. Settings that change
 ' the images (the buildings, the sections, the lamps, the animals, and the
 ' hemisphere) can only be set in town.json, because the images are made
 ' when the town is built.
@@ -173,7 +177,82 @@ function externalSettings(data as object) as object
     end if
     special = carNames(data["special_cars"], true)
     if special <> invalid then out.specialCars = special
+
+    birthdays = checkedList(data["birthdays"], "birthdays")
+    if birthdays <> invalid then out.birthdays = birthdays
+    messages = checkedList(data["messages"], "messages")
+    if messages <> invalid then out.messages = messages
     return out
+end function
+
+' The entries of the birthdays or messages list that are correct, or invalid
+' if list is not a list. An entry with a mistake is left out, and the others
+' are kept. See birthdays and messages in tools/riverside/town.schema.json.
+function checkedList(list as dynamic, field as string) as dynamic
+    if list = invalid then return invalid
+    if type(list) <> "roArray"
+        print "External settings: " + field + " must be a list"
+        return invalid
+    end if
+    out = []
+    for i = 0 to list.Count() - 1
+        entry = invalid
+        if type(list[i]) = "roAssociativeArray"
+            if field = "birthdays"
+                entry = checkedBirthday(list[i])
+            else
+                entry = checkedMessage(list[i])
+            end if
+        end if
+        if entry = invalid
+            print "External settings: " + field + "/" + i.ToStr() + " has a mistake and is skipped: " + FormatJson(list[i])
+        else
+            out.Push(entry)
+        end if
+    end for
+    return out
+end function
+
+function checkedBirthday(b as object) as dynamic
+    monthDay = CreateObject("roRegex", "^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$", "")
+    entry = { name: b["name"], date: b["date"] }
+    if not textOk(entry.name, 30) then return invalid
+    if not isString(entry.date) or not monthDay.IsMatch(entry.date) then return invalid
+    if b["text"] <> invalid
+        if not textOk(b["text"], 60) then return invalid
+        entry.text = b["text"]
+    end if
+    if not whereOk(b["where"], entry) then return invalid
+    return entry
+end function
+
+function checkedMessage(msg as object) as dynamic
+    day = CreateObject("roRegex", "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$", "")
+    entry = { text: msg["text"] }
+    if not textOk(entry.text, 60) then return invalid
+    for each key in ["from", "until"]
+        v = msg[key]
+        if v <> invalid
+            if not isString(v) or not day.IsMatch(v) then return invalid
+            entry[key] = v
+        end if
+    end for
+    if not whereOk(msg["where"], entry) then return invalid
+    return entry
+end function
+
+' True if v is text with 1 to maxLen characters
+function textOk(v as dynamic, maxLen as integer) as boolean
+    return isString(v) and Len(v) >= 1 and Len(v) <= maxLen
+end function
+
+' Copies a correct "where" value into entry. Returns false for a wrong one.
+function whereOk(v as dynamic, entry as object) as boolean
+    if v = invalid then return true
+    if not isString(v) then return false
+    if v <> "banner" and v <> "marquee" and v <> "both" then return false
+    entry.where = v
+    return true
 end function
 
 ' The car names in list that are cars of the right kind (special or not), or

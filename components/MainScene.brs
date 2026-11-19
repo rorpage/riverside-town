@@ -11,6 +11,7 @@
 '   cars.brs       the cars on the street and the car parked at the gas station
 '   sidewalk.brs   the animals and the street lamps
 '   external.brs   the network settings file (external_config_url in town.json)
+'   messages.brs   the birthdays and messages to show today
 
 sub init()
     ' ---------- Settings ----------
@@ -224,6 +225,7 @@ sub init()
     makeTimer(900, "onWeatherTick")
     makeTimer(300, "onMoveInfo")
 
+    printMessages()
     startExternalConfig()
 end sub
 
@@ -234,7 +236,7 @@ function loadTownConfig() as object
         lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north", driveOn: "right",
         sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [], lamps: [],
         airplane: true, fireflies: true, fallingLeaves: true, seasons: true, christmasSeasons: [], christmasBlink: [],
-        externalConfigUrl: ""
+        externalConfigUrl: "", birthdays: [], messages: []
     }
     text = ReadAsciiFile("pkg:/components/town_config.json")
     data = invalid

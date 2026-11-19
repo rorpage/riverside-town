@@ -1036,6 +1036,22 @@
       "maxLength": 500,
       "description": "The address of a JSON file with settings that can change without rebuilding the town, for example http://192.168.1.50:8080/riverside.json. Use https, or http for an address on the home network. Leave it empty for none."
     },
+    "birthdays": {
+      "type": "array",
+      "maxItems": 100,
+      "description": "Birthdays to show each year. The network settings file can replace this list.",
+      "items": {
+        "$ref": "#/$defs/birthday"
+      }
+    },
+    "messages": {
+      "type": "array",
+      "maxItems": 50,
+      "description": "Messages to show between two dates. The network settings file can replace this list.",
+      "items": {
+        "$ref": "#/$defs/message"
+      }
+    },
     "special_cars": {
       "type": "array",
       "uniqueItems": true,
@@ -1085,8 +1101,80 @@
           "description": "In December, Christmas lights on the buildings, wreaths on the street lights, and garland on the gazebo and the columned hall"
         },
         "christmas_lights": {
-          "enum": ["mixed", "rainbow", "white", "red_white"],
+          "enum": [
+            "mixed",
+            "rainbow",
+            "white",
+            "red_white"
+          ],
           "description": "The style of the Christmas lights: one style for every building, or mixed, where each building gets one of the styles"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "where": {
+      "enum": [
+        "banner",
+        "marquee",
+        "both"
+      ],
+      "description": "Where the text shows: on the banner the airplane tows, on the marquee sign, or both. Default both."
+    },
+    "birthday": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "date"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30,
+          "description": "Shown as \"Happy birthday, <name>!\""
+        },
+        "date": {
+          "type": "string",
+          "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "Month and day, for example \"11-20\". On 02-29, the text shows on February 28 in years without February 29."
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Text to show in place of \"Happy birthday, <name>!\""
+        },
+        "where": {
+          "$ref": "#/$defs/where"
+        }
+      }
+    },
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "from": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "The first day to show the text, for example \"2026-11-26\". Without it, the text shows until the until date."
+        },
+        "until": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+          "description": "The last day to show the text. Without it, the text shows every day from the from date."
+        },
+        "where": {
+          "$ref": "#/$defs/where"
         }
       }
     }

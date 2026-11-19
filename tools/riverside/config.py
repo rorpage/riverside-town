@@ -8,6 +8,7 @@ import json
 import os
 import urllib.parse
 import urllib.request
+from . import messages
 from .art import FONTS, ACCENT, DARK, WHITE, check_text
 
 SCHEMA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "town.schema.json")
@@ -195,6 +196,10 @@ def fill(data):
     town["special_cars"] = data.get("special_cars", [])
     town["extras"] = dict(EXTRAS, **data.get("extras", {}))
     town["external_config_url"] = check_external_url(data.get("external_config_url", "").strip())
+    problems = messages.date_problems(data)
+    if problems:
+        raise ConfigError("town.json has mistakes:\n" + "\n".join("  " + p for p in problems))
+    town["birthdays"], town["messages"] = messages.fill(data)
     # The radio station on the hill beside the river
     radio = data.get("radio_station")
     town["radio_station"] = None

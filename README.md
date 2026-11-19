@@ -164,6 +164,8 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `cars` | Which cars drive by: `"sedan"`, `"van"`, `"jeep"`, `"truck"`, `"sports"`, and `"buggy"`. At least 2. | all six |
 | `special_cars` | Special cars from movies: `"aston"` (the silver Aston Martin DB5 from Goldfinger), `"herbie"` (Herbie, the Love Bug: a pearl white 1963 VW Beetle with the number 53 on the door), `"kitt"` (KITT from Knight Rider: a black 1982 Pontiac Trans Am with a red scanner light on the nose), `"ecto1"` (the Ecto-1 from Ghostbusters: a white and red 1959 Cadillac ambulance with equipment on the roof), `"delorean"` (the DeLorean time machine from the first Back to the Future movie), `"mcqueen"` (Lightning McQueen from Cars: a red race car with the number 95), and `"mustang"` (the dark gray 1969 Ford Mustang Mach 1 from John Wick). Each one first drives by 6 to 25 seconds after the screensaver starts, then about once every 20 seconds to 1 minute. Special cars never park at the gas station. | none |
 | `external_config_url` | The address of a [network settings file](#network-settings-file), for example `"http://192.168.1.50:8080/riverside.json"`. Use `https`, or `http` for a server on your home network (a private IP address such as `192.168.x.x` or `10.x.x.x`, a name with no dots, or a name that ends in `.local`, `.lan`, `.home`, `.home.arpa`, or `.internal`). | `""` (none) |
+| `birthdays` | Birthdays to show every year, for example `{ "name": "Sam", "date": "11-20" }`, which shows "Happy birthday, Sam!" on November 20. `date` is the month and day. `text` replaces the "Happy birthday" text. `where` is `"banner"`, `"marquee"`, or `"both"` (the default). A birthday on `"02-29"` shows on February 28 in years without February 29. Names can have up to 30 characters, and `text` up to 60. Up to 100. See [Birthdays and messages](#birthdays-and-messages). | none |
+| `messages` | Texts to show between two dates, for example `{ "text": "Welcome home!", "from": "2026-12-20", "until": "2026-12-26" }`. Both dates are included. Without `from`, the text shows until `until`; without `until`, it shows every day from `from`. `where` works as in `birthdays`. Up to 60 characters each, and up to 50 messages. | none |
 | `extras.airplane` | The airplane | `true` |
 | `extras.kayaks` | The kayaks beside the river, in spring and summer | `true` |
 | `extras.fireflies` | Fireflies on summer nights | `true` |
@@ -265,8 +267,16 @@ The fields use the same names as in `town.json`. All of them are optional:
   "units": { "temperature": "C", "clock": "24h" },
   "location": { "lat": 39.7684, "lon": -86.1581 },
   "cars": ["sedan", "van", "jeep"],
-  "special_cars": ["herbie"]
+  "special_cars": ["herbie"],
+  "birthdays": [{ "name": "Sam", "date": "11-20" }],
+  "messages": [{ "text": "Welcome home!", "from": "2026-12-20", "until": "2026-12-26", "where": "marquee" }]
 }
+```
+
+Editors such as VS Code check the file while you type if it starts with:
+
+```json
+"$schema": "https://raw.githubusercontent.com/rorpage/riverside-town/main/tools/riverside/external.schema.json",
 ```
 
 | Field | What it sets |
@@ -278,8 +288,17 @@ The fields use the same names as in `town.json`. All of them are optional:
 | `location` | `lat` and `lon`, as numbers or as text. Both are needed. A ZIP code does not work here, because the coordinates for a ZIP code are looked up when the town is built. |
 | `cars` | Which of the six regular cars drive by. At least 2. A car that is turned off finishes its trip. |
 | `special_cars` | Which special cars drive by. All special cars are in every zip, so any of them can be turned on here. |
+| `birthdays`, `messages` | The same as in `town.json`. Each list replaces the whole list from `town.json`. An entry with a mistake is skipped, and the other entries are used. |
 
 Settings that change the images can only be set in `town.json`: the buildings, the sections, the radio station, the animals, the street lights, the hemisphere, the side of the road, the Christmas decorations, and the other extras. The car parked at the gas station is chosen when the screensaver starts, from the cars in the zip.
+
+To check a file for mistakes before the screensaver uses it:
+
+```
+python3 tools/check_external_config.py riverside.json
+```
+
+It needs only the jsonschema package (`pip install jsonschema`). The [companion](companion/) folder has a Docker Compose file that serves the file on your home network with nginx, and the steps to set it up.
 
 ### When the file cannot be downloaded
 
@@ -296,6 +315,12 @@ To go back to the settings in the zip:
 - For all settings: delete the file, or replace its contents with `{}`. When the server answers that the file does not exist (response code 404 or 410), the screensaver also deletes the saved copy, so the zip settings stay in use even if the server is down later.
 - For good: remove `external_config_url` from `town.json`, then build and install the town again.
 
+### Birthdays and messages
+
+`birthdays` and `messages` can be set in `town.json`, in the network settings file, or both. The screensaver works out today's texts from the Roku's date and time zone, birthdays first, then messages, in the order they are listed.
+
+The banner the airplane tows and the marquee sign that show these texts are not built yet. Until they are, today's texts are printed in the [debug console](#debugging) with the prefix `Messages today:` when the screensaver starts and after each download of the network settings file.
+
 ## Project layout
 
 ```
@@ -307,15 +332,18 @@ components/MainScene.xml         Scene layout: layers, lanes, panel, animations
 components/MainScene.brs         init(), the settings, and small helpers for the scene
 components/scene/                The rest of the scene logic, one file for each part: scenery and time of day,
                                  Christmas, weather, airplane, clock panel, cars, sidewalk (animals and lamps),
-                                 and the network settings file
+                                 the network settings file, and today's birthdays and messages
 components/WeatherTask.xml       Task node definition for the weather request
 components/WeatherTask.brs       Calls the Open-Meteo API
 components/ExternalConfigTask.*  Downloads the network settings file and keeps the last good copy
+companion/                       Docker Compose file and an example network settings file
 components/town_config.json      The town's settings for the screensaver, written by the generator
 images/                          All artwork as PNG files, written by the generator
 tools/generate_images.py         Draws every image in images/ from town.json
 tools/build_town.py              Builds a complete zip and previews from any town.json (used by Docker)
-tools/riverside/                 The generator's code: building types, layout, scenery, and town.schema.json
+tools/check_external_config.py   Checks a network settings file for mistakes
+tools/riverside/                 The generator's code: building types, layout, scenery, town.schema.json,
+                                 and external.schema.json (the network settings file)
 tools/fonts/                     Sign fonts and their licenses (used only by the generator)
 Dockerfile                       The riverside-town-roku-generator image
 action.yml                       The GitHub Action that runs the image

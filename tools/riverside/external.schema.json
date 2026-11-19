@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Riverside Town network settings file",
+  "description": "The file at external_config_url in town.json. Every field is optional. Fields that are left out keep their values from town.json. See \"Network settings file\" in README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1,
+      "description": "The version of this file format"
+    },
+    "refresh_minutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1440,
+      "description": "Minutes between downloads. Default 10."
+    },
+    "extras": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Only these extras can change here. The others change the images, so they can only be set in town.json.",
+      "properties": {
+        "airplane": {
+          "type": "boolean"
+        },
+        "fireflies": {
+          "type": "boolean"
+        },
+        "falling_leaves": {
+          "type": "boolean"
+        },
+        "seasons": {
+          "type": "boolean"
+        }
+      }
+    },
+    "units": {
+      "$ref": "town.schema.json#/properties/units"
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lat",
+        "lon"
+      ],
+      "description": "A ZIP code does not work here, because its coordinates are looked up when the town is built.",
+      "properties": {
+        "lat": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+            }
+          ],
+          "description": "A number, or a number as text"
+        },
+        "lon": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+(\\.[0-9]+)?$"
+            }
+          ],
+          "description": "A number, or a number as text"
+        }
+      }
+    },
+    "cars": {
+      "$ref": "town.schema.json#/properties/cars"
+    },
+    "special_cars": {
+      "$ref": "town.schema.json#/properties/special_cars"
+    },
+    "birthdays": {
+      "$ref": "town.schema.json#/properties/birthdays"
+    },
+    "messages": {
+      "$ref": "town.schema.json#/properties/messages"
+    }
+  }
+}

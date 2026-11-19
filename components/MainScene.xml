@@ -9,6 +9,7 @@
   <script type="text/brightscript" uri="pkg:/components/scene/cars.brs" />
   <script type="text/brightscript" uri="pkg:/components/scene/sidewalk.brs" />
   <script type="text/brightscript" uri="pkg:/components/scene/external.brs" />
+  <script type="text/brightscript" uri="pkg:/components/scene/messages.brs" />
   <children>
     <!-- Sky: an 8 px wide gradient image stretched across the screen to save memory -->
     <Poster id="sky" width="1920" height="1080" loadDisplayMode="scaleToFill" />

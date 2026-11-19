@@ -246,6 +246,7 @@ def runtime_config(town, images):
         "seasons": ex["seasons"], "christmasSeasons": christmas_seasons(town),
         "christmasBlink": town.get("blink", []),
         "externalConfigUrl": town["external_config_url"],
+        "birthdays": town["birthdays"], "messages": town["messages"],
     }
 
 def radio_light(town):
