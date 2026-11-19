@@ -9,7 +9,7 @@ Some types are drawn at the position they had in the original town and moved
 into place with shift(). Their ORIGIN value is the left edge of that drawing.
 """
 import math
-from .art import (ACCENT, ICON, WHITE, DARK, wall, text, text_width, fit_size, sign, shift, arch,
+from .art import (ROKU_LINE, ACCENT, ICON, WHITE, DARK, wall, text, text_width, fit_size, sign, shift, arch,
                   snow_flat, snow_ridge, pumpkins, flower_box, round_tree, is_dark, skewed, bicycle,
                   shadow, shadow_opacity, is_christmas, christmas_lights, scallops, swags, garland, bow, wreath)
 
@@ -266,10 +266,9 @@ def theater_width(s):
 
 def marquee_area(s, x):
     """The area for the text on the marquee, as (left, top, width, height), for
-    a theater whose left edge is at x: the board, less 10 pixels on each side
-    and 2 pixels at the top and the bottom."""
+    a theater whose left edge is at x: the board, less 10 pixels on each side."""
     board_x, board_w = x + 10, s["width"] + 12 - 20
-    return board_x + 10, MARQUEE_Y[1] + 2, board_w - 20, MARQUEE_Y[2] - MARQUEE_Y[1] - 4
+    return board_x + 10, MARQUEE_Y[1], board_w - 20, MARQUEE_Y[2] - MARQUEE_Y[1]
 
 # Text sizes for the marquee, largest first. components/scene/marquee.brs uses
 # the same sizes and rule.
@@ -278,12 +277,12 @@ MARQUEE_SIZES = [30, 26, 22, 18, 15]
 def marquee_lines(label, width, height, measure):
     """Picks the largest size in MARQUEE_SIZES at which label fits in the
     marquee text area, and splits it into lines. A size fits when its lines,
-    each 1.2 times the size apart, fit in height, and the words fit in that
-    many lines of width. measure(text, size) gives the width of text.
+    each ROKU_LINE times the size apart, fit in height, and the words fit in
+    that many lines of width. measure(text, size) gives the width of text.
     Returns (size, lines); at the smallest size the lines may not all fit."""
     words = label.split()
     for size in MARQUEE_SIZES:
-        most = max(1, int(height / (size * 1.2)))
+        most = max(1, int(height / (size * ROKU_LINE)))
         lines = []
         for word in words:
             if lines and measure(lines[-1] + " " + word, size) <= width:

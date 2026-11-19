@@ -80,6 +80,14 @@ def banner_colors(pal):
 # weight, the weight value is ignored. Text is converted to outlines, so the
 # images look the same on every computer.
 FONT_DIR = os.path.join(TOOLS, "fonts")
+# The font for the text the Roku draws itself: the banner and the theater
+# marquees. tools/generate_images.py writes a copy of it at this weight to
+# components/fonts/ROKU_FONT_FILE, with its license, because the Roku cannot
+# choose a weight in a variable font.
+ROKU_FONT, ROKU_FONT_WEIGHT, ROKU_FONT_FILE = "oswald", 700, "Oswald-Bold.ttf"
+# The distance between lines of the Roku font, as a part of the text size.
+# Oswald's line height (its ascender plus its descender) is 1.48 times the size.
+ROKU_LINE = 1.5
 FONTS = {"oswald": "Oswald-Variable.ttf", "playfair": "PlayfairDisplay-Variable.ttf",
          "cinzel": "Cinzel-Variable.ttf", "script": "DancingScript-Variable.ttf",
          "kaushan": "KaushanScript-Regular.ttf", "alegreya": "AlegreyaSans-Medium.ttf",

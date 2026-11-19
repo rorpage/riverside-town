@@ -5,7 +5,8 @@
 ' shows today's birthdays and messages for the marquee
 ' (currentMessages("marquee") in messages.brs), one at a time, each for
 ' m.marqueeHold seconds. When there are none, it shows the theater's own text.
-' The text is in capital letters, like the letters on a real marquee.
+' The text is in capital letters, like the letters on a real marquee, in
+' Oswald Bold (components/fonts/Oswald-Bold.ttf), the font the previews use.
 ' These subs run in the scope of MainScene (see MainScene.xml), so they
 ' share m with MainScene.brs.
 
@@ -20,7 +21,7 @@ sub buildMarquee()
     m.marqueeFonts = []
     for each size in m.marqueeSizes
         font = CreateObject("roSGNode", "Font")
-        font.uri = "font:BoldSystemFontFile"
+        font.uri = "pkg:/components/fonts/Oswald-Bold.ttf"
         font.size = size
         m.marqueeFonts.Push(font)
     end for
@@ -101,8 +102,9 @@ sub onMarqueeFaded(event as object)
 end sub
 
 ' Shows text in the largest size at which it fits the text area, split into
-' lines at spaces. A size fits when its lines, each 1.2 times the size apart,
-' fit in the height, and every line fits in the width. This is the same rule
+' lines at spaces. A size fits when its lines, each 1.5 times the size apart
+' (ROKU_LINE in tools/riverside/art.py; Oswald's lines are 1.48 times the
+' size apart), fit in the height, and every line fits in the width. This is the same rule
 ' as marquee_lines() in tools/riverside/buildings.py. At the smallest size,
 ' a line that still does not fit is cut off with "...".
 sub setMarqueeText(label as object, text as string, d as object)
@@ -110,7 +112,7 @@ sub setMarqueeText(label as object, text as string, d as object)
     lines = []
     for k = 0 to m.marqueeSizes.Count() - 1
         font = m.marqueeFonts[k]
-        most = Int(d["h"] / (m.marqueeSizes[k] * 1.2))
+        most = Int(d["h"] / (m.marqueeSizes[k] * 1.5))
         if most < 1 then most = 1
         lines = []
         fits = true

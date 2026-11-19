@@ -12,7 +12,7 @@ import random
 from PIL import Image
 from . import scenery, buildings
 from .art import ACCENT, season_palette, christmas_palette, svg, render, text, text_width
-from .config import MARQUEE_FONT
+from .art import ROKU_FONT, ROKU_FONT_WEIGHT, ROKU_LINE
 import cairosvg
 
 LETTERS = "abcde"
@@ -53,18 +53,17 @@ def parked(town, images, im, section, name):
 def marquees(town, section):
     """The text on each theater marquee in one town section: the theater's own
     text, as components/scene/marquee.brs shows it when there is no birthday or
-    message. The previews use MARQUEE_FONT; the Roku uses its bold system font,
-    which is a little wider."""
+    message, in ROKU_FONT, like the Roku."""
     out = ""
-    measure = lambda t, size: text_width(t, MARQUEE_FONT, 700, size, 1)
+    measure = lambda t, size: text_width(t, ROKU_FONT, ROKU_FONT_WEIGHT, size)
     for m in town["marquees"]:
         if m["x"] // 1920 != section:
             continue
         size, lines = buildings.marquee_lines(m["text"], m["w"], m["h"], measure)
         cx, mid = m["x"] % 1920 + m["w"] / 2, m["y"] + m["h"] / 2
         for k, line in enumerate(lines):
-            base = mid + (k - (len(lines) - 1) / 2) * size * 1.2 + size * 0.36
-            out += text(line, MARQUEE_FONT, 700, size, cx, base, "#1F2A33", 1)
+            base = mid + (k - (len(lines) - 1) / 2) * size * ROKU_LINE + size * 0.36
+            out += text(line, ROKU_FONT, ROKU_FONT_WEIGHT, size, cx, base, "#1F2A33")
     return out
 
 def lamps(town, section, p, season):

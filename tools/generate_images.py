@@ -258,6 +258,19 @@ def radio_light(town):
     light = scenery.radio_light(town["radio_station"])
     return [light[0], light[1] - CROPS["hills"][0]] if light else []
 
+def write_font(package):
+    """Writes ROKU_FONT at ROKU_FONT_WEIGHT, with its license, to
+    components/fonts in the package, for the banner and the marquees."""
+    from fontTools.ttLib import TTFont
+    from fontTools.varLib import instancer
+    src = os.path.join(art.FONT_DIR, art.FONTS[art.ROKU_FONT])
+    out = os.path.join(package, "components", "fonts")
+    os.makedirs(out, exist_ok=True)
+    font = instancer.instantiateVariableFont(TTFont(src), {"wght": art.ROKU_FONT_WEIGHT})
+    font.save(os.path.join(out, art.ROKU_FONT_FILE))
+    with open(src[:-4] + "-OFL.txt", "rb") as f, open(os.path.join(out, art.ROKU_FONT_FILE[:-4] + "-OFL.txt"), "wb") as g:
+        g.write(f.read())
+
 def write_manifest(path, title):
     with open(path) as f:
         lines = f.read().split("\n")
@@ -279,6 +292,7 @@ def build(config, package, build_dir, docs=None):
         json.dump(runtime_config(town, images), f, indent=2)
         f.write("\n")
     write_manifest(os.path.join(package, "manifest"), town["title"])
+    write_font(package)
     previews.write_all(town, layers(town), images, build_dir, docs)
     n = len(town["sections"])
     print(f"Built {town['title']}: {sum(len(s) for s in town['sections'])} buildings and trees in {n} town section{'s' if n > 1 else ''}.")

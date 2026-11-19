@@ -75,7 +75,7 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
 
   Falling leaves and fireflies are hidden while rain or snow is falling. Leaves fall only in October and November (April and May in the southern hemisphere). Even then they do not fall all the time: they fall, fade out, stay hidden, then fade back in. Each of these lasts a random length of time.
 - A banner plane for birthdays and messages. On a day with a birthday or a message, a larger copy of the airplane tows a banner with the text across the sky every 2 to 4 minutes. With more than one text, each flight shows the next one. It flies at the distance of the near mountains and takes about 20 to 30 seconds to cross the screen. Like the small airplane, it has its wingtip and tail lights at dusk and night, and it does not fly in rain, snow, fog, or thunderstorms. It flies even when `extras.airplane` is `false`.
-- A theater building type with a marquee. The marquee shows today's birthdays and messages, one at a time, and the theater's own text when there are none. The letters are capital letters, sized to fit the board on one to three lines.
+- A theater building type with a marquee. The marquee shows today's birthdays and messages, one at a time, and the theater's own text when there are none. The letters are capital letters, sized to fit the board on one or two lines.
 - An optional network settings file. Some settings, such as the airplane, the cars, and the units, can be changed from a JSON file on your home network or on the internet, without building the town again or installing it on the Roku again. See [Network settings file](#network-settings-file).
 - A clock and weather panel in the top-right corner. Every 5 minutes it fades out, moves a small amount within the corner, and fades back in, to protect TVs from burn-in. The sun and moon are in the top-left corner, so the panel never covers them.
 
@@ -324,7 +324,9 @@ To go back to the settings in the zip:
 
 Texts with `"where": "banner"` or `"both"` are shown on the banner plane. The first flight is 15 to 45 seconds after the screensaver starts, and the next ones are 2 to 4 minutes apart. The banner gets wider to fit the text. A new birthday or message from the network settings file shows on the next flight.
 
-Texts with `"where": "marquee"` or `"both"` are shown on the marquee of every `theater` in the town. Each text stays for 12 seconds, then the letters fade out and the next text fades in. With one text, it stays. When there is no text for today, each theater shows its own `text`. The text is shown in capital letters, in the largest of five sizes at which it fits the board, on one to three lines. A word that is too long for the board at the smallest size is cut off with "...". The previews show each theater's own `text`, in the Oswald font; the Roku uses its bold system font, which is a little wider.
+Texts with `"where": "marquee"` or `"both"` are shown on the marquee of every `theater` in the town. Each text stays for 12 seconds, then the letters fade out and the next text fades in. With one text, it stays. When there is no text for today, each theater shows its own `text`. The text is shown in capital letters, in the largest of five sizes at which it fits the board, on one or two lines. A word that is too long for the board at the smallest size is cut off with "...". The previews show each theater's own `text`.
+
+The banner and the marquees use Oswald Bold. The generator writes it to `components/fonts/Oswald-Bold.ttf`, with its license, from `tools/fonts/Oswald-Variable.ttf`. A birthday or message in `town.json` with a letter that Oswald cannot draw stops the build with a message. The network settings file is not checked for this, so such a letter shows as an empty box on the TV. Oswald has the Latin and Cyrillic alphabets, but not Greek letters or emoji.
 
 Today's texts are also printed in the [debug console](#debugging) with the prefix `Messages today:` when the screensaver starts and after each download of the network settings file.
 
@@ -346,6 +348,7 @@ components/WeatherTask.brs       Calls the Open-Meteo API
 components/ExternalConfigTask.*  Downloads the network settings file and keeps the last good copy
 companion/                       Docker Compose file and an example network settings file
 components/town_config.json      The town's settings for the screensaver, written by the generator
+components/fonts/                Oswald Bold and its license, for the banner and the marquees, written by the generator
 images/                          All artwork as PNG files, written by the generator
 tools/generate_images.py         Draws every image in images/ from town.json
 tools/build_town.py              Builds a complete zip and previews from any town.json (used by Docker)

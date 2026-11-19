@@ -9,7 +9,7 @@ import os
 import urllib.parse
 import urllib.request
 from . import messages
-from .art import FONTS, ACCENT, DARK, WHITE, check_text
+from .art import FONTS, ACCENT, DARK, WHITE, ROKU_FONT, check_text
 
 SCHEMA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "town.schema.json")
 
@@ -72,10 +72,6 @@ EXTRAS = {"airplane": True, "kayaks": True, "fireflies": True, "falling_leaves":
           "table_mountain": False, "bikes": False, "street_lights": False, "christmas": True,
           "christmas_lights": "mixed"}
 RADIO = dict(color="#E4DCCD", font="racing", weight=400, letter_color="#D32F2F", tower=True)
-
-# The font the previews use for the text on a theater marquee. On the Roku,
-# the marquee uses the Roku's bold system font.
-MARQUEE_FONT = "oswald"
 
 # Text fields that are not drawn with the building's own font
 FIELD_FONTS = {("radio_station", "small_line"): "kaushan", ("radio_station", "power"): "oswald",
@@ -206,6 +202,13 @@ def fill(data):
     if problems:
         raise ConfigError("town.json has mistakes:\n" + "\n".join("  " + p for p in problems))
     town["birthdays"], town["messages"] = messages.fill(data)
+    # The banner and the marquees show these texts in ROKU_FONT
+    for field, entries, keys in (("birthdays", town["birthdays"], ("name", "text")), ("messages", town["messages"], ("text",))):
+        for i, entry in enumerate(entries):
+            for key in keys:
+                bad = check_text(entry.get(key, ""), ROKU_FONT) + check_text(entry.get(key, "").upper(), ROKU_FONT)
+                if bad:
+                    raise ConfigError(f"{field}/{i}/{key}: the banner and the marquee cannot show {' '.join(sorted(set(bad)))} in \"{entry[key]}\".")
     # The radio station on the hill beside the river
     radio = data.get("radio_station")
     town["radio_station"] = None
@@ -259,10 +262,9 @@ def fill(data):
         if kind in ("shop", "church", "school", "columned_hall", "drive_through", "theater") and not spec.get("name"):
             raise ConfigError(f"{where}: a {kind} needs a \"name\".")
         if kind == "theater":
-            # The marquee shows its text in capital letters. The previews draw
-            # it with MARQUEE_FONT, so that font must be able to draw it.
+            # The marquee shows its text in capital letters, in ROKU_FONT
             spec["text"] = spec["text"].upper()
-            bad = check_text(spec["text"], MARQUEE_FONT)
+            bad = check_text(spec["text"], ROKU_FONT)
             if bad:
                 raise ConfigError(f"{where}: the marquee cannot show {' '.join(bad)} in \"{spec['text']}\".")
         for key in ("name", "number", "small_line", "store_name", "canopy_name", "power"):
