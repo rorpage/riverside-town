@@ -10,6 +10,10 @@
 '   panel.brs      the clock and weather panel
 '   cars.brs       the cars on the street and the car parked at the gas station
 '   sidewalk.brs   the animals and the street lamps
+'   external.brs   the network settings file (external_config_url in town.json)
+'   messages.brs   the birthdays and messages to show today
+'   banner.brs     the banner plane, which tows today's birthdays and messages
+'   marquee.brs    the text on the theater marquees
 
 sub init()
     ' ---------- Settings ----------
@@ -18,9 +22,16 @@ sub init()
     ' location (Roku does not give apps the device's ZIP code), the units, the
     ' number of town sections, the cars, the animals, and the extras.
     m.config = loadTownConfig()
-    m.LAT = m.config.lat
-    m.LON = m.config.lon
+    ' The settings from the zip. The network settings file is applied on top
+    ' of these each time it is downloaded (see components/scene/external.brs).
+    m.baseConfig = m.config
     m.sections = m.config.sections
+    ' Days to keep using the last good network settings file when it cannot
+    ' be downloaded. After that, the settings in the zip are used again.
+    m.externalKeepDays = 7
+    ' Minutes between downloads of the network settings file, when the file
+    ' has no refresh_minutes
+    m.externalRefreshDefault = 10
 
     ' Scroll speed of each scenery layer in pixels per second. Farther = slower.
     m.layerSpeeds = { clouds: 8, far: 5, near: 12, hills: 24, town: 55 }
@@ -50,16 +61,10 @@ sub init()
         { name: "mcqueen",  w: 300, h: 106, wheels: [[75, 71], [245, 71]],   r: 28, bottom: 99,  ground: 420, special: true },
         { name: "mustang",  w: 310, h: 96,  wheels: [[71, 77], [243, 77]],   r: 18, bottom: 95,  ground: 380, special: true }
     ]
-    ' Only the cars listed in the settings drive by. Special cars come from their
-    ' own list, specialCars.
-    m.carDefs = []
-    for each def in allCars
-        names = m.config.cars
-        if isSpecial(def) then names = m.config.specialCars
-        for each name in names
-            if name = def.name then m.carDefs.Push(def)
-        end for
-    end for
+    ' Only the cars listed in the settings drive by (see enabledCars). The
+    ' network settings file can change the list while the screensaver runs.
+    m.allCars = allCars
+    m.carDefs = enabledCars()
     ' Special cars drive by less often. Seconds before the first trip: at least
     ' specialFirstMin, plus up to specialFirstMore. Seconds between trips: at
     ' least specialWaitMin, plus up to specialWaitMore. Regular cars wait 2 to 9
@@ -120,6 +125,25 @@ sub init()
     ' Seconds to wait between flights: at least planeWaitMin, plus up to planeWaitMore.
     m.planeWaitMin = 45
     m.planeWaitMore = 120
+
+    ' The banner plane: a Cessna 3 times the size of the small airplane, that
+    ' tows a banner with today's birthdays and messages. It flies at the
+    ' distance of the near mountains, so the camera adds or takes away
+    ' m.layerSpeeds.near. Planes that tow banners fly slowly, so its own speed
+    ' is about 2 times the sedan's (300): 2 * 300 * 12 / 55 is about 131. A
+    ' banner then takes about 20 to 30 seconds to cross the screen.
+    m.bannerSpeed = 131
+    ' Seconds before the first flight: at least bannerFirstMin, plus up to
+    ' bannerFirstMore. Seconds between flights: at least bannerWaitMin, plus up
+    ' to bannerWaitMore. With no text for today, it checks again after the
+    ' same wait.
+    m.bannerFirstMin = 15
+    m.bannerFirstMore = 30
+    m.bannerWaitMin = 120
+    m.bannerWaitMore = 120
+
+    ' Seconds each text stays on a theater marquee before the next one
+    m.marqueeHold = 12
 
     ' Falling leaves in fall come and go. They fall for leafOnMin seconds plus up
     ' to leafOnMore, then stop for leafOffMin plus up to leafOffMore, and so on.
@@ -206,13 +230,14 @@ sub init()
     startParallax()
     buildCars()
     parkCar()
+    buildMarquee()
     placeAnimals()
     buildLamps()
     updateClock()
 
     m.weatherTask = m.top.findNode("weatherTask")
-    m.weatherTask.lat = m.LAT
-    m.weatherTask.lon = m.LON
+    m.weatherTask.lat = m.config.lat
+    m.weatherTask.lon = m.config.lon
     m.weatherTask.unit = m.config.temperatureUnit
     m.weatherTask.observeField("result", "onWeather")
     m.weatherTask.control = "RUN"
@@ -221,6 +246,10 @@ sub init()
     makeTimer(60, "onPeriodTick")
     makeTimer(900, "onWeatherTick")
     makeTimer(300, "onMoveInfo")
+
+    printMessages()
+    startBanner()
+    startExternalConfig()
 end sub
 
 ' Reads components/town_config.json. If it is missing or cannot be read, the
@@ -229,7 +258,13 @@ function loadTownConfig() as object
     cfg = {
         lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north", driveOn: "right",
         sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [], lamps: [],
-        airplane: true, fireflies: true, fallingLeaves: true, seasons: true, christmasSeasons: [], christmasBlink: []
+        airplane: true, fireflies: true, fallingLeaves: true, seasons: true, christmasSeasons: [], christmasBlink: [],
+        externalConfigUrl: "", birthdays: [], messages: [], marquees: [],
+        bannerColors: {
+            day: { cloth: "0xF4F1E8FF", stripe: "0xC0392BFF", rope: "0x5B6770FF", text: "0x1F2A33FF" },
+            dusk: { cloth: "0xF4F1E8FF", stripe: "0xC0392BFF", rope: "0x5B6770FF", text: "0x1F2A33FF" },
+            night: { cloth: "0xF4F1E8FF", stripe: "0xC0392BFF", rope: "0x5B6770FF", text: "0x1F2A33FF" }
+        }
     }
     text = ReadAsciiFile("pkg:/components/town_config.json")
     data = invalid
@@ -253,6 +288,20 @@ function loadTownConfig() as object
     cfg.sections = Int(cfg.sections)
     if cfg.sections < 1 then cfg.sections = 1
     return cfg
+end function
+
+' The width in pixels of text in font, on one line. It uses a label that is
+' in the scene but cannot be seen, because a label with a width of 0 is as
+' wide as its text.
+function measureText(text as string, font as object) as integer
+    if m.measureLabel = invalid
+        m.measureLabel = m.top.createChild("Label")
+        m.measureLabel.opacity = 0
+        m.measureLabel.translation = [0, -200]
+    end if
+    m.measureLabel.font = font
+    m.measureLabel.text = text
+    return Int(m.measureLabel.boundingRect().width)
 end function
 
 function makeTimer(seconds as float, callback as string) as object

@@ -64,12 +64,30 @@ def wall(day, p):
     ratio = [n / d for n, d in zip(hex_rgb(p["houseA"]), hex_rgb(P["day"]["houseA"]))]
     return "#" + "".join(f"{min(255, round(c * r)):02X}" for c, r in zip(hex_rgb(day), ratio))
 
+# The banner the large airplane tows (components/scene/banner.brs). These are
+# day colors; banner_colors() darkens them for dusk and night like wall().
+# The text color stays dark in every period.
+BANNER = {"cloth": "#F4F1E8", "stripe": "#C0392B", "rope": "#5B6770", "text": "#1F2A33"}
+
+def banner_colors(pal):
+    """The banner colors for the period pal, as #RRGGBB."""
+    p = P[pal]
+    return {key: color if key == "text" else wall(color, p) for key, color in BANNER.items()}
+
 # ---------- Fonts and text ----------
 # The fonts are stored in tools/fonts under the SIL Open Font License. Most are
 # variable fonts (one file covers a range of weights); for the ones with one
 # weight, the weight value is ignored. Text is converted to outlines, so the
 # images look the same on every computer.
 FONT_DIR = os.path.join(TOOLS, "fonts")
+# The font for the text the Roku draws itself: the banner and the theater
+# marquees. tools/generate_images.py writes a copy of it at this weight to
+# components/fonts/ROKU_FONT_FILE, with its license, because the Roku cannot
+# choose a weight in a variable font.
+ROKU_FONT, ROKU_FONT_WEIGHT, ROKU_FONT_FILE = "oswald", 700, "Oswald-Bold.ttf"
+# The distance between lines of the Roku font, as a part of the text size.
+# Oswald's line height (its ascender plus its descender) is 1.48 times the size.
+ROKU_LINE = 1.5
 FONTS = {"oswald": "Oswald-Variable.ttf", "playfair": "PlayfairDisplay-Variable.ttf",
          "cinzel": "Cinzel-Variable.ttf", "script": "DancingScript-Variable.ttf",
          "kaushan": "KaushanScript-Regular.ttf", "alegreya": "AlegreyaSans-Medium.ttf",

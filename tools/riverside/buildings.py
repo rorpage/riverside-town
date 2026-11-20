@@ -9,7 +9,7 @@ Some types are drawn at the position they had in the original town and moved
 into place with shift(). Their ORIGIN value is the left edge of that drawing.
 """
 import math
-from .art import (ACCENT, ICON, WHITE, DARK, wall, text, text_width, fit_size, sign, shift, arch,
+from .art import (ROKU_LINE, ACCENT, ICON, WHITE, DARK, wall, text, text_width, fit_size, sign, shift, arch,
                   snow_flat, snow_ridge, pumpkins, flower_box, round_tree, is_dark, skewed, bicycle,
                   shadow, shadow_opacity, is_christmas, christmas_lights, scallops, swags, garland, bow, wreath)
 
@@ -247,6 +247,116 @@ def shop_draw(s, x, p, season):
         # Lights in small swags along the top of the roof edge, so they stay
         # clear of the sign
         out += christmas_lights(scallops(x - 4, x + w + 4, top + 1, 5), p, start=w // 10)
+    return out
+
+# ---------- theater ----------
+# A small-town movie theater with a marquee over the entrance. The text on
+# the marquee is not part of the image: components/scene/marquee.brs puts a
+# label over the board, in the area that marquee_area() gives, so it can show
+# today's birthdays and messages. The building's own "text" is shown when
+# there are none.
+THEATER_TOP = 618          # The top of the walls
+MARQUEE_Y = (690, 700, 764, 774)   # The top trim, the board, and the bottom trim
+MARQUEE_BOARD = "#F4F1E8"  # The board in daylight
+MARQUEE_LIT = "#FFF4D6"    # The board at dusk and night, when it is lit
+
+def theater_width(s):
+    # The marquee reaches 6 pixels past the walls on each side
+    return s["width"] + 12
+
+def marquee_area(s, x):
+    """The area for the text on the marquee, as (left, top, width, height), for
+    a theater whose left edge is at x: the board, less 10 pixels on each side."""
+    board_x, board_w = x + 10, s["width"] + 12 - 20
+    return board_x + 10, MARQUEE_Y[1], board_w - 20, MARQUEE_Y[2] - MARQUEE_Y[1]
+
+# Text sizes for the marquee, largest first. components/scene/marquee.brs uses
+# the same sizes and rule.
+MARQUEE_SIZES = [30, 26, 22, 18, 15]
+
+def marquee_lines(label, width, height, measure):
+    """Picks the largest size in MARQUEE_SIZES at which label fits in the
+    marquee text area, and splits it into lines. A size fits when its lines,
+    each ROKU_LINE times the size apart, fit in height, and the words fit in
+    that many lines of width. measure(text, size) gives the width of text.
+    Returns (size, lines); at the smallest size the lines may not all fit."""
+    words = label.split()
+    for size in MARQUEE_SIZES:
+        most = max(1, int(height / (size * ROKU_LINE)))
+        lines = []
+        for word in words:
+            if lines and measure(lines[-1] + " " + word, size) <= width:
+                lines[-1] += " " + word
+            else:
+                lines.append(word)
+        if len(lines) <= most and all(measure(l, size) <= width for l in lines):
+            return size, lines
+    return size, lines
+
+def theater_draw(s, x, p, season):
+    """A two-story theater: brick-colored walls, a roof edge, the name on a
+    sign, a marquee with a row of bulbs along its top and bottom trim, glass
+    doors in the middle, and a poster case on each side. The bulbs and the
+    board are lit at dusk and night."""
+    A, B, W2, R, Wn = colors(p)
+    w = s["width"]
+    hx, top = x + 6, THEATER_TOP
+    lit = is_dark(p)
+    trim = wall(s["trim_color"], p)
+    out = f'<rect x="{hx}" y="{top}" width="{w}" height="{900 - top}" fill="{wall(s["color"], p)}"/>'
+    out += f'<rect x="{hx - 4}" y="{top}" width="{w + 8}" height="14" fill="{R}"/>' + snow_flat(season, p, hx - 4, top, w + 8)
+    out += shadow([(hx, top + 14), (hx + w, top + 14), (hx + w, top + 22), (hx + 8, top + 22)], p)
+
+    # The name sign
+    sx, sw = hx + 30, w - 60
+    out += f'<rect x="{sx + 5}" y="645" width="{sw}" height="40" rx="4" fill="#000000" fill-opacity="{shadow_opacity(p):.3f}"/>'
+    out += f'<rect x="{sx}" y="640" width="{sw}" height="40" rx="4" fill="{s["sign_color"]}"/>'
+    size = fit_size(s["name"], s["font"], s["weight"], s.get("sign_size", 28), sw - 20, 3)
+    out += text(s["name"], s["font"], s["weight"], size, sx + sw / 2, 660 + size * 0.34, s.get("sign_text_color", WHITE), 3)
+
+    # The marquee
+    t0, b0, b1, t1 = MARQUEE_Y
+    mx, mw = x, w + 12
+    board = MARQUEE_LIT if lit else wall(MARQUEE_BOARD, p)
+    out += f'<rect x="{mx}" y="{t0}" width="{mw}" height="{t1 - t0}" fill="{trim}"/>'
+    out += f'<rect x="{mx + 10}" y="{b0}" width="{mw - 20}" height="{b1 - b0}" fill="{board}"/>'
+    if lit:
+        out += f'<rect x="{mx}" y="{t0}" width="{mw}" height="{t1 - t0}" fill="#F6E7B0" fill-opacity="0.10"/>'
+    n = (mw - 8) // 14
+    for k in range(n + 1):
+        bx = mx + 4 + k * (mw - 8) / n
+        for by in (t0 + 5, t1 - 5):
+            if lit:
+                out += (f'<circle cx="{bx:.1f}" cy="{by}" r="5" fill="#F6E7B0" fill-opacity="0.35"/>'
+                        f'<circle cx="{bx:.1f}" cy="{by}" r="2.2" fill="#FFF8E0"/>')
+            else:
+                out += f'<circle cx="{bx:.1f}" cy="{by}" r="2.2" fill="{wall("#E9DFC4", p)}"/>'
+    out += snow_flat(season, p, mx, t0, mw)
+    out += shadow([(hx, t1), (hx + w, t1), (hx + w, t1 + 10), (hx + 14, t1 + 10)], p)
+
+    # The doors: two pairs of glass doors in a frame
+    cx = hx + w // 2
+    out += f'<rect x="{cx - 62}" y="806" width="124" height="94" fill="{R}"/>'
+    for dx in (-56, -28, 4, 32):
+        out += f'<rect x="{cx + dx}" y="814" width="24" height="80" fill="{Wn}"/>'
+        out += f'<line x1="{cx + dx + 12}" y1="850" x2="{cx + dx + 12}" y2="858" stroke="{R}" stroke-width="2"/>'
+
+    # A poster case on each side. The posters are colored shapes, with no people.
+    for i, px in enumerate((hx + 16, hx + w - 60)):
+        poster = wall(["#2B4C7E", "#7E2B4C"][i], p)
+        out += f'<rect x="{px}" y="812" width="44" height="66" fill="{trim}"/>'
+        out += f'<rect x="{px + 4}" y="816" width="36" height="58" fill="{poster}"/>'
+        out += (f'<polygon points="{px + 22},826 {px + 26},836 {px + 36},836 {px + 28},842 {px + 31},852 '
+                f'{px + 22},846 {px + 13},852 {px + 16},842 {px + 8},836 {px + 18},836" fill="{wall("#F2C14E", p)}"/>')
+        out += f'<rect x="{px + 10}" y="858" width="24" height="4" fill="{wall("#F4F1E8", p)}"/>'
+        out += f'<rect x="{px + 14}" y="865" width="16" height="3" fill="{wall("#F4F1E8", p)}"/>'
+        if lit:
+            out += f'<rect x="{px + 4}" y="816" width="36" height="58" fill="#F6E7B0" fill-opacity="0.18"/>'
+
+    out += pumpkins(season, p, cx + 70)
+    if is_christmas(p):
+        # Lights along the top of the roof edge, clear of the name sign
+        out += christmas_lights(scallops(hx - 4, hx + w + 4, top + 1, 5), p, start=w // 10)
     return out
 
 # ---------- church ----------
@@ -875,10 +985,10 @@ def street_lamps(xs, p, season):
     return "".join(street_lamp(x, p, season) for x in xs)
 
 # Building types with Christmas lights in December
-LIT = {"house", "shop", "church", "school", "columned_hall", "gas_station", "drive_through"}
+LIT = {"house", "shop", "church", "school", "columned_hall", "gas_station", "drive_through", "theater"}
 
 # Building types with walls down to the sidewalk, which get a shadow on it
-SOLID = {"house", "shop", "church", "school", "columned_hall"}
+SOLID = {"house", "shop", "church", "school", "columned_hall", "theater"}
 
 def sidewalk_shadows(section, p):
     """A short shadow on the sidewalk in front of each building with walls,
@@ -904,6 +1014,7 @@ TYPES = {
     "columned_hall": (hall_width, hall_draw),
     "gas_station": (gas_width, gas_draw),
     "drive_through": (drive_width, drive_draw),
+    "theater": (theater_width, theater_draw),
     "tree": (tree_width, tree_draw),
     "gazebo": (gazebo_width, gazebo_building),
     "bike_rack": (rack_width, rack_draw),

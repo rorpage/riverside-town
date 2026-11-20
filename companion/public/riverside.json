@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/rorpage/riverside-town/main/tools/riverside/external.schema.json",
+  "version": 1,
+  "refresh_minutes": 10,
+  "extras": { "airplane": true },
+  "birthdays": [
+    { "name": "Sam", "date": "11-20" },
+    { "name": "Alex", "date": "03-04", "where": "banner" }
+  ],
+  "messages": [
+    { "text": "Welcome home!", "from": "2026-12-20", "until": "2026-12-26", "where": "marquee" }
+  ]
+}

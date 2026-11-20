@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component name="ExternalConfigTask" extends="Task">
+  <interface>
+    <!-- The address of the network settings file (external_config_url in town.json) -->
+    <field id="url" type="string" />
+    <!-- Days a saved copy of the file can be used when the file cannot be downloaded -->
+    <field id="keepDays" type="integer" value="7" />
+    <!-- Set to true for the first run only: the task then also sends the saved copy -->
+    <field id="readSaved" type="boolean" value="false" />
+    <!-- The saved copy: { data, saved }. It is set before the download starts. -->
+    <field id="saved" type="assocarray" />
+    <!-- The download: { status: "ok", data }, { status: "removed" }, or { status: "error", reason } -->
+    <field id="result" type="assocarray" />
+  </interface>
+  <script type="text/brightscript" uri="pkg:/components/ExternalConfigTask.brs" />
+</component>

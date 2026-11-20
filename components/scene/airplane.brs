@@ -4,6 +4,7 @@
 
 ' Starts a flight, or waits again if the weather is bad for flying.
 sub onPlaneTimer()
+    if not m.config.airplane then return
     if m.precipKind <> "" or m.fog.visible or m.storm
         schedulePlane()
         return
@@ -33,6 +34,17 @@ sub onPlaneState(event as object)
     m.plane.visible = false
     m.strobeAnim.control = "stop"
     schedulePlane()
+end sub
+
+' Starts or stops the flights after the network settings file turns the
+' airplane on or off. A plane in the air finishes its flight.
+sub applyAirplane()
+    if not m.config.airplane
+        m.planeTimer.control = "stop"
+    else if not m.plane.visible
+        m.planeTimer.duration = 10 + Rnd(30)
+        m.planeTimer.control = "start"
+    end if
 end sub
 
 sub schedulePlane()

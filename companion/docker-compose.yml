@@ -1,0 +1,18 @@
+# Serves the Riverside Town network settings file on your home network.
+#
+#   docker compose up -d
+#
+# The file is then at http://<this computer's IP address>:8080/riverside.json.
+# Put that address in external_config_url in town.json. See README.md in
+# this folder.
+services:
+  riverside-config:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      # The folder is mounted, not the single file. Many editors save a file
+      # by writing a new file in its place, and a container with only the old
+      # file mounted keeps serving the old version.
+      - ./public:/usr/share/nginx/html:ro
+    restart: unless-stopped

@@ -74,6 +74,9 @@ These images are drawn by `tools/generate_images.py` from the same artwork the s
   - Thunderstorms: rain and lightning flashes at random times.
 
   Falling leaves and fireflies are hidden while rain or snow is falling. Leaves fall only in October and November (April and May in the southern hemisphere). Even then they do not fall all the time: they fall, fade out, stay hidden, then fade back in. Each of these lasts a random length of time.
+- A banner plane for birthdays and messages. On a day with a birthday or a message, a larger copy of the airplane tows a banner with the text across the sky every 2 to 4 minutes. With more than one text, each flight shows the next one. It flies at the distance of the near mountains and takes about 20 to 30 seconds to cross the screen. Like the small airplane, it has its wingtip and tail lights at dusk and night, and it does not fly in rain, snow, fog, or thunderstorms. It flies even when `extras.airplane` is `false`.
+- A theater building type with a marquee. The marquee shows today's birthdays and messages, one at a time, and the theater's own text when there are none. The letters are capital letters, sized to fit the board on one or two lines.
+- An optional network settings file. Some settings, such as the airplane, the cars, and the units, can be changed from a JSON file on your home network or on the internet, without building the town again or installing it on the Roku again. See [Network settings file](#network-settings-file).
 - A clock and weather panel in the top-right corner. Every 5 minutes it fades out, moves a small amount within the corner, and fades back in, to protect TVs from burn-in. The sun and moon are in the top-left corner, so the panel never covers them.
 
 ## Make your own town
@@ -162,6 +165,9 @@ Only `location` is required. The [town.json](town.json) in this repository is a 
 | `pets` | Animals on the sidewalk, for example `{ "type": "cat", "color": "tabby", "size": "small" }`. Cats can be `"black"`, `"gray"` (dark gray with darker stripes, drawn a little darker at night so it shows against the sidewalk), `"tabby"`, `"white"`, or `"gray_white"` (gray with a white chest, muzzle, and paws). Dogs (`"dog"`) can be `"yellow_lab"`, `"black_lab"`, `"chocolate_lab"`, `"beagle"`, `"corgi"`, `"dalmatian"`, `"dachshund"`, or `"husky"`. Guinea pigs (`"guinea_pig"`) can be `"black_orange"` or `"white_orange"`. `size` is `"regular"` (the default) or `"small"`, which is 0.65 times as big. Up to 10. | none |
 | `cars` | Which cars drive by: `"sedan"`, `"van"`, `"jeep"`, `"truck"`, `"sports"`, and `"buggy"`. At least 2. | all six |
 | `special_cars` | Special cars from movies: `"aston"` (the silver Aston Martin DB5 from Goldfinger), `"herbie"` (Herbie, the Love Bug: a pearl white 1963 VW Beetle with the number 53 on the door), `"kitt"` (KITT from Knight Rider: a black 1982 Pontiac Trans Am with a red scanner light on the nose), `"ecto1"` (the Ecto-1 from Ghostbusters: a white and red 1959 Cadillac ambulance with equipment on the roof), `"delorean"` (the DeLorean time machine from the first Back to the Future movie), `"mcqueen"` (Lightning McQueen from Cars: a red race car with the number 95), and `"mustang"` (the dark gray 1969 Ford Mustang Mach 1 from John Wick). Each one first drives by 6 to 25 seconds after the screensaver starts, then about once every 20 seconds to 1 minute. Special cars never park at the gas station. | none |
+| `external_config_url` | The address of a [network settings file](#network-settings-file), for example `"http://192.168.1.50:8080/riverside.json"`. Use `https`, or `http` for a server on your home network (a private IP address such as `192.168.x.x` or `10.x.x.x`, a name with no dots, or a name that ends in `.local`, `.lan`, `.home`, `.home.arpa`, or `.internal`). | `""` (none) |
+| `birthdays` | Birthdays to show every year, for example `{ "name": "Sam", "date": "11-20" }`, which shows "Happy birthday, Sam!" on November 20. `date` is the month and day. `text` replaces the "Happy birthday" text. `where` is `"banner"`, `"marquee"`, or `"both"` (the default). A birthday on `"02-29"` shows on February 28 in years without February 29. Names can have up to 30 characters, and `text` up to 60. Up to 100. See [Birthdays and messages](#birthdays-and-messages). | none |
+| `messages` | Texts to show between two dates, for example `{ "text": "Welcome home!", "from": "2026-12-20", "until": "2026-12-26" }`. Both dates are included. Without `from`, the text shows until `until`; without `until`, it shows every day from `from`. `where` works as in `birthdays`. Up to 60 characters each, and up to 50 messages. | none |
 | `extras.airplane` | The airplane | `true` |
 | `extras.kayaks` | The kayaks beside the river, in spring and summer | `true` |
 | `extras.fireflies` | Fireflies on summer nights | `true` |
@@ -198,6 +204,7 @@ These options work for most types:
 | `columned_hall` | A stone building with columns and steps, like a library, a courthouse, or a university, with the name across the top. The building always has the stone colors of the town; its `color` is not used. A town can have more than one, each with its own name and lettering colors. | `clock` (a clock tower), `clock_time` (for example `"10:04"`), `letter_color` (the color of the name; default: the roof color), `letter_outline` (a 2 pixel outline around each letter; default: none) |
 | `gas_station` | A price sign, a canopy over one pump, and a small store. A car is parked under the canopy. | `canopy_name` (default `"FUEL STOP"`), `store_name` (default `"MARKET"`), `store_sign_color`, `price` (for example `"3.19"`; a small 9 is added for the 9/10 of a cent) |
 | `drive_through` | A restaurant with its name on a colored roof and a drive-through window | `roof_color`, `sign_text_color` |
+| `theater` | A two-story movie theater with its name on a sign, a marquee with a row of bulbs along its top and bottom, glass doors, and a poster case on each side. The marquee board and bulbs are lit at dusk and night. The marquee shows today's [birthdays and messages](#birthdays-and-messages), and `text` when there are none. | `text` (up to 60 characters, shown in capital letters; default `"WELCOME"`), `width` (300 to 440, default 360), `sign_color`, `sign_text_color`, `trim_color` (the marquee trim and the poster cases) |
 | `gazebo` | An eight-sided gazebo on a brick base, with a shingled roof, a cupola, white posts and railings, and front steps. It is open inside, so the hills show between the posts. It has hanging flower baskets in spring and summer, leaf garlands, corn stalks, hay, and pumpkins in fall, and wreaths in winter. Strings of bulbs hang between the posts, with a lantern in the middle, and they are lit at dusk and night. | `name` (a town sign stands to its left, with this name), `small_line` (a small line on the sign, for example `"FOUNDED \u00b7 1779"`), `sign_color`, `color` (the brick base) |
 | `bike_rack` | A bike rack on the sidewalk with three bikes (no bikes in winter or while snow is falling) | none |
 | `tree` | A tree | none |
@@ -236,6 +243,93 @@ If a font cannot draw a letter in a name, the build stops and names the letter.
 
 These fonts are from [Google Fonts](https://fonts.google.com/), under the SIL Open Font License. The license for each font is in `tools/fonts` next to the font file. The fonts are used only by the generator and are not part of the Roku zip.
 
+## Network settings file
+
+`external_config_url` in `town.json` can point to a JSON file that changes some settings while the screensaver runs. Changing the file does not need a new build or a new install on the Roku.
+
+The settings are applied in three layers:
+
+1. The defaults in `loadTownConfig()` in `components/MainScene.brs`.
+2. `components/town_config.json` in the zip, made from `town.json`.
+3. The network settings file. Each value in it replaces the value from the zip.
+
+The rules:
+
+- A field that is not in the file keeps its value from the zip. Every new copy of the file is applied to the settings from the zip again, not to the settings from the copy before it. So when you remove a field from the file, that setting goes back to its value in the zip.
+- A list in the file (`cars` or `special_cars`) replaces the whole list from the zip.
+- A value with the wrong type, or a value that is not allowed, is skipped, and the value from the zip is used. The reason is printed in the [debug console](#debugging).
+- The screensaver starts with the settings from the zip, downloads the file, and applies it. After that it downloads the file again every `refresh_minutes`.
+
+The fields use the same names as in `town.json`. All of them are optional:
+
+```json
+{
+  "version": 1,
+  "refresh_minutes": 10,
+  "extras": { "airplane": false, "fireflies": true, "falling_leaves": true, "seasons": true },
+  "units": { "temperature": "C", "clock": "24h" },
+  "location": { "lat": 39.7684, "lon": -86.1581 },
+  "cars": ["sedan", "van", "jeep"],
+  "special_cars": ["herbie"],
+  "birthdays": [{ "name": "Sam", "date": "11-20" }],
+  "messages": [{ "text": "Welcome home!", "from": "2026-12-20", "until": "2026-12-26", "where": "marquee" }]
+}
+```
+
+Editors such as VS Code check the file while you type if it starts with:
+
+```json
+"$schema": "https://raw.githubusercontent.com/rorpage/riverside-town/main/tools/riverside/external.schema.json",
+```
+
+| Field | What it sets |
+|---|---|
+| `version` | The version of this file format. Use `1`. The screensaver does not use a file with a higher version. |
+| `refresh_minutes` | Minutes between downloads, from 1 to 1440. The default is 10. |
+| `extras.airplane`, `extras.fireflies`, `extras.falling_leaves`, `extras.seasons` | The same as in `town.json`: `true` or `false`. A plane that is already in the air finishes its flight. |
+| `units.temperature`, `units.clock` | The same as in `town.json`. A new temperature unit downloads the weather again. |
+| `location` | `lat` and `lon`, as numbers or as text. Both are needed. A ZIP code does not work here, because the coordinates for a ZIP code are looked up when the town is built. |
+| `cars` | Which of the six regular cars drive by. At least 2. A car that is turned off finishes its trip. |
+| `special_cars` | Which special cars drive by. All special cars are in every zip, so any of them can be turned on here. |
+| `birthdays`, `messages` | The same as in `town.json`. Each list replaces the whole list from `town.json`. An entry with a mistake is skipped, and the other entries are used. |
+
+Settings that change the images can only be set in `town.json`: the buildings, the sections, the radio station, the animals, the street lights, the hemisphere, the side of the road, the Christmas decorations, and the other extras. The car parked at the gas station is chosen when the screensaver starts, from the cars in the zip.
+
+To check a file for mistakes before the screensaver uses it:
+
+```
+python3 tools/check_external_config.py riverside.json
+```
+
+It needs only the jsonschema package (`pip install jsonschema`). The [companion](companion/) folder has a Docker Compose file that serves the file on your home network with nginx, and the steps to set it up.
+
+### When the file cannot be downloaded
+
+The screensaver saves the last good copy of the file on the Roku. A good copy is one that downloads with response code 200 and is valid JSON.
+
+- When the server cannot be reached, or the file is not valid JSON, the screensaver keeps using the last good copy. This also works when the screensaver starts again, so a server that is down does not change what you see.
+- The last good copy is used for up to 7 days after it was downloaded (`m.externalKeepDays` in `components/MainScene.brs`). After that, the settings from the zip are used until the file can be downloaded again.
+- The saved copy is only used for the same address. If you change `external_config_url` in `town.json`, a copy from the old address is not used.
+- Files larger than 12,000 characters are used but not saved, because Roku gives each app only 16 KB of storage for this.
+
+To go back to the settings in the zip:
+
+- For some settings: remove those fields from the file. The change shows at the next download.
+- For all settings: delete the file, or replace its contents with `{}`. When the server answers that the file does not exist (response code 404 or 410), the screensaver also deletes the saved copy, so the zip settings stay in use even if the server is down later.
+- For good: remove `external_config_url` from `town.json`, then build and install the town again.
+
+### Birthdays and messages
+
+`birthdays` and `messages` can be set in `town.json`, in the network settings file, or both. The screensaver works out today's texts from the Roku's date and time zone, birthdays first, then messages, in the order they are listed.
+
+Texts with `"where": "banner"` or `"both"` are shown on the banner plane. The first flight is 15 to 45 seconds after the screensaver starts, and the next ones are 2 to 4 minutes apart. The banner gets wider to fit the text. A new birthday or message from the network settings file shows on the next flight.
+
+Texts with `"where": "marquee"` or `"both"` are shown on the marquee of every `theater` in the town. Each text stays for 12 seconds, then the letters fade out and the next text fades in. With one text, it stays. When there is no text for today, each theater shows its own `text`. The text is shown in capital letters, in the largest of five sizes at which it fits the board, on one or two lines. A word that is too long for the board at the smallest size is cut off with "...". The previews show each theater's own `text`.
+
+The banner and the marquees use Oswald Bold. The generator writes it to `components/fonts/Oswald-Bold.ttf`, with its license, from `tools/fonts/Oswald-Variable.ttf`. A birthday or message in `town.json` with a letter that Oswald cannot draw stops the build with a message. The network settings file is not checked for this, so such a letter shows as an empty box on the TV. Oswald has the Latin and Cyrillic alphabets, but not Greek letters or emoji.
+
+Today's texts are also printed in the [debug console](#debugging) with the prefix `Messages today:` when the screensaver starts and after each download of the network settings file.
+
 ## Project layout
 
 ```
@@ -246,14 +340,21 @@ source/main.brs                  Entry point (RunScreenSaver)
 components/MainScene.xml         Scene layout: layers, lanes, panel, animations
 components/MainScene.brs         init(), the settings, and small helpers for the scene
 components/scene/                The rest of the scene logic, one file for each part: scenery and time of day,
-                                 Christmas, weather, airplane, clock panel, cars, and sidewalk (animals and lamps)
+                                 Christmas, weather, airplane, clock panel, cars, sidewalk (animals and lamps),
+                                 the network settings file, today's birthdays and messages, the banner plane,
+                                 and the theater marquees
 components/WeatherTask.xml       Task node definition for the weather request
 components/WeatherTask.brs       Calls the Open-Meteo API
+components/ExternalConfigTask.*  Downloads the network settings file and keeps the last good copy
+companion/                       Docker Compose file and an example network settings file
 components/town_config.json      The town's settings for the screensaver, written by the generator
+components/fonts/                Oswald Bold and its license, for the banner and the marquees, written by the generator
 images/                          All artwork as PNG files, written by the generator
 tools/generate_images.py         Draws every image in images/ from town.json
 tools/build_town.py              Builds a complete zip and previews from any town.json (used by Docker)
-tools/riverside/                 The generator's code: building types, layout, scenery, and town.schema.json
+tools/check_external_config.py   Checks a network settings file for mistakes
+tools/riverside/                 The generator's code: building types, layout, scenery, town.schema.json,
+                                 and external.schema.json (the network settings file)
 tools/fonts/                     Sign fonts and their licenses (used only by the generator)
 Dockerfile                       The riverside-town-roku-generator image
 action.yml                       The GitHub Action that runs the image
@@ -293,7 +394,12 @@ The settings that are not in `town.json` are at the top of `init()` in `componen
 | `allCars` | Each car's image size, wheel positions, wheel radius, and `ground` speed in pixels per second. `m.carDefs` holds the ones `town.json` turns on. |
 | `m.planeSpeed` | The airplane's own speed at the distance of the far mountains, in pixels per second. The comment above it in `MainScene.brs` shows how it was worked out. |
 | `m.planeWaitMin`, `m.planeWaitMore` | Seconds between airplane flights: at least `m.planeWaitMin`, plus a random amount up to `m.planeWaitMore`. |
+| `m.bannerSpeed` | The banner plane's own speed at the distance of the near mountains, in pixels per second. The comment above it in `MainScene.brs` shows how it was worked out. |
+| `m.bannerFirstMin`, `m.bannerFirstMore`, `m.bannerWaitMin`, `m.bannerWaitMore` | Seconds before the first banner flight (15 to 45 by default) and between flights (120 to 240 by default): at least the `Min` value, plus a random amount up to the `More` value. |
+| `m.marqueeHold` | Seconds each text stays on a theater marquee before the next one. The default is 12. |
 | `m.leafOnMin`, `m.leafOnMore`, `m.leafOffMin`, `m.leafOffMore` | How long the fall leaves fall and how long they stop, in seconds: at least the `Min` value, plus a random amount up to the `More` value. The defaults are 25 to 70 seconds falling and 15 to 60 seconds stopped. |
+| `m.externalKeepDays` | Days to keep using the last good network settings file when it cannot be downloaded. The default is 7. |
+| `m.externalRefreshDefault` | Minutes between downloads of the network settings file when the file has no `refresh_minutes`. The default is 10. |
 | `m.infoSpots` | The positions the clock panel moves between. They are all in the top-right corner. |
 | `m.seasonOverride` | Set to `"spring"`, `"summer"`, `"fall"`, or `"winter"` to always show that season, for example to preview it. Leave it as `""` to choose the season from the date. |
 | `m.christmasOverride` | Set to `"on"` to always show the Christmas decorations, or `"off"` to never show them. Leave it as `""` to show them in December. It does nothing when `extras.christmas` is `false`, because the town then has no Christmas images. |
@@ -410,7 +516,7 @@ Connect to the screensaver's debug console with:
 telnet <roku-ip-address> 8087
 ```
 
-Screensavers use port 8087, not port 8085 like normal channels. Errors from the weather request are printed there with the prefix `WeatherTask:`. If `components/town_config.json` cannot be read, a message is printed with the prefix `MainScene:`, and the screensaver uses default settings.
+Screensavers use port 8087, not port 8085 like normal channels. Errors from the weather request are printed there with the prefix `WeatherTask:`. If `components/town_config.json` cannot be read, a message is printed with the prefix `MainScene:`, and the screensaver uses default settings. Messages about the network settings file start with `External settings:` or `ExternalConfigTask:`.
 
 ## Known limits
 

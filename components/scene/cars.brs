@@ -68,7 +68,49 @@ sub makeCar(def as object)
     timer.observeField("fire", "onCarTimer")
     timer.control = "start"
 
-    m.cars[name] = { def: def, node: car, body: body, wheels: wheels, interps: interps, move: move, moveInterp: moveInterp, spin: spin, timer: timer, lane: "" }
+    m.cars[name] = { def: def, node: car, body: body, wheels: wheels, interps: interps, move: move, moveInterp: moveInterp, spin: spin, timer: timer, lane: "", enabled: true }
+end sub
+
+' The cars in allCars that the settings turn on. Special cars come from their
+' own list, specialCars.
+function enabledCars() as object
+    out = []
+    for each def in m.allCars
+        names = m.config.cars
+        if isSpecial(def) then names = m.config.specialCars
+        for each carName in names
+            if carName = def.name then out.Push(def)
+        end for
+    end for
+    return out
+end function
+
+' Turns cars on and off after the network settings file changes the car
+' lists. A car that is turned off finishes its trip and does not start
+' another one. A car that is turned on for the first time is created. The
+' car parked at the gas station is chosen at startup and stays.
+sub applyCars()
+    m.carDefs = enabledCars()
+    enabled = {}
+    for each def in m.carDefs
+        enabled[def.name] = true
+        if not m.cars.DoesExist(def.name)
+            makeCar(def)
+        else
+            c = m.cars[def.name]
+            if not c.enabled
+                c.enabled = true
+                if c.lane = ""
+                    c.timer.duration = 1 + Rnd(6)
+                    if isSpecial(def) then c.timer.duration = m.specialFirstMin + Rnd(m.specialFirstMore)
+                    c.timer.control = "start"
+                end if
+            end if
+        end if
+    end for
+    for each carName in m.cars
+        if not enabled.DoesExist(carName) then m.cars[carName].enabled = false
+    end for
 end sub
 
 ' The wheel image for a car. Special cars have their own wheels.
@@ -87,7 +129,9 @@ function carNameFromId(id as string) as string
 end function
 
 sub onCarTimer(event as object)
-    spawnCar(carNameFromId(event.getNode()))
+    name = carNameFromId(event.getNode())
+    if not m.cars[name].enabled then return
+    spawnCar(name)
 end sub
 
 ' Sends a car across the screen. Only one car uses a lane at a time so faster

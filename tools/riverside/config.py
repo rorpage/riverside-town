@@ -3,11 +3,13 @@
 Errors are raised as ConfigError with a message that names the field, so a
 person editing town.json can find the mistake.
 """
+import ipaddress
 import json
 import os
 import urllib.parse
 import urllib.request
-from .art import FONTS, ACCENT, DARK, WHITE, check_text
+from . import messages
+from .art import FONTS, ACCENT, DARK, WHITE, ROKU_FONT, check_text
 
 SCHEMA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "town.schema.json")
 
@@ -51,6 +53,8 @@ DEFAULTS = {
     "gas_station": dict(canopy_name="FUEL STOP", store_name="MARKET", store_sign_color="#1F4E9C", price="2.05",
                         color="#E2E7EE", font="oswald", weight=600),
     "drive_through": dict(font="script", weight=700, color=WHITE, roof_color="#D62E3C"),
+    "theater": dict(width=360, font="oswald", weight=700, color="#B86B55", sign_color="#2B2F3A",
+                    trim_color="#C0392B", text="WELCOME"),
     "tree": dict(),
     "gazebo": dict(color="#A9553F", font="playfair", weight=700),
     "bike_rack": dict(),
@@ -132,6 +136,31 @@ def lookup_zip(zip_code, country):
     raise ConfigError(f"Could not look up the coordinates for ZIP code {zip_code} ({'; '.join(problems)}). "
                       "Add \"lat\" and \"lon\" to \"location\" in town.json instead.")
 
+# Host names that are only on a home network, so http is allowed for them
+LOCAL_SUFFIXES = (".local", ".lan", ".home", ".home.arpa", ".internal")
+
+def check_external_url(url):
+    """Checks external_config_url and returns it. https works for any server.
+    http only works for a server on the home network: a private IP address,
+    a name with no dots (for example "nas"), or a name that ends in one of
+    LOCAL_SUFFIXES. Without https, anyone between the Roku and a server on
+    the internet could change the file."""
+    if not url:
+        return ""
+    parts = urllib.parse.urlsplit(url)
+    host = parts.hostname or ""
+    if parts.scheme not in ("http", "https") or not host:
+        raise ConfigError(f'external_config_url: "{url}" must start with https:// or http:// and include a server name.')
+    if parts.scheme == "http":
+        try:
+            local = ipaddress.ip_address(host).is_private
+        except ValueError:
+            local = "." not in host or host.endswith(LOCAL_SUFFIXES)
+        if not local:
+            raise ConfigError(f'external_config_url: "{url}" uses http for a server that is not on the home network. '
+                              "Use https, or the IP address of the server on your home network.")
+    return url
+
 def spread_houses(buildings, houses):
     """Places the houses from the "houses" list between the buildings, spread
     out as evenly as possible."""
@@ -168,6 +197,18 @@ def fill(data):
     town["cars"] = data.get("cars", CARS)
     town["special_cars"] = data.get("special_cars", [])
     town["extras"] = dict(EXTRAS, **data.get("extras", {}))
+    town["external_config_url"] = check_external_url(data.get("external_config_url", "").strip())
+    problems = messages.date_problems(data)
+    if problems:
+        raise ConfigError("town.json has mistakes:\n" + "\n".join("  " + p for p in problems))
+    town["birthdays"], town["messages"] = messages.fill(data)
+    # The banner and the marquees show these texts in ROKU_FONT
+    for field, entries, keys in (("birthdays", town["birthdays"], ("name", "text")), ("messages", town["messages"], ("text",))):
+        for i, entry in enumerate(entries):
+            for key in keys:
+                bad = check_text(entry.get(key, ""), ROKU_FONT) + check_text(entry.get(key, "").upper(), ROKU_FONT)
+                if bad:
+                    raise ConfigError(f"{field}/{i}/{key}: the banner and the marquee cannot show {' '.join(sorted(set(bad)))} in \"{entry[key]}\".")
     # The radio station on the hill beside the river
     radio = data.get("radio_station")
     town["radio_station"] = None
@@ -218,8 +259,14 @@ def fill(data):
             counts["school"] += 1
         elif kind == "church" and spec["style"] == "tower":
             spec.setdefault("color", "#D8CFC2")
-        if kind in ("shop", "church", "school", "columned_hall", "drive_through") and not spec.get("name"):
+        if kind in ("shop", "church", "school", "columned_hall", "drive_through", "theater") and not spec.get("name"):
             raise ConfigError(f"{where}: a {kind} needs a \"name\".")
+        if kind == "theater":
+            # The marquee shows its text in capital letters, in ROKU_FONT
+            spec["text"] = spec["text"].upper()
+            bad = check_text(spec["text"], ROKU_FONT)
+            if bad:
+                raise ConfigError(f"{where}: the marquee cannot show {' '.join(bad)} in \"{spec['text']}\".")
         for key in ("name", "number", "small_line", "store_name", "canopy_name", "power"):
             if spec.get(key):
                 font = FIELD_FONTS.get((kind, key), spec.get("font"))
