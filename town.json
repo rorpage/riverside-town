@@ -49,8 +49,15 @@
   "cars": ["sedan", "van", "jeep", "truck", "sports", "buggy"],
   "special_cars": [],
   "external_config_url": "",
-  "birthdays": [],
-  "messages": [],
+  "birthdays": [
+    { "name": "Marty", "date": "10-26" },
+    { "name": "Doc Brown", "date": "11-05" },
+    { "name": "George", "date": "11-12" },
+    { "name": "Jennifer", "date": "10-21" }
+  ],
+  "messages": [
+    { "text": "Welcome to Riverside!" }
+  ],
   "extras": {
     "airplane": true,
     "kayaks": true,

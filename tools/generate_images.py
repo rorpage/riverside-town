@@ -267,6 +267,9 @@ def write_font(package):
     out = os.path.join(package, "components", "fonts")
     os.makedirs(out, exist_ok=True)
     font = instancer.instantiateVariableFont(TTFont(src), {"wght": art.ROKU_FONT_WEIGHT})
+    # Keep the dates from the source font, so the file is the same each time
+    # the generator runs, instead of having the time of the build in it
+    font.recalcTimestamp = False
     font.save(os.path.join(out, art.ROKU_FONT_FILE))
     with open(src[:-4] + "-OFL.txt", "rb") as f, open(os.path.join(out, art.ROKU_FONT_FILE[:-4] + "-OFL.txt"), "wb") as g:
         g.write(f.read())
