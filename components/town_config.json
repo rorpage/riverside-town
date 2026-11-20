@@ -136,8 +136,34 @@
     ]
   ],
   "externalConfigUrl": "",
-  "birthdays": [],
-  "messages": [],
+  "birthdays": [
+    {
+      "where": "both",
+      "name": "Marty",
+      "date": "10-26"
+    },
+    {
+      "where": "both",
+      "name": "Doc Brown",
+      "date": "11-05"
+    },
+    {
+      "where": "both",
+      "name": "George",
+      "date": "11-12"
+    },
+    {
+      "where": "both",
+      "name": "Jennifer",
+      "date": "10-21"
+    }
+  ],
+  "messages": [
+    {
+      "where": "both",
+      "text": "Welcome to Riverside!"
+    }
+  ],
   "marquees": [],
   "bannerColors": {
     "day": {
