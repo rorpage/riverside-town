@@ -39,6 +39,8 @@ PRESETS = {
     "photo_store": dict(font="montserrat", weight=700, sign_color=DARK, letter_spacing=6, window="camera"),
     "pet_shop": dict(font="fredoka", weight=600, sign_color="#4A82A8", sign_icon="paw", awning="striped",
                      awning_colors=["#4A82A8", WHITE], window="pets", stories=2),
+    "pizza_shop": dict(font="fredoka", weight=700, sign_color="#B8352B", sign_icon="pizza", awning="striped",
+                       awning_colors=["#C0392B", WHITE], window="pizza", stories=2),
     "restaurant": dict(font="lora", weight=600, sign_color="#2F5D3A", awning="striped",
                        awning_colors=["#2F8F4E", WHITE, "#C0392B"], window="table", stories=2),
 }
@@ -237,10 +239,11 @@ def fill(data):
     for i, b in enumerate(items):
         kind = b["type"]
         if kind in PRESETS:
-            spec = dict(DEFAULTS["shop"], **PRESETS[kind], **b)
+            # Options in town.json replace the preset values
+            spec = {**DEFAULTS["shop"], **PRESETS[kind], **b}
             spec["preset"], spec["type"] = kind, "shop"
         else:
-            spec = dict(DEFAULTS[kind], **b)
+            spec = {**DEFAULTS[kind], **b}
         kind = spec["type"]
         where = f"buildings/{i} ({spec.get('name', spec.get('number', kind))})"
         if kind == "house":

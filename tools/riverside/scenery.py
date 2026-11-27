@@ -180,14 +180,24 @@ def kayaks(p, season, places=KAYAKS):
 
 # Two bikes parked beside the radio station, on the top of the near hill, far
 # away, so they are small. Each is (x of the left end, color, facing left).
-# They are only drawn with the radio station, and not in winter.
+# They are only drawn with the radio station. They are not part of the hills
+# image: the generator writes them as radio_bikes_<period>.png, so the
+# screensaver can hide them while it rains or snows.
 RADIO_BIKES = [(545, "#C0392B", False), (590, "#2E86C1", True)]
-def radio_bikes(p, season):
-    if season == "winter":
-        return ""
-    # 0.7 is BIKE_SCALE in buildings.py times about RADIO_SCALE, the size of
-    # things at the distance of the hills
-    return "".join(bicycle(x, near_hill_y(x + 21) + 3, 0.7, wall(c, p), left) for x, c, left in RADIO_BIKES)
+RADIO_BIKE_SCALE = 0.7   # BIKE_SCALE in buildings.py times about RADIO_SCALE, the size of things at the distance of the hills
+
+def radio_bikes(p):
+    return "".join(bicycle(x, near_hill_y(x + 21) + 3, RADIO_BIKE_SCALE, wall(c, p), left) for x, c, left in RADIO_BIKES)
+
+def radio_bikes_box():
+    """The box around the radio bikes, as (left, top, width, height) in
+    screen coordinates."""
+    left = min(x for x, c, l in RADIO_BIKES) - 2
+    right = max(x for x, c, l in RADIO_BIKES) + 60 * RADIO_BIKE_SCALE + 2
+    grounds = [near_hill_y(x + 21) + 3 for x, c, l in RADIO_BIKES]
+    top = int(min(grounds) - 48 * RADIO_BIKE_SCALE) - 2
+    bottom = int(max(grounds)) + 3
+    return int(left), top, int(right - left) + 1, bottom - top
 
 # The radio station stands on the near hill to the left of the river, where
 # the hill is nearly flat and high enough to show above most roofs. It is
@@ -295,11 +305,11 @@ def hills_c(p, season):
             + "".join(pine(x, y, p, season) for x, y in PINES_C)
             + "".join(round_tree(x, y, 36, 30, p, season) for x, y in ROUND_TREES_C))
 
-def hills(p, season, with_kayaks=True, with_bikes=False, radio=None, tile="a"):
+def hills(p, season, with_kayaks=True, radio=None, tile="a"):
     """One hills tile. tile "a" has the river, the kayaks, and the radio
     station, if there is one; tile "b" (hills_b) has other trees and no river;
-    tile "c" (hills_c) has its own hill shapes. With with_bikes on, two bikes
-    are parked beside the radio station."""
+    tile "c" (hills_c) has its own hill shapes. The bikes beside the radio
+    station are a separate image (see radio_bikes())."""
     if tile == "c":
         return hills_c(p, season)
     b = tile == "b"
@@ -315,8 +325,7 @@ def hills(p, season, with_kayaks=True, with_bikes=False, radio=None, tile="a"):
     river = f'''<path fill="{p["river"]}" d="M958,647 C935,668 1000,695 900,730 C760,780 640,800 560,900 L1080,900 C1100,820 1180,790 1240,750 C1320,700 1060,675 1000,662 C985,656 968,650 958,647 Z"/>
 <g stroke="{p["riverHi"]}" stroke-width="4" stroke-linecap="round" fill="none">
 <path d="M962,672 L980,672"/><path d="M930,700 L972,700"/><path d="M860,758 L930,758"/><path d="M1010,770 L1080,770"/><path d="M760,832 L850,832"/><path d="M930,850 L1030,850"/></g>'''
-    return (s + river + (kayaks(p, season) if with_kayaks else "")
-            + (radio_bikes(p, season) if with_bikes and radio else ""))
+    return s + river + (kayaks(p, season) if with_kayaks else "")
 
 def street(p, season, seed=11):
     """The sidewalk, curb, and road at the bottom of every town section. The

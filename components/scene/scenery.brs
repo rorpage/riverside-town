@@ -166,6 +166,7 @@ sub applyScene()
     m.top.findNode("hillsC").uri = layerUri("hills_c", ground, period)
     updateTowerLight(period)
     updateAnimals(period)
+    updateOutside()
     updateLamps()
     for i = 0 to m.sections
         m.townPosters[i].uri = townUri(m.townNames[i MOD m.sections], ground, period)

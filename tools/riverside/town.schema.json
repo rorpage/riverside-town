@@ -188,6 +188,7 @@
                   "art_store",
                   "photo_store",
                   "pet_shop",
+                  "pizza_shop",
                   "restaurant"
                 ]
               },
@@ -269,7 +270,8 @@
               },
               "sign_icon": {
                 "enum": [
-                  "paw"
+                  "paw",
+                  "pizza"
                 ]
               },
               "letter_spacing": {
@@ -308,6 +310,7 @@
                   "ice_cream",
                   "pets",
                   "table",
+                  "pizza",
                   "none"
                 ]
               },

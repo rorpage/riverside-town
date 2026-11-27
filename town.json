@@ -33,6 +33,7 @@
     "301",
     { "type": "church", "name": "Chapel", "style": "tower" },
     { "type": "computer_store", "name": "Computers" },
+    { "type": "pizza_shop", "name": "Pizza" },
     { "type": "gazebo", "name": "RIVERSIDE", "small_line": "FOUNDED 1890" }
   ],
   "radio_station": { "name": "WRVR", "small_line": "River Radio", "power": "50,000" },

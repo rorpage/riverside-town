@@ -173,8 +173,29 @@ def window_table(wx, wy, ww, wh, p, s):
                   f'<rect x="{tx + 30:.0f}" y="{ty - 16}" width="7" height="16" rx="2" fill="#2F5D3A"/><rect x="{tx + 32:.0f}" y="{ty - 22}" width="3" height="7" fill="#2F5D3A"/>'
                   f'<rect x="{tx + 58:.0f}" y="{ty - 10}" width="4" height="10" fill="#F8FAFC"/><ellipse cx="{tx + 60:.0f}" cy="{ty - 13}" rx="2" ry="3" fill="#F6C46A"/>')
 
+def pizza_slice(cx, cy, k, color, cut):
+    """A slice of pizza drawn like an icon, in one color, like the camera and
+    the palette: the crust along the top, the cheese coming to a point at the
+    bottom, and three slices of pepperoni and a line under the crust cut out
+    in the color behind it. (cx, cy) is the center, and k is the size, where 1
+    is 40 pixels tall."""
+    def pt(dx, dy):
+        return f"{cx + dx * k:.1f},{cy + dy * k:.1f}"
+    return (f'<path d="M{pt(-17, -13)} L{pt(17, -13)} L{pt(2, 20)} Q{pt(0, 23)} {pt(-2, 20)} Z" fill="{color}"/>'
+            f'<path d="M{pt(-20, -13)} Q{pt(-20, -20)} {pt(-13, -20)} L{pt(13, -20)} Q{pt(20, -20)} {pt(20, -13)} '
+            f'L{pt(20, -11)} L{pt(-20, -11)} Z" fill="{color}"/>'
+            f'<rect x="{cx - 18 * k:.1f}" y="{cy - 12.6 * k:.1f}" width="{36 * k:.1f}" height="{1.6 * k:.1f}" fill="{cut}"/>'
+            f'<circle cx="{cx - 6 * k:.1f}" cy="{cy - 5 * k:.1f}" r="{3.6 * k:.1f}" fill="{cut}"/>'
+            f'<circle cx="{cx + 5.5 * k:.1f}" cy="{cy - 4 * k:.1f}" r="{3.2 * k:.1f}" fill="{cut}"/>'
+            f'<circle cx="{cx:.1f}" cy="{cy + 6 * k:.1f}" r="{2.8 * k:.1f}" fill="{cut}"/>')
+
+def window_pizza(wx, wy, ww, wh, p, s):
+    """A slice of pizza, drawn like an icon."""
+    return pizza_slice(wx + ww / 2, wy + wh / 2, 1.1, ICON, p["window"])
+
 WINDOWS = {"books": window_books, "computer": window_computer, "camera": window_camera, "palette": window_palette,
-           "ice_cream": window_ice_cream, "pets": window_pets, "table": window_table}
+           "ice_cream": window_ice_cream, "pets": window_pets, "table": window_table,
+           "pizza": window_pizza}
 
 def window_lettering(lines, wx, wy, ww, wh):
     """Gray lettering on a shop window, in one or two lines."""
@@ -225,6 +246,10 @@ def shop_draw(s, x, p, season):
         room -= 26
         cx -= 12
         out += paw(sx + sw - 20, 749, tcolor)
+    elif s.get("sign_icon") == "pizza":
+        room -= 30
+        cx -= 14
+        out += pizza_slice(sx + sw - 22, 752, 0.85, tcolor, sign_color)
     if s.get("small_line"):
         small = fit_size(s["small_line"], font, weight, 13, room, 4)
         big = fit_size(s["name"], font, weight, 24, room, 3)
@@ -901,18 +926,34 @@ def rack_width(s):
     return 176
 
 def rack_draw(s, x, p, season):
-    """A bike rack on the sidewalk with three bikes, except in winter. The rack
-    and bikes stand in front of the street drawing, so this draws nothing;
-    sidewalk_bikes() draws them."""
+    """A bike rack on the sidewalk. The rack stands in front of the street
+    drawing, so this draws nothing; sidewalk_racks() draws it. The three bikes
+    in it are not part of the town image (see rack_bikes())."""
     return ""
 
-def rack_bikes(x, p, season, start=0):
+def rack_metal(x, p):
     metal = wall("#9CA6B1", p)
-    out = "".join(f'<path d="M{x + 22 + i * 48},924 L{x + 22 + i * 48},893 A14,14 0 0 1 {x + 50 + i * 48},893 L{x + 50 + i * 48},924" fill="none" stroke="{metal}" stroke-width="3.5"/>' for i in range(3))
-    # No bikes in winter. The winter images are also used while snow is
-    # falling, so this covers any snow.
-    if season != "winter":
-        out += "".join(bicycle(x + i * 48, 926, BIKE_SCALE, BIKE_COLORS[(start + i) % len(BIKE_COLORS)], left=i % 2 == 1) for i in range(3))
+    return "".join(f'<path d="M{x + 22 + i * 48},924 L{x + 22 + i * 48},893 A14,14 0 0 1 {x + 50 + i * 48},893 L{x + 50 + i * 48},924" fill="none" stroke="{metal}" stroke-width="3.5"/>' for i in range(3))
+
+# The three bikes in a bike rack are a separate image, so the screensaver can
+# hide them while it rains or snows, and in winter. BIKE_BOX is the image: its left edge
+# relative to the left edge of the rack, its top, its width, and its height.
+BIKE_BOX = (-4, 860, 184, 70)
+
+def rack_bikes(x, start=0):
+    """The three bikes in the bike rack whose left edge is at x. start picks
+    the first color in BIKE_COLORS."""
+    return "".join(bicycle(x + i * 48, 926, BIKE_SCALE, BIKE_COLORS[(start + i) % len(BIKE_COLORS)], left=i % 2 == 1) for i in range(3))
+
+def rack_spots(sections):
+    """Every bike rack in the town, as (x of its left edge in townStrip
+    coordinates, first color). Each rack starts three colors after the one
+    before it."""
+    out = []
+    for i, section in enumerate(sections):
+        for b, x in section:
+            if b["type"] == "bike_rack":
+                out.append((i * 1920 + x, len(out) * 3))
     return out
 
 # Old-fashioned street lights at the front of the sidewalk, about 480 pixels
@@ -996,15 +1037,10 @@ def sidewalk_shadows(section, p):
     return "".join(shadow([(x + 6, 900), (x + width(b) - 4, 900), (x + width(b) + 8, 909), (x + 18, 909)], p, 0.8)
                    for b, x in section if b["type"] in SOLID)
 
-def sidewalk_bikes(section, p, season, extras):
-    """Bikes drawn after the street: the bikes in each bike rack. These are the
-    only bikes in town."""
-    out, n = "", 0
-    for b, x in section:
-        if b["type"] == "bike_rack":
-            out += rack_bikes(x, p, season, n)
-            n += 3
-    return out
+def sidewalk_racks(section, p):
+    """The bike racks, drawn after the street, because they stand on the
+    sidewalk. The bikes in them are separate images (see rack_bikes())."""
+    return "".join(rack_metal(x, p) for b, x in section if b["type"] == "bike_rack")
 
 TYPES = {
     "house": (house_width, house_draw),
