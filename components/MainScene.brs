@@ -9,7 +9,7 @@
 '   airplane.brs   the airplane
 '   panel.brs      the clock and weather panel
 '   cars.brs       the cars on the street and the car parked at the gas station
-'   sidewalk.brs   the animals and the street lamps
+'   sidewalk.brs   the animals, the bikes, and the street lamps
 '   external.brs   the network settings file (external_config_url in town.json)
 '   messages.brs   the birthdays and messages to show today
 '   banner.brs     the banner plane, which tows today's birthdays and messages
@@ -81,6 +81,10 @@ sub init()
     m.nightAnimals = []
     ' The street lamp posters (see buildLamps)
     m.lampPosters = []
+    ' The animal and bike posters, which are hidden while it rains or snows
+    ' (see updateOutside)
+    m.outsidePosters = []
+    m.radioBikes = []
     m.laneGapMax = 10000
 
     ' Open-Meteo weather codes (WMO) to text
@@ -226,11 +230,13 @@ sub init()
     buildTown()
     buildBlink()
     buildTowerLight()
+    buildRadioBikes()
     applyScene()
     startParallax()
     buildCars()
     parkCar()
     buildMarquee()
+    buildBikes()
     placeAnimals()
     buildLamps()
     updateClock()
@@ -257,7 +263,7 @@ end sub
 function loadTownConfig() as object
     cfg = {
         lat: "39.7684", lon: "-86.1581", temperatureUnit: "fahrenheit", clock24: false, hemisphere: "north", driveOn: "right",
-        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [], lamps: [],
+        sections: 1, cars: ["sedan", "van", "jeep", "truck", "sports", "buggy"], specialCars: [], pets: [], parkedCarX: -1, radioLight: [], lamps: [], bikes: [], radioBikes: [],
         airplane: true, fireflies: true, fallingLeaves: true, seasons: true, christmasSeasons: [], christmasBlink: [],
         externalConfigUrl: "", birthdays: [], messages: [], marquees: [],
         bannerColors: {

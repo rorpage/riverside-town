@@ -96,7 +96,7 @@ def town_section(town, i, p, season):
 def street_layer(town, i, p, season):
     section = town["sections"][i]
     return (scenery.street(p, season, 11 + i)
-            + buildings.sidewalk_shadows(section, p) + buildings.sidewalk_bikes(section, p, season, town["extras"]))
+            + buildings.sidewalk_shadows(section, p) + buildings.sidewalk_racks(section, p))
 
 def christmas_seasons(town):
     """The seasons that need a Christmas image of each town section: the
@@ -127,6 +127,24 @@ def write_lamps(town, out):
             for season, suffix in (("summer", ""), ("winter", "_winter")):
                 render(buildings.street_lamp(0, palette(P[pal]), season), f"{left} {top} {w} {h}", w, h,
                        os.path.join(out, f"street_lamp{name}{suffix}_{pal}.png"))
+
+def write_bikes(town, out):
+    """The bikes, which are not part of the town and hills images, so the
+    screensaver can hide them while it rains or snows. Each bike rack has one
+    image of its three bikes, bike_rack_<n>.png (the bike colors do not change
+    with the time of day). With extras.bikes on and a radio station, the two
+    bikes beside it are radio_bikes_<period>.png. components/scene/sidewalk.brs
+    places them from bikes and radioBikes in town_config.json."""
+    left, top, w, h = buildings.BIKE_BOX
+    for n, (x, start) in enumerate(buildings.rack_spots(town["sections"])):
+        render(buildings.rack_bikes(0, start), f"{left} {top} {w} {h}", w, h, os.path.join(out, f"bike_rack_{n}.png"))
+    if radio_bikes_on(town):
+        left, top, w, h = scenery.radio_bikes_box()
+        for pal in P:
+            render(scenery.radio_bikes(P[pal]), f"{left} {top} {w} {h}", w, h, os.path.join(out, f"radio_bikes_{pal}.png"))
+
+def radio_bikes_on(town):
+    return bool(town["extras"]["bikes"] and town["radio_station"])
 
 def write_blink(town, out):
     """The images that make the Christmas lights blink. For each building with
@@ -185,9 +203,9 @@ def layers(town):
     out = {f"clouds_{level}": (lambda p, s, level=level: scenery.clouds(p, s, level)) for level in scenery.CLOUD_LEVELS}
     out.update({"far": lambda p, s: scenery.far(p, s, ex["table_mountain"]), "far_b": scenery.far_b,
            "near": scenery.near, "near_b": scenery.near_b,
-           "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], town["radio_station"]),
-           "hills_b": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], tile="b"),
-           "hills_c": lambda p, s: scenery.hills(p, s, ex["kayaks"], ex["bikes"], tile="c")})
+           "hills": lambda p, s: scenery.hills(p, s, ex["kayaks"], town["radio_station"]),
+           "hills_b": lambda p, s: scenery.hills(p, s, ex["kayaks"], tile="b"),
+           "hills_c": lambda p, s: scenery.hills(p, s, ex["kayaks"], tile="c")})
     for i in range(len(town["sections"])):
         out[f"town_{LETTERS[i]}"] = lambda p, s, i=i: town_section(town, i, p, s)
     return out
@@ -217,6 +235,7 @@ def write_images(town, out):
                     render(fn(christmas_palette(season_palette(pal, season), lit=(0,)), season), vb, 1920, h,
                            os.path.join(out, f"{name}_christmas_{season}_{pal}.png"))
     town["blink"] = write_blink(town, out)
+    write_bikes(town, out)
     sprites.write(out)
     if town["extras"]["street_lights"]:
         write_lamps(town, out)
@@ -242,6 +261,8 @@ def runtime_config(town, images):
         "driveOn": town["drive_on"],
         "sections": len(town["sections"]), "cars": town["cars"], "specialCars": town["special_cars"], "pets": pets,
         "parkedCarX": town["parked_car_x"], "radioLight": radio_light(town), "lamps": town["lamps"],
+        "bikes": [[x + buildings.BIKE_BOX[0], buildings.BIKE_BOX[1] - CROPS["town"][0]] for x, start in buildings.rack_spots(town["sections"])],
+        "radioBikes": radio_bikes_spot(town),
         "airplane": ex["airplane"], "fireflies": ex["fireflies"], "fallingLeaves": ex["falling_leaves"],
         "seasons": ex["seasons"], "christmasSeasons": christmas_seasons(town),
         "christmasBlink": town.get("blink", []),
@@ -250,6 +271,15 @@ def runtime_config(town, images):
         "marquees": [dict(m, y=m["y"] - CROPS["town"][0]) for m in town["marquees"]],
         "bannerColors": {pal: {k: "0x" + c[1:] + "FF" for k, c in art.banner_colors(pal).items()} for pal in art.P},
     }
+
+def radio_bikes_spot(town):
+    """Where components/scene/sidewalk.brs puts radio_bikes_<period>.png:
+    [x, y, width, height] in hills strip coordinates, or [] if there are no
+    bikes beside the radio station."""
+    if not radio_bikes_on(town):
+        return []
+    left, top, w, h = scenery.radio_bikes_box()
+    return [left, top - CROPS["hills"][0], w, h]
 
 def radio_light(town):
     """Where components/scene/scenery.brs puts the blinking light on the radio tower: [x, y]

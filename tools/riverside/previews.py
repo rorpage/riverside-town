@@ -66,6 +66,19 @@ def marquees(town, section):
             out += text(line, ROKU_FONT, ROKU_FONT_WEIGHT, size, cx, base, "#1F2A33")
     return out
 
+def bikes(town, section):
+    """The bikes in the bike racks in one town section. They are separate
+    images on the Roku (see components/scene/sidewalk.brs), shown when it is
+    not raining or snowing. The previews never show rain or snow."""
+    return "".join(buildings.rack_bikes(x - section * 1920, start)
+                   for x, start in buildings.rack_spots(town["sections"]) if x // 1920 == section)
+
+def radio_bikes(town, p, tile="a"):
+    """The bikes beside the radio station, on hills tile A."""
+    if tile != "a" or not (town["extras"]["bikes"] and town["radio_station"]):
+        return ""
+    return scenery.radio_bikes(p)
+
 def lamps(town, section, p, season):
     """The street lamps in one town section, drawn last, in front of the
     animals and the parked car, like components/scene/sidewalk.brs adds them.
@@ -80,7 +93,7 @@ def lamps_image(town, section, p, season):
 def mountains(town, p, season):
     mtn = season if season == "winter" else "summer"
     return (scenery.clouds(p, season) + scenery.far(p, mtn, town["extras"]["table_mountain"]) + scenery.near(p, mtn)
-            + scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"]))
+            + scenery.hills(p, season, town["extras"]["kayaks"], town["radio_station"]) + radio_bikes(town, p))
 
 def composite(town, layers, pal, section, season, images=None, car=None, christmas=False):
     """One town section with the scenery behind it. car is the name of a car to
@@ -91,7 +104,8 @@ def composite(town, layers, pal, section, season, images=None, car=None, christm
     town_p = christmas_palette(p) if christmas else p
     full = (f'<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{p["sky"]}"/><stop offset="0.62" stop-color="{p["horizon"]}"/></linearGradient></defs>'
             f'<rect width="1920" height="1080" fill="url(#g)"/><circle cx="220" cy="180" r="64" fill="{ACCENT}"/>'
-            + mountains(town, p, season) + layers[f"town_{LETTERS[section]}"](town_p, season) + marquees(town, section))
+            + mountains(town, p, season) + layers[f"town_{LETTERS[section]}"](town_p, season) + marquees(town, section)
+            + bikes(town, section))
     im = Image.open(io.BytesIO(render(full, "0 0 1920 1080", 1920, 1080))).convert("RGBA")
     if car:
         parked(town, images, im, section, car)
@@ -151,12 +165,12 @@ def preview(town, layers, images, pal, season, hour, temp, cond, section, fx=Non
     near = scenery.near(p, mtn) if section % 2 == 0 else scenery.near_b(p, mtn)
     # The hills change tiles too, A, B, then C; only the first has the radio station
     tile = "abc"[section % 3]
-    hills = scenery.hills(p, season, town["extras"]["kayaks"], town["extras"]["bikes"], town["radio_station"], tile)
+    hills = scenery.hills(p, season, town["extras"]["kayaks"], town["radio_station"], tile) + radio_bikes(town, p, tile)
     light = scenery.radio_light(town["radio_station"]) if tile == "a" and pal != "day" else None
     if light:
         hills += f'<circle cx="{light[0]}" cy="{light[1]}" r="7" fill="#E74C3C" fill-opacity="0.35"/><circle cx="{light[0]}" cy="{light[1]}" r="3" fill="#FF6B5B"/>'
     art_svg = (scenery.clouds(p, season, clouds) + far + near + hills
-               + layers[f"town_{LETTERS[section]}"](town_p, season))
+               + layers[f"town_{LETTERS[section]}"](town_p, season) + bikes(town, section))
     im.alpha_composite(Image.open(io.BytesIO(render(art_svg, "0 0 1920 1080", 1920, 1080))).convert("RGBA"))
     if season == "summer" and pal == "night" and town["extras"]["fireflies"]:
         im.alpha_composite(Image.open(os.path.join(images, "fireflies_a.png")).convert("RGBA").resize((1920, 400)), (0, 540))
