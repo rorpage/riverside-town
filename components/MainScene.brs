@@ -81,9 +81,10 @@ sub init()
     m.nightAnimals = []
     ' The street lamp posters (see buildLamps)
     m.lampPosters = []
-    ' The animal and bike posters, which are hidden while it rains or snows
-    ' (see updateOutside)
+    ' The animal posters and the bike posters, which are hidden while it
+    ' rains or snows, and the bikes also in winter (see updateOutside)
     m.outsidePosters = []
+    m.bikePosters = []
     m.radioBikes = []
     m.laneGapMax = 10000
 

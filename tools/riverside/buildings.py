@@ -173,24 +173,25 @@ def window_table(wx, wy, ww, wh, p, s):
                   f'<rect x="{tx + 30:.0f}" y="{ty - 16}" width="7" height="16" rx="2" fill="#2F5D3A"/><rect x="{tx + 32:.0f}" y="{ty - 22}" width="3" height="7" fill="#2F5D3A"/>'
                   f'<rect x="{tx + 58:.0f}" y="{ty - 10}" width="4" height="10" fill="#F8FAFC"/><ellipse cx="{tx + 60:.0f}" cy="{ty - 13}" rx="2" ry="3" fill="#F6C46A"/>')
 
-def pizza_slice(cx, cy, k):
-    """A slice of pizza drawn like the pizza emoji: the crust along the top,
-    the cheese coming to a point at the bottom, and three slices of pepperoni.
-    (cx, cy) is the center, and k is the size, where 1 is 40 pixels tall."""
+def pizza_slice(cx, cy, k, color, cut):
+    """A slice of pizza drawn like an icon, in one color, like the camera and
+    the palette: the crust along the top, the cheese coming to a point at the
+    bottom, and three slices of pepperoni and a line under the crust cut out
+    in the color behind it. (cx, cy) is the center, and k is the size, where 1
+    is 40 pixels tall."""
     def pt(dx, dy):
         return f"{cx + dx * k:.1f},{cy + dy * k:.1f}"
-    return (f'<path d="M{pt(-17, -13)} L{pt(17, -13)} L{pt(2, 20)} Q{pt(0, 23)} {pt(-2, 20)} Z" fill="#F6C443"/>'
-            f'<path d="M{pt(-6, 4)} Q{pt(-7, 12)} {pt(-4, 14)} Q{pt(-2, 12)} {pt(-3, 6)} Z" fill="#F6C443"/>'
-            f'<circle cx="{cx - 7 * k:.1f}" cy="{cy - 5 * k:.1f}" r="{4 * k:.1f}" fill="#C0392B"/>'
-            f'<circle cx="{cx + 6 * k:.1f}" cy="{cy - 4 * k:.1f}" r="{3.6 * k:.1f}" fill="#C0392B"/>'
-            f'<circle cx="{cx:.1f}" cy="{cy + 7 * k:.1f}" r="{3 * k:.1f}" fill="#C0392B"/>'
+    return (f'<path d="M{pt(-17, -13)} L{pt(17, -13)} L{pt(2, 20)} Q{pt(0, 23)} {pt(-2, 20)} Z" fill="{color}"/>'
             f'<path d="M{pt(-20, -13)} Q{pt(-20, -20)} {pt(-13, -20)} L{pt(13, -20)} Q{pt(20, -20)} {pt(20, -13)} '
-            f'L{pt(20, -11)} L{pt(-20, -11)} Z" fill="#D9984B"/>'
-            f'<path d="M{pt(-20, -13)} L{pt(20, -13)} L{pt(20, -11)} L{pt(-20, -11)} Z" fill="#B9773A"/>')
+            f'L{pt(20, -11)} L{pt(-20, -11)} Z" fill="{color}"/>'
+            f'<rect x="{cx - 18 * k:.1f}" y="{cy - 12.6 * k:.1f}" width="{36 * k:.1f}" height="{1.6 * k:.1f}" fill="{cut}"/>'
+            f'<circle cx="{cx - 6 * k:.1f}" cy="{cy - 5 * k:.1f}" r="{3.6 * k:.1f}" fill="{cut}"/>'
+            f'<circle cx="{cx + 5.5 * k:.1f}" cy="{cy - 4 * k:.1f}" r="{3.2 * k:.1f}" fill="{cut}"/>'
+            f'<circle cx="{cx:.1f}" cy="{cy + 6 * k:.1f}" r="{2.8 * k:.1f}" fill="{cut}"/>')
 
 def window_pizza(wx, wy, ww, wh, p, s):
-    """A slice of pizza, drawn like the pizza emoji."""
-    return pizza_slice(wx + ww / 2, wy + wh / 2, 1.1)
+    """A slice of pizza, drawn like an icon."""
+    return pizza_slice(wx + ww / 2, wy + wh / 2, 1.1, ICON, p["window"])
 
 WINDOWS = {"books": window_books, "computer": window_computer, "camera": window_camera, "palette": window_palette,
            "ice_cream": window_ice_cream, "pets": window_pets, "table": window_table,
@@ -248,7 +249,7 @@ def shop_draw(s, x, p, season):
     elif s.get("sign_icon") == "pizza":
         room -= 30
         cx -= 14
-        out += pizza_slice(sx + sw - 22, 752, 0.85)
+        out += pizza_slice(sx + sw - 22, 752, 0.85, tcolor, sign_color)
     if s.get("small_line"):
         small = fit_size(s["small_line"], font, weight, 13, room, 4)
         big = fit_size(s["name"], font, weight, 24, room, 3)
@@ -935,7 +936,7 @@ def rack_metal(x, p):
     return "".join(f'<path d="M{x + 22 + i * 48},924 L{x + 22 + i * 48},893 A14,14 0 0 1 {x + 50 + i * 48},893 L{x + 50 + i * 48},924" fill="none" stroke="{metal}" stroke-width="3.5"/>' for i in range(3))
 
 # The three bikes in a bike rack are a separate image, so the screensaver can
-# hide them while it rains or snows. BIKE_BOX is the image: its left edge
+# hide them while it rains or snows, and in winter. BIKE_BOX is the image: its left edge
 # relative to the left edge of the rack, its top, its width, and its height.
 BIKE_BOX = (-4, 860, 184, 70)
 

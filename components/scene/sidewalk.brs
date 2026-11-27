@@ -1,6 +1,6 @@
 ' The animals, the bikes, and the street lamps on the sidewalk, and the bikes
 ' beside the radio station. The animals and the bikes are hidden while it
-' rains or snows (see updateOutside).
+' rains or snows, and the bikes are also hidden in winter (see updateOutside).
 ' These subs run in the scope of MainScene (see MainScene.xml), so they
 ' share m with MainScene.brs.
 
@@ -83,8 +83,8 @@ function addBikes(strip as object, uri as string, x as integer, y as integer, w 
     bikes.width = w
     bikes.height = h
     bikes.translation = [x, y]
-    bikes.visible = m.precipKind = ""
-    m.outsidePosters.Push(bikes)
+    bikes.visible = bikesOut()
+    m.bikePosters.Push(bikes)
     return bikes
 end function
 
@@ -104,16 +104,26 @@ sub buildRadioBikes()
 end sub
 
 ' Hides the animals and the bikes while it rains or snows, and shows them
-' at other times. applyScene() calls it when the weather changes.
+' at other times. The bikes are also hidden in winter (the ground is winter
+' in winter and while snow is falling). applyScene() calls it when the
+' weather or the season changes.
 sub updateOutside()
     outside = m.precipKind = ""
     for each poster in m.outsidePosters
         poster.visible = outside
     end for
-    for each bikes in m.radioBikes
-        bikes.uri = "pkg:/images/radio_bikes_" + m.period + ".png"
+    showBikes = bikesOut()
+    for each poster in m.bikePosters
+        poster.visible = showBikes
+    end for
+    for each poster in m.radioBikes
+        poster.uri = "pkg:/images/radio_bikes_" + m.period + ".png"
     end for
 end sub
+
+function bikesOut() as boolean
+    return m.precipKind = "" and m.ground <> "winter"
+end function
 
 ' The street lamps. lamps in the settings is the x of each lamp post in
 ' townStrip coordinates. The lamps are separate posters, added after the
